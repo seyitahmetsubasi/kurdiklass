@@ -1752,7 +1752,6 @@ export default function App() {
             onClick={() => setViewMode('student')}
             className="flex items-center gap-2.5 font-extrabold text-xl text-slate-900"
           >
-              <img src="/logo3.png" alt="Logo" className="w-12 h-12" />
             <span>
               {ui.brand_first}
               <span className="text-red-600">{ui.brand_second}</span>
