@@ -628,7 +628,7 @@ const UI_TRANSLATIONS = {
     learn_replay_btn: 'Gioca ancora',
     learn_back_units_btn: 'Torna alle tappe',
     learn_type_choice: 'Scelta corretta',
-    learn_type_sentence: 'Componi la frase',
+    learn_type_sentence: 'Componi la phrase',
     learn_type_match: 'Abbina le parole',
     learn_type_fill: 'Riempi lo spazio',
     learn_type_image: 'Trova l’immagine, scegli la parola',
@@ -657,87 +657,8 @@ const UI_FIELD_LABELS = [
   { key: 'footer_text', label: 'Nivîsa Jêrîn (Footer)' }
 ];
 
-const STARTER_GAMES = [
-  {
-    unit_title: 'Beşa 1: Silav û Nasîn',
-    exercise_type: 'match',
-    question_text: 'Peyvên Kurmancî bi ravekirinên wan re bighîne hev:',
-    options: [
-      'Silav=Peyva pêşwazîkirinê',
-      'Spas=Peyva rêzdarî û minetdariyê',
-      'Belê=Bersiva erênî',
-      'Na=Bersiva neyînî'
-    ],
-    correct_answer: '4',
-    explanation: 'Silav, Spas, Belê û Na peyvên herî bingehîn ên axaftina rojane ne.'
-  },
-  {
-    unit_title: 'Beşa 1: Silav û Nasîn',
-    exercise_type: 'choice',
-    question_text: 'Dema tu sibehê kesekî dibînî, tu çi dibêjî?',
-    options: ['Rojbaş', 'Şevbaş', 'Êvarbaş', 'Bi xatirê te'],
-    correct_answer: 'Rojbaş',
-    explanation: 'Rojbaş ji bo silavdayîna sibeh û nîvro tê bikaranîn.'
-  },
-  {
-    unit_title: 'Beşa 1: Silav û Nasîn',
-    exercise_type: 'sentence',
-    question_text: 'Peyvan li gorî rêzimanê rêz bike û hevokeke rast saz bike:',
-    options: ['Ez', 'diçim', 'dibistanê.', 'tu', 'malê'],
-    correct_answer: 'Ez diçim dibistanê.',
-    explanation: 'Di Kurmancî de lêker (diçim) berî cihê çûnê (dibistanê) tê.'
-  },
-  {
-    unit_title: 'Beşa 2: Malbat û Cînavk',
-    exercise_type: 'fill_blank',
-    question_text: 'Valahiyê bi cînavka rast tije bike: "Navê _____ Azad e."',
-    options: ['min', 'ez', 'tu', 'em'],
-    correct_answer: 'min',
-    explanation: 'Piştî veqetandeka "-ê" (Navê), cînavka tewandî "min" tê bikaranîn: Navê min.'
-  },
-  {
-    unit_title: 'Beşa 2: Malbat û Cînavk',
-    exercise_type: 'match',
-    question_text: 'Peyvên dijwate bi hev re bighîne:',
-    options: [
-      'Mezin=Biçûk',
-      'Germ=Sar',
-      'Dirêj=Kurt',
-      'Spî=Reş'
-    ],
-    correct_answer: '4',
-    explanation: 'Mezin û biçûk, germ û sar, dirêj û kurt, spî û reş rengdêrên dijwate ne.'
-  }
-];
-
-const FEKI_AUDIO =
-  'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/exercise_audio/1795116991119-y0yjbc.mp3';
-
-const FEKI_DATA = [
-  ['🍎', 'sêv', ['hinar', 'zebeş', 'hêjîr'], 'Sêv (Elma)', '21,23'],
-  ['🍎', 'hinar', ['gûz', 'alû', 'xox'], 'Hinar (Nar)', '3,4.5'],
-  ['🌰', 'gûz', ['mişmiş', 'vîşne', 'tirî'], 'Gûz (Ceviz)', '4.5,6'],
-  ['🍑', 'alû', ['hirmî', 'pirteqal', 'sêv'], 'Alû (Erik)', '6,7.5'],
-  ['🍑', 'xox', ['zebeş', 'hinar', 'hêjîr'], 'Xox (Şeftali)', '7.5,9'],
-  ['🍊', 'mişmiş', ['gûz', 'tirî', 'vîşne'], 'Mişmiş (Kayısı)', '9,10.8'],
-  ['🍉', 'zebeş', ['alû', 'hirmî', 'pirteqal'], 'Zebeş (Karpuz)', '10.8,12.5'],
-  ['🍒', 'vîşne', ['xox', 'sêv', 'hinar'], 'Vîşne (Vişne)', '12.5,14.2'],
-  ['🍐', 'hirmî', ['mişmiş', 'gûz', 'zebeş'], 'Hirmî (Armut)', '14.2,15.8'],
-  ['🫒', 'hêjîr', ['vîşne', 'alû', 'tirî'], 'Hêjîr (İncir)', '15.8,17.5'],
-  ['🍊', 'pirteqal', ['hirmî', 'xox', 'sêv'], 'Pirteqal (Portakal)', '17.5,19.3'],
-  ['🍇', 'tirî', ['hêjîr', 'hinar', 'gûz'], 'Tirî (Üzüm)', '19.3,21']
-];
-
-const BUILTIN_ZAROK_FEKI = FEKI_DATA.map(([emoji, answer, wrong, explanation, range], i) => ({
-  id: `feki-${i + 1}`,
-  unit_title: 'ZAROK: Fêkî',
-  exercise_type: 'choice',
-  question_text: `${emoji} Guhdarî bike! Ev kîjan fêkî ye?`,
-  options: [answer, ...wrong].sort((a, b) => ((a.charCodeAt(1) + i) % 3) - ((b.charCodeAt(1) + i) % 3)),
-  correct_answer: answer,
-  explanation,
-  audio_url: `${FEKI_AUDIO}#t=${range}`
-}));
+const STARTER_GAMES = [];
+const BUILTIN_ZAROK_FEKI = [];
 
 const fetchFromWiktionary = async (rawWord) => {
   const cleanWord = rawWord.trim().toLowerCase();
@@ -1309,19 +1230,8 @@ export default function App() {
   };
 
   const handleLoadStarterGames = async () => {
-    setExMsg('Paketa lîstikên Kurmancî tê barkirin...');
-    const rows = STARTER_GAMES.map((g, idx) => ({
-      ...g,
-      sort_order: exercises.length + idx + 1
-    }));
-    const { error } = await supabase.from('kurmanci_exercises').insert(rows);
-    if (error) {
-      setExMsg('Çewtî: ' + error.message);
-    } else {
-      setExMsg('Lîstikên înteraktîf hatin zêdekirin!');
-      fetchExercises();
-    }
-    setTimeout(() => setExMsg(''), 5000);
+    setExMsg('Paketa lîstikên destpêkê vala ye.');
+    setTimeout(() => setExMsg(''), 3000);
   };
 
   const uploadExFile = async (event, folder, setBusy, field) => {
@@ -1487,27 +1397,22 @@ export default function App() {
   ];
 
   const zarokUnitList = [
-    ...new Set([
-      'ZAROK: Fêkî',
-      ...exercises
+    ...new Set(
+      exercises
         .filter((ex) => (ex.unit_title || '').toLowerCase().trim().startsWith('zarok'))
         .map((ex) => ex.unit_title)
-    ])
+    )
   ];
 
   const unitExercises = (() => {
     if (!selectedUnit) return [];
     if (selectedUnit === 'ZAROK: Fêkî') {
-      const dbFeki = exercises.filter(
-        (ex) => ex.unit_title === 'ZAROK: Fêkî' && ex.audio_url
-      );
-      return dbFeki.length > 0 ? dbFeki : BUILTIN_ZAROK_FEKI;
+      return exercises.filter((ex) => ex.unit_title === 'ZAROK: Fêkî' && ex.audio_url);
     }
     return exercises.filter((ex) => ex.unit_title === selectedUnit);
   })();
 
   const currentEx = unitExercises[currentExIndex];
-
   const playCurrentAudio = (url) => {
     if (!url) return;
     try {
@@ -1905,7 +1810,7 @@ export default function App() {
               </div>
             </div>
 
-            {selectedCategory === 'zarok' && (
+            {selectedCategory === 'zarok' && zarokUnitList.length > 0 && (
               <section className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
                 <h2 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
                   <Sparkles className="w-5 h-5" />
@@ -2436,7 +2341,6 @@ export default function App() {
             )}
           </div>
         )}
-
         {/* ===================== FERHENG ===================== */}
         {viewMode === 'ferheng' && (
           <div className="max-w-4xl mx-auto space-y-6">
