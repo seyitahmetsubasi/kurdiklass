@@ -1,929 +1,1353 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from './supabaseClient';
 import {
-  Search,
   BookOpen,
   Video,
   FileText,
   Headphones,
   Plus,
   Trash2,
-  Edit3,
+  Search,
   Lock,
   LogOut,
-  Filter,
+  Edit3,
   CheckCircle2,
   AlertCircle,
   ExternalLink,
+  Sparkles,
+  Heart,
+  Flame,
+  Award,
+  RotateCcw,
+  BookA,
   X,
-  Upload,
   FolderEdit,
   Settings,
   ClipboardList,
   Download,
-  BookA,
-  Sparkles,
-  Award,
-  Heart,
-  RotateCcw,
-  ChevronDown,
-  Flame,
-  Check,
-  Zap,
-  Image as ImageIcon,
-  Eye,
-  LayoutDashboard,
+  Upload,
+  Filter,
   Volume2,
+  Image as ImageIcon,
+  LayoutDashboard,
+  ChevronDown,
+  Check,
   Star,
-  History
+  History,
+  Eye,
+  Zap
 } from 'lucide-react';
-// =========================================================================
-// SUPABASE BAĞLANTI AYARLARI
-// =========================================================================
-const SUPABASE_URL = 'https://mzsxryxuvyllljvbrzul.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-// Not: İstemci tarafı ADMIN_PASS yalnızca arayüz kilidi içindir;
-// üretim güvenliği için Supabase RLS politikaları ile desteklenmelidir.
-const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'kurdiklass2026';
-const DEFAULT_CATEGORIES = [
-  { slug: 'zanist', name: 'ZANIST', sort_order: 1 },
-  { slug: 'birkari', name: 'BÎRKARÎ', sort_order: 2 },
-  { slug: 'ziman-u-wejeya-kurdi', name: 'ZIMAN û WÊJEYA KURDÎ', sort_order: 3 },
-  { slug: 'zarok', name: 'ZAROK', sort_order: 4 },
-  { slug: 'huner', name: 'HUNER', sort_order: 5 },
-  { slug: 'teknoloji', name: 'TEKNOLOJÎ', sort_order: 6 }
-];
+const ADMIN_PASSCODE = import.meta.env.VITE_ADMIN_PASSCODE || 'kurdiklass2025';
 const LANGUAGE_OPTIONS = [
-  { code: 'KU', nativeName: 'Kurmancî' },
-  { code: 'ZZA', nativeName: 'Zazakî' },
-  { code: 'CKB', nativeName: 'Soranî' },
-  { code: 'TR', nativeName: 'Türkçe' },
-  { code: 'EN', nativeName: 'English' },
-  { code: 'DE', nativeName: 'Deutsch' },
-  { code: 'FR', nativeName: 'Français' },
-  { code: 'IT', nativeName: 'Italiano' }
+  { code: 'KU', name: 'Kurmancî', nativeName: 'Kurmancî' },
+  { code: 'ZZA', name: 'Zazakî / Kirmanckî', nativeName: 'Zazakî' },
+  { code: 'CKB', name: 'Sorani', nativeName: 'Soranî' },
+  { code: 'TR', name: 'Turkish', nativeName: 'Türkçe' },
+  { code: 'EN', name: 'English', nativeName: 'English' },
+  { code: 'DE', name: 'German', nativeName: 'Deutsch' },
+  { code: 'FR', name: 'French', nativeName: 'Français' },
+  { code: 'IT', name: 'Italian', nativeName: 'Italiano' }
 ];
-const ALFABE_BASE_URL = '';
-const ALFABE_DEFAULT_EXT = 'png';
-const ALFABE_SHEET_SRC = '/alfabe-gisti-2.png';
-const ALFABE_IMAGE_URLS = {
-  Agir: '',
-  Bilbil: '',
-  Cemed: '',
-  Çay: '',
-  Dar: '',
-  Endezyar: '',
-  Êlek: '',
-  Ferheng: '',
-  Gore: '',
-  Hesp: '',
-  Tivir: '',
-  Îsot: '',
-  Jûjî: '',
-  Ker: '',
-  Lembe: '',
-  Masî: '',
-  Nan: '',
-  Roj: '',
-  Pisîk: '',
-  Qaz: '',
-  Rovî: '',
-  Stêrk: '',
-  Şêr: '',
-  Telefon: '',
-  Guh: '',
-  Gûz: '',
-  Nivîn: '',
-  Werdek: '',
-  Xiyar: '',
-  Heyv: '',
-  Zebeş: ''
-};
-const RAW_ALFABE_ITEMS = [
-  { letter: 'A', word: 'Agir', image: '' },
-  { letter: 'B', word: 'Bilbil', image: '' },
-  { letter: 'C', word: 'Cemed', image: '' },
-  { letter: 'Ç', word: 'Çay', image: '' },
-  { letter: 'D', word: 'Dar', image: '' },
-  { letter: 'E', word: 'Endezyar', image: '' },
-  { letter: 'Ê', word: 'Êlek', image: '' },
-  { letter: 'F', word: 'Ferheng', image: '' },
-  { letter: 'G', word: 'Gore', image: '' },
-  { letter: 'H', word: 'Hesp', image: '' },
-  { letter: 'I', word: 'Tivir', image: '' },
-  { letter: 'Î', word: 'Îsot', image: '' },
-  { letter: 'J', word: 'Jûjî', image: '' },
-  { letter: 'K', word: 'Ker', image: '' },
-  { letter: 'L', word: 'Lembe', image: '' },
-  { letter: 'M', word: 'Masî', image: '' },
-  { letter: 'N', word: 'Nan', image: '' },
-  { letter: 'O', word: 'Roj', image: '' },
-  { letter: 'P', word: 'Pisîk', image: '' },
-  { letter: 'Q', word: 'Qaz', image: '' },
-  { letter: 'R', word: 'Rovî', image: '' },
-  { letter: 'S', word: 'Stêrk', image: '' },
-  { letter: 'Ş', word: 'Şêr', image: '' },
-  { letter: 'T', word: 'Telefon', image: '' },
-  { letter: 'U', word: 'Guh', image: '' },
-  { letter: 'Û', word: 'Gûz', image: '' },
-  { letter: 'V', word: 'Nivîn', image: '' },
-  { letter: 'W', word: 'Werdek', image: '' },
-  { letter: 'X', word: 'Xiyar', image: '' },
-  { letter: 'Y', word: 'Heyv', image: '' },
-  { letter: 'Z', word: 'Zebeş', image: '' }
+const kurdishAlphabet = [
+  'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î', 'J', 'K', 'L',
+  'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'Ş', 'T', 'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
 ];
-const ALFABE_ITEMS = RAW_ALFABE_ITEMS.map((item, idx) => {
-  const customUrl = (ALFABE_IMAGE_URLS[item.word] || '').trim();
-  const baseUrl = ALFABE_BASE_URL.trim().replace(/\/+$/, '');
-  const slug = item.word
-    .toLocaleLowerCase('tr')
-    .replace(/ê/g, 'e')
-    .replace(/î/g, 'i')
-    .replace(/û/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ç/g, 'c')
-    .replace(/\s+/g, '-');
-  const resolvedImage =
-    (item.image || '').trim() ||
-    customUrl ||
-    (baseUrl ? `${baseUrl}/${slug}.${ALFABE_DEFAULT_EXT}` : '');
-  const row = Math.floor(idx / 5);
-  const col = idx < 30 ? idx % 5 : 2;
-  return {
-    ...item,
-    cellIndex: idx,
-    gridRow: row,
-    gridCol: col,
-    image: resolvedImage
-  };
-});
-const ALFABE_WORD_IMAGE_MAP = ALFABE_ITEMS.reduce((acc, item) => {
-  acc[item.word.toLocaleLowerCase('tr')] = item.image || '';
-  acc[item.letter.toLocaleLowerCase('tr')] = item.image || '';
-  return acc;
-}, {});
-const ALFABE_CELL_META_MAP = ALFABE_ITEMS.reduce((acc, item) => {
-  acc[item.word.toLocaleLowerCase('tr')] = item;
-  acc[item.letter.toLocaleLowerCase('tr')] = item;
-  return acc;
-}, {});
-let cachedAlfabeSheetImg = null;
-const loadAlfabeSheetImage = () => {
-  if (!ALFABE_SHEET_SRC || typeof window === 'undefined') return Promise.resolve(null);
-  if (cachedAlfabeSheetImg && cachedAlfabeSheetImg.complete && cachedAlfabeSheetImg.naturalWidth > 0) {
-    return Promise.resolve(cachedAlfabeSheetImg);
+const BUILTIN_DICTIONARY = [
+  {
+    id: 'builtin-1',
+    word: 'heval',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'arkadaş, dost',
+    meaning_en: 'friend',
+    meaning_ku: 'kesê ku mirov pê re dostanî û hevaltî dike',
+    example_sentence: 'Ew hevalê min ê herî baş e.',
+    meanings_i18n: {
+      KU: 'kesê ku mirov pê re dostanî û hevaltî dike',
+      ZZA: 'embaz, dost',
+      CKB: 'هاوڕێ، دۆست',
+      TR: 'arkadaş, dost',
+      EN: 'friend',
+      DE: 'Freund, Freundin',
+      FR: 'ami, amie',
+      IT: 'amico, amica'
+    },
+    examples_i18n: {
+      KU: 'Ew hevalê min ê herî baş e.',
+      TR: 'O benim en iyi arkadaşım.',
+      EN: 'He/She is my best friend.'
+    }
+  },
+  {
+    id: 'builtin-2',
+    word: 'dibistan',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'okul',
+    meaning_en: 'school',
+    meaning_ku: 'cîhê perwerde û hînbûnê',
+    example_sentence: 'Zarok her sibeh diçin dibistanê.',
+    meanings_i18n: {
+      KU: 'cîhê perwerde û hînbûnê',
+      ZZA: 'mekteb, wendegeh',
+      CKB: 'قوتابخانە',
+      TR: 'okul',
+      EN: 'school',
+      DE: 'Schule',
+      FR: 'école',
+      IT: 'scuola'
+    },
+    examples_i18n: {
+      KU: 'Zarok her sibeh diçin dibistanê.',
+      TR: 'Çocuklar her sabah okula gidiyor.',
+      EN: 'Children go to school every morning.'
+    }
+  },
+  {
+    id: 'builtin-3',
+    word: 'pirtûk',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'kitap',
+    meaning_en: 'book',
+    meaning_ku: 'berhema nivîskî ya xwendinê',
+    example_sentence: 'Ez îşev pirtûkekê dixwînim.',
+    meanings_i18n: {
+      KU: 'berhema nivîskî ya xwendinê',
+      ZZA: 'kîtab',
+      CKB: 'کتێب',
+      TR: 'kitap',
+      EN: 'book',
+      DE: 'Buch',
+      FR: 'livre',
+      IT: 'libro'
+    },
+    examples_i18n: {
+      KU: 'Ez îşev pirtûkekê dixwînim.',
+      TR: 'Bu akşam bir kitap okuyorum.',
+      EN: 'I am reading a book tonight.'
+    }
+  },
+  {
+    id: 'builtin-4',
+    word: 'av',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'su',
+    meaning_en: 'water',
+    meaning_ku: 'şileya jiyanê ya bêreng û bêbêhn',
+    example_sentence: 'Ava kaniyê pir sar û zelal e.',
+    meanings_i18n: {
+      KU: 'şileya jiyanê ya bêreng û bêbêhn',
+      ZZA: 'awe',
+      CKB: 'ئاو',
+      TR: 'su',
+      EN: 'water',
+      DE: 'Wasser',
+      FR: 'eau',
+      IT: 'acqua'
+    },
+    examples_i18n: {
+      KU: 'Ava kaniyê pir sar û zelal e.',
+      TR: 'Pınarın suyu çok soğuk ve berrak.',
+      EN: 'The spring water is very cold and clear.'
+    }
+  },
+  {
+    id: 'builtin-5',
+    word: 'mamoste',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'öğretmen',
+    meaning_en: 'teacher',
+    meaning_ku: 'kesê ku ders dide û fêr dike',
+    example_sentence: 'Mamoste bi sebir dersê şirove dike.',
+    meanings_i18n: {
+      KU: 'kesê ku ders dide û fêr dike',
+      ZZA: 'malim, mamoste',
+      CKB: 'مامۆستا',
+      TR: 'öğretmen',
+      EN: 'teacher',
+      DE: 'Lehrer, Lehrerin',
+      FR: 'enseignant, professeur',
+      IT: 'insegnante, maestro'
+    },
+    examples_i18n: {
+      KU: 'Mamoste bi sebir dersê şirove dike.',
+      TR: 'Öğretmen sabırla dersi açıklıyor.',
+      EN: 'The teacher explains the lesson patiently.'
+    }
+  },
+  {
+    id: 'builtin-6',
+    word: 'xwendin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'okumak, öğrenmek',
+    meaning_en: 'to read, to study',
+    meaning_ku: 'bi çav an bi dengekî bilind nivîsekê şopandin',
+    example_sentence: 'Em bi hev re kurdî dixwînin.',
+    meanings_i18n: {
+      KU: 'bi çav an bi dengekî bilind nivîsekê şopandin',
+      ZZA: 'wendiş',
+      CKB: 'خوێندنەوە',
+      TR: 'okumak, öğrenmek',
+      EN: 'to read, to study',
+      DE: 'lesen, lernen',
+      FR: 'lire, étudier',
+      IT: 'leggere, studiare'
+    },
+    examples_i18n: {
+      KU: 'Em bi hev re kurdî dixwînin.',
+      TR: 'Birlikte Kürtçe okuyoruz.',
+      EN: 'We study Kurdish together.'
+    }
+  },
+  {
+    id: 'builtin-7',
+    word: 'nivîsandin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'yazmak',
+    meaning_en: 'to write',
+    meaning_ku: 'bi tîp û peyvan ramanan tomar kirin',
+    example_sentence: 'Ew her roj çîrokekê dinivîse.',
+    meanings_i18n: {
+      KU: 'bi tîp û peyvan ramanan tomar kirin',
+      ZZA: 'nuştiş',
+      CKB: 'نووسین',
+      TR: 'yazmak',
+      EN: 'to write',
+      DE: 'schreiben',
+      FR: 'écrire',
+      IT: 'scrivere'
+    },
+    examples_i18n: {
+      KU: 'Ew her roj çîrokekê dinivîse.',
+      TR: 'O her gün bir hikâye yazıyor.',
+      EN: 'He/She writes a story every day.'
+    }
+  },
+  {
+    id: 'builtin-8',
+    word: 'roj',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'gün, güneş',
+    meaning_en: 'day, sun',
+    meaning_ku: 'demjimêrên ronahiyê an yekeya demê ya 24 saetan',
+    example_sentence: 'Îro rojeke gelekî xweş e.',
+    meanings_i18n: {
+      KU: 'demjimêrên ronahiyê an yekeya demê ya 24 saetan',
+      ZZA: 'roc, tîje',
+      CKB: 'ڕۆژ، خۆر',
+      TR: 'gün, güneş',
+      EN: 'day, sun',
+      DE: 'Tag, Sonne',
+      FR: 'jour, soleil',
+      IT: 'giorno, sole'
+    },
+    examples_i18n: {
+      KU: 'Îro rojeke gelekî xweş e.',
+      TR: 'Bugün çok güzel bir gün.',
+      EN: 'Today is a very nice day.'
+    }
+  },
+  {
+    id: 'builtin-9',
+    word: 'şev',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'gece',
+    meaning_en: 'night',
+    meaning_ku: 'dema tarîtiyê ya piştî rojavabûnê',
+    example_sentence: 'Şev bêdeng û stêrkbar bû.',
+    meanings_i18n: {
+      KU: 'dema tarîtiyê ya piştî rojavabûnê',
+      ZZA: 'şew',
+      CKB: 'شەو',
+      TR: 'gece',
+      EN: 'night',
+      DE: 'Nacht',
+      FR: 'nuit',
+      IT: 'notte'
+    },
+    examples_i18n: {
+      KU: 'Şev bêdeng û stêrkbar bû.',
+      TR: 'Gece sessiz ve yıldızlıydı.',
+      EN: 'The night was quiet and starry.'
+    }
+  },
+  {
+    id: 'builtin-10',
+    word: 'mal',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'ev, yuva',
+    meaning_en: 'home, house',
+    meaning_ku: 'cîhê jiyan û rûniştinê yê malbatê',
+    example_sentence: 'Em êvarê vedigerin malê.',
+    meanings_i18n: {
+      KU: 'cîhê jiyan û rûniştinê yê malbatê',
+      ZZA: 'key, çê',
+      CKB: 'ماڵ',
+      TR: 'ev, yuva',
+      EN: 'home, house',
+      DE: 'Haus, Zuhause',
+      FR: 'maison, foyer',
+      IT: 'casa'
+    },
+    examples_i18n: {
+      KU: 'Em êvarê vedigerin malê.',
+      TR: 'Akşam eve dönüyoruz.',
+      EN: 'We are returning home in the evening.'
+    }
+  },
+  {
+    id: 'builtin-11',
+    word: 'zarok',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'çocuk',
+    meaning_en: 'child',
+    meaning_ku: 'mirovê biçûk di temenê zarokatiyê de',
+    example_sentence: 'Zarok li baxçe dilîzin.',
+    meanings_i18n: {
+      KU: 'mirovê biçûk di temenê zarokatiyê de',
+      ZZA: 'qij, doman',
+      CKB: 'منداڵ',
+      TR: 'çocuk',
+      EN: 'child',
+      DE: 'Kind',
+      FR: 'enfant',
+      IT: 'bambino, bambina'
+    },
+    examples_i18n: {
+      KU: 'Zarok li baxçe dilîzin.',
+      TR: 'Çocuklar bahçede oynuyor.',
+      EN: 'Children are playing in the yard.'
+    }
+  },
+  {
+    id: 'builtin-12',
+    word: 'ziman',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'dil',
+    meaning_en: 'language, tongue',
+    meaning_ku: 'sîstema deng û peyvan a têkiliya mirovan',
+    example_sentence: 'Zimanê kurdî pir dewlemend e.',
+    meanings_i18n: {
+      KU: 'sîstema deng û peyvan a têkiliya mirovan',
+      ZZA: 'ziwan',
+      CKB: 'زمان',
+      TR: 'dil',
+      EN: 'language, tongue',
+      DE: 'Sprache, Zunge',
+      FR: 'langue, langage',
+      IT: 'lingua'
+    },
+    examples_i18n: {
+      KU: 'Zimanê kurdî pir dewlemend e.',
+      TR: 'Kürtçe çok zengin bir dil.',
+      EN: 'The Kurdish language is very rich.'
+    }
+  },
+  {
+    id: 'builtin-13',
+    word: 'hêvî',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'umut',
+    meaning_en: 'hope',
+    meaning_ku: 'bawerî û hêviya tiştên baş ên pêşerojê',
+    example_sentence: 'Hêvî her tim ronahiyê dide.',
+    meanings_i18n: {
+      KU: 'bawerî û hêviya tiştên baş ên pêşerojê',
+      ZZA: 'umîd, hêvî',
+      CKB: 'هیوا، ئومێد',
+      TR: 'umut',
+      EN: 'hope',
+      DE: 'Hoffnung',
+      FR: 'espoir',
+      IT: 'speranza'
+    },
+    examples_i18n: {
+      KU: 'Hêvî her tim ronahiyê dide.',
+      TR: 'Umut her zaman ışık verir.',
+      EN: 'Hope always gives light.'
+    }
+  },
+  {
+    id: 'builtin-14',
+    word: 'aşîtî',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'barış',
+    meaning_en: 'peace',
+    meaning_ku: 'rewşa aramî, lihevkirin û bêşeriyê',
+    example_sentence: 'Em ji bo aştiyê dixebitin.',
+    meanings_i18n: {
+      KU: 'rewşa aramî, lihevkirin û bêşeriyê',
+      ZZA: 'haştî, aştî',
+      CKB: 'ئاشتی',
+      TR: 'barış',
+      EN: 'peace',
+      DE: 'Frieden',
+      FR: 'paix',
+      IT: 'pace'
+    },
+    examples_i18n: {
+      KU: 'Em ji bo aştiyê dixebitin.',
+      TR: 'Barış için çalışıyoruz.',
+      EN: 'We work for peace.'
+    }
+  },
+  {
+    id: 'builtin-15',
+    word: 'şîn',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'mavi, yeşil',
+    meaning_en: 'blue, green',
+    meaning_ku: 'rengê esmanî an rengê giha û pelên şîn',
+    example_sentence: 'Esman îro şîn û vekirî ye.',
+    meanings_i18n: {
+      KU: 'rengê esmanî an rengê giha û pelên şîn',
+      ZZA: 'kewe, keske',
+      CKB: 'شین',
+      TR: 'mavi, yeşil',
+      EN: 'blue, green',
+      DE: 'blau, grün',
+      FR: 'bleu, vert',
+      IT: 'blu, verde'
+    },
+    examples_i18n: {
+      KU: 'Esman îro şîn û vekirî ye.',
+      TR: 'Gökyüzü bugün mavi ve açık.',
+      EN: 'The sky is blue and clear today.'
+    }
+  },
+  {
+    id: 'builtin-16',
+    word: 'sor',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'kırmızı',
+    meaning_en: 'red',
+    meaning_ku: 'rengê agir û gulên sor',
+    example_sentence: 'Guleke sor li ser maseyê ye.',
+    meanings_i18n: {
+      KU: 'rengê agir û gulên sor',
+      ZZA: 'sûr',
+      CKB: 'سوور',
+      TR: 'kırmızı',
+      EN: 'red',
+      DE: 'rot',
+      FR: 'rouge',
+      IT: 'rosso'
+    },
+    examples_i18n: {
+      KU: 'Guleke sor li ser maseyê ye.',
+      TR: 'Masanın üzerinde kırmızı bir gül var.',
+      EN: 'There is a red rose on the table.'
+    }
+  },
+  {
+    id: 'builtin-17',
+    word: 'spî',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'beyaz',
+    meaning_en: 'white',
+    meaning_ku: 'rengê berf û şîrî',
+    example_sentence: 'Berfa spî hemû çiya girtiye.',
+    meanings_i18n: {
+      KU: 'rengê berf û şîrî',
+      ZZA: 'sipî',
+      CKB: 'سپی',
+      TR: 'beyaz',
+      EN: 'white',
+      DE: 'weiß',
+      FR: 'blanc',
+      IT: 'bianco'
+    },
+    examples_i18n: {
+      KU: 'Berfa spî hemû çiya girtiye.',
+      TR: 'Beyaz kar bütün dağları kaplamış.',
+      EN: 'White snow has covered all the mountains.'
+    }
+  },
+  {
+    id: 'builtin-18',
+    word: 'baş',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'iyi, güzel',
+    meaning_en: 'good, well',
+    meaning_ku: 'tiştê kêrhatî, qenc û erênî',
+    example_sentence: 'Sibeha we bi xêr û baş be.',
+    meanings_i18n: {
+      KU: 'tiştê kêrhatî, qenc û erênî',
+      ZZA: 'rınd, baş',
+      CKB: 'باش',
+      TR: 'iyi, güzel',
+      EN: 'good, well',
+      DE: 'gut',
+      FR: 'bon, bien',
+      IT: 'buono, bene'
+    },
+    examples_i18n: {
+      KU: 'Sibeha we bi xêr û baş be.',
+      TR: 'Sabahınız hayırlı ve iyi olsun.',
+      EN: 'Good morning to you.'
+    }
+  },
+  {
+    id: 'builtin-19',
+    word: 'hatin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'gelmek',
+    meaning_en: 'to come',
+    meaning_ku: 'ber bi cîhekî an kesekî ve çûn',
+    example_sentence: 'Mêvanên me îro tên.',
+    meanings_i18n: {
+      KU: 'ber bi cîhekî an kesekî ve çûn',
+      ZZA: 'ameyîş',
+      CKB: 'هاتن',
+      TR: 'gelmek',
+      EN: 'to come',
+      DE: 'kommen',
+      FR: 'venir',
+      IT: 'venire'
+    },
+    examples_i18n: {
+      KU: 'Mêvanên me îro tên.',
+      TR: 'Misafirlerimiz bugün geliyor.',
+      EN: 'Our guests are coming today.'
+    }
+  },
+  {
+    id: 'builtin-20',
+    word: 'çûn',
+    part_of_speech: 'lêker',
+    meaning_tr: 'gitmek',
+    meaning_en: 'to go',
+    meaning_ku: 'ji cîhekî dûr ketin an ber bi cihekî din ve rê ketin',
+    example_sentence: 'Em sibehê zû diçin rêwîtiyê.',
+    meanings_i18n: {
+      KU: 'ji cîhekî dûr ketin an ber bi cihekî din ve rê ketin',
+      ZZA: 'şîyayîş',
+      CKB: 'چوون',
+      TR: 'gitmek',
+      EN: 'to go',
+      DE: 'gehen, fahren',
+      FR: 'aller, partir',
+      IT: 'andare'
+    },
+    examples_i18n: {
+      KU: 'Em sibehê zû diçin rêwîtiyê.',
+      TR: 'Yarın sabah erken yolculuğa çıkıyoruz.',
+      EN: 'We are going on a trip early tomorrow.'
+    }
+  },
+  {
+    id: 'builtin-21',
+    word: 'dîtin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'görmek',
+    meaning_en: 'to see',
+    meaning_ku: 'bi çavan ferq kirin an hev dîtin',
+    example_sentence: 'Min hevalê xwe li kolanê dît.',
+    meanings_i18n: {
+      KU: 'bi çavan ferq kirin an hev dîtin',
+      ZZA: 'vînayîş',
+      CKB: 'بینین',
+      TR: 'görmek',
+      EN: 'to see',
+      DE: 'sehen',
+      FR: 'voir',
+      IT: 'vedere'
+    },
+    examples_i18n: {
+      KU: 'Min hevalê xwe li kolanê dît.',
+      TR: 'Arkadaşımı sokakta gördüm.',
+      EN: 'I saw my friend on the street.'
+    }
+  },
+  {
+    id: 'builtin-22',
+    word: 'bihîstin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'duymak, işitmek',
+    meaning_en: 'to hear',
+    meaning_ku: 'bi guhan deng fêm kirin',
+    example_sentence: 'Min dengê stranê baş bihîst.',
+    meanings_i18n: {
+      KU: 'bi guhan deng fêm kirin',
+      ZZA: 'hesayîş',
+      CKB: 'بیستن',
+      TR: 'duymak, işitmek',
+      EN: 'to hear',
+      DE: 'hören',
+      FR: 'entendre',
+      IT: 'sentire'
+    },
+    examples_i18n: {
+      KU: 'Min dengê stranê baş bihîst.',
+      TR: 'Şarkının sesini iyi duydum.',
+      EN: 'I heard the sound of the song well.'
+    }
+  },
+  {
+    id: 'builtin-23',
+    word: 'axaftin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'konuşmak',
+    meaning_en: 'to speak, to talk',
+    meaning_ku: 'bi zimên raman û hestan vegotin',
+    example_sentence: 'Ew bi kurdî û tirkî diaxive.',
+    meanings_i18n: {
+      KU: 'bi zimên raman û hestan vegotin',
+      ZZA: 'qiseykerdiş',
+      CKB: 'قسەکردن',
+      TR: 'konuşmak',
+      EN: 'to speak, to talk',
+      DE: 'sprechen',
+      FR: 'parler',
+      IT: 'parlare'
+    },
+    examples_i18n: {
+      KU: 'Ew bi kurdî û tirkî diaxive.',
+      TR: 'O Kürtçe ve Türkçe konuşuyor.',
+      EN: 'He/She speaks Kurdish and Turkish.'
+    }
+  },
+  {
+    id: 'builtin-24',
+    word: 'xwaringeh',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'lokanta, restoran',
+    meaning_en: 'restaurant',
+    meaning_ku: 'cîhê ku xwarin tê çêkirin û xwarin',
+    example_sentence: 'Em ê nîvro li xwaringehê bixwin.',
+    meanings_i18n: {
+      KU: 'cîhê ku xwarin tê çêkirin û xwarin',
+      ZZA: 'lokanta',
+      CKB: 'چێشتخانە',
+      TR: 'lokanta, restoran',
+      EN: 'restaurant',
+      DE: 'Restaurant',
+      FR: 'restaurant',
+      IT: 'ristorante'
+    },
+    examples_i18n: {
+      KU: 'Em ê nîvro li xwaringehê bixwin.',
+      TR: 'Öğlen lokantada yiyeceğiz.',
+      EN: 'We will eat at the restaurant at noon.'
+    }
+  },
+  {
+    id: 'builtin-25',
+    word: 'nexweşxane',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'hastane',
+    meaning_en: 'hospital',
+    meaning_ku: 'navenda tenduristiyê ya dermankirina nexweşan',
+    example_sentence: 'Nexweşxane nêzîkî navenda bajêr e.',
+    meanings_i18n: {
+      KU: 'navenda tenduristiyê ya dermankirina nexweşan',
+      ZZA: 'nêweşxane',
+      CKB: 'نەخۆشخانە',
+      TR: 'hastane',
+      EN: 'hospital',
+      DE: 'Krankenhaus',
+      FR: 'hôpital',
+      IT: 'ospedale'
+    },
+    examples_i18n: {
+      KU: 'Nexweşxane nêzîkî navenda bajêr e.',
+      TR: 'Hastane şehir merkezine yakın.',
+      EN: 'The hospital is near the city center.'
+    }
+  },
+  {
+    id: 'builtin-26',
+    word: 'bijîşk',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'doktor, hekim',
+    meaning_en: 'doctor, physician',
+    meaning_ku: 'pisporê bijîşkî û dermankirinê',
+    example_sentence: 'Bijîşk şîretên baş dide nexweşan.',
+    meanings_i18n: {
+      KU: 'pisporê bijîşkî û dermankirinê',
+      ZZA: 'doktor, hekîm',
+      CKB: 'پزیشک، دکتۆر',
+      TR: 'doktor, hekim',
+      EN: 'doctor, physician',
+      DE: 'Arzt, Ärztin',
+      FR: 'médecin',
+      IT: 'medico, dottore'
+    },
+    examples_i18n: {
+      KU: 'Bijîşk şîretên baş dide nexweşan.',
+      TR: 'Doktor hastalara iyi tavsiyeler veriyor.',
+      EN: 'The doctor gives good advice to patients.'
+    }
+  },
+  {
+    id: 'builtin-27',
+    word: 'welat',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'ülke, vatan',
+    meaning_en: 'country, homeland',
+    meaning_ku: 'ax û erdnîgariya ku gelek lê dijî',
+    example_sentence: 'Her welat xwedî çandeke taybet e.',
+    meanings_i18n: {
+      KU: 'ax û erdnîgariya ku gelek lê dijî',
+      ZZA: 'welat',
+      CKB: 'وڵات',
+      TR: 'ülke, vatan',
+      EN: 'country, homeland',
+      DE: 'Land, Heimat',
+      FR: 'pays',
+      IT: 'paese'
+    },
+    examples_i18n: {
+      KU: 'Her welat xwedî çandeke taybet e.',
+      TR: 'Her ülkenin kendine özgü bir kültürü var.',
+      EN: 'Every country has a special culture.'
+    }
+  },
+  {
+    id: 'builtin-28',
+    word: 'bajêr',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'şehir',
+    meaning_en: 'city',
+    meaning_ku: 'navenda niştecihbûnê ya mezin',
+    example_sentence: 'Ev bajêr pir qerebalix û zindî ye.',
+    meanings_i18n: {
+      KU: 'navenda niştecihbûnê ya mezin',
+      ZZA: 'şar',
+      CKB: 'شار',
+      TR: 'şehir',
+      EN: 'city',
+      DE: 'Stadt',
+      FR: 'ville',
+      IT: 'città'
+    },
+    examples_i18n: {
+      KU: 'Ev bajêr pir qerebalix û zindî ye.',
+      TR: 'Bu şehir çok kalabalık ve canlı.',
+      EN: 'This city is very crowded and lively.'
+    }
+  },
+  {
+    id: 'builtin-29',
+    word: 'gund',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'köy',
+    meaning_en: 'village',
+    meaning_ku: 'cîhê niştecihbûnê yê biçûk di nav xwezayê de',
+    example_sentence: 'Gundê me di nav daristanê de ye.',
+    meanings_i18n: {
+      KU: 'cîhê niştecihbûnê yê biçûk di nav xwezayê de',
+      ZZA: 'dew',
+      CKB: 'گوند',
+      TR: 'köy',
+      EN: 'village',
+      DE: 'Dorf',
+      FR: 'village',
+      IT: 'villaggio'
+    },
+    examples_i18n: {
+      KU: 'Gundê me di nav daristanê de ye.',
+      TR: 'Köyümüz ormanın içinde.',
+      EN: 'Our village is in the forest.'
+    }
+  },
+  {
+    id: 'builtin-30',
+    word: 'çiya',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'dağ',
+    meaning_en: 'mountain',
+    meaning_ku: 'bilindahiya mezin û kevirîn a ser rûyê erdê',
+    example_sentence: 'Serê çiyê hîn jî bi berfê ye.',
+    meanings_i18n: {
+      KU: 'bilindahiya mezin û kevirîn a ser rûyê erdê',
+      ZZA: 'ko',
+      CKB: 'چیا، شاخ',
+      TR: 'dağ',
+      EN: 'mountain',
+      DE: 'Berg',
+      FR: 'montagne',
+      IT: 'montagna'
+    },
+    examples_i18n: {
+      KU: 'Serê çiyê hîn jî bi berfê ye.',
+      TR: 'Dağın zirvesi hâlâ karlı.',
+      EN: 'The mountain peak is still covered with snow.'
+    }
   }
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      cachedAlfabeSheetImg = img;
-      resolve(img);
-    };
-    img.onerror = () => resolve(null);
-    img.src = ALFABE_SHEET_SRC;
-  });
+];
+const ALFABE_IMAGE_URLS = {
+  a: '',
+  b: '',
+  c: '',
+  ç: '',
+  d: '',
+  e: '',
+  ê: '',
+  f: '',
+  g: '',
+  h: '',
+  i: '',
+  î: '',
+  j: '',
+  k: '',
+  l: '',
+  m: '',
+  n: '',
+  o: '',
+  p: '',
+  q: '',
+  r: '',
+  s: '',
+  ş: '',
+  t: '',
+  u: '',
+  û: '',
+  v: '',
+  w: '',
+  x: '',
+  y: '',
+  z: ''
+};
+const ALFABE_CELL_META_MAP = {
+  agir: { row: 0, col: 0 },
+  a: { row: 0, col: 0 },
+  bilbil: { row: 0, col: 1 },
+  b: { row: 0, col: 1 },
+  cotkar: { row: 0, col: 2 },
+  c: { row: 0, col: 2 },
+  çay: { row: 0, col: 3 },
+  ç: { row: 0, col: 3 },
+  dar: { row: 0, col: 4 },
+  d: { row: 0, col: 4 },
+  ewr: { row: 0, col: 5 },
+  e: { row: 0, col: 5 },
+  êvar: { row: 1, col: 0 },
+  ê: { row: 1, col: 0 },
+  firok: { row: 1, col: 1 },
+  f: { row: 1, col: 1 },
+  gul: { row: 1, col: 2 },
+  g: { row: 1, col: 2 },
+  hêvî: { row: 1, col: 3 },
+  h: { row: 1, col: 3 },
+  îşev: { row: 1, col: 4 },
+  î: { row: 1, col: 4 },
+  jîr: { row: 1, col: 5 },
+  j: { row: 1, col: 5 },
+  karton: { row: 2, col: 0 },
+  k: { row: 2, col: 0 },
+  lîmon: { row: 2, col: 1 },
+  l: { row: 2, col: 1 },
+  masî: { row: 2, col: 2 },
+  m: { row: 2, col: 2 },
+  nan: { row: 2, col: 3 },
+  n: { row: 2, col: 3 },
+  otobûs: { row: 2, col: 4 },
+  o: { row: 2, col: 4 },
+  pirtûk: { row: 2, col: 5 },
+  p: { row: 2, col: 5 },
+  qelem: { row: 3, col: 0 },
+  q: { row: 3, col: 0 },
+  roj: { row: 3, col: 1 },
+  r: { row: 3, col: 1 },
+  stêrk: { row: 3, col: 2 },
+  s: { row: 3, col: 2 },
+  şev: { row: 3, col: 3 },
+  ş: { row: 3, col: 3 },
+  top: { row: 3, col: 4 },
+  t: { row: 3, col: 4 },
+  uf: { row: 3, col: 5 },
+  u: { row: 3, col: 5 },
+  ûd: { row: 4, col: 0 },
+  û: { row: 4, col: 0 },
+  valîz: { row: 4, col: 1 },
+  v: { row: 4, col: 1 },
+  wêne: { row: 4, col: 2 },
+  w: { row: 4, col: 2 },
+  xew: { row: 4, col: 3 },
+  x: { row: 4, col: 3 },
+  yoyo: { row: 4, col: 4 },
+  y: { row: 4, col: 4 },
+  zebeş: { row: 4, col: 5 },
+  z: { row: 4, col: 5 }
+};
+const ALFABE_WORD_IMAGE_MAP = {
+  agir: ALFABE_IMAGE_URLS.a,
+  a: ALFABE_IMAGE_URLS.a,
+  bilbil: ALFABE_IMAGE_URLS.b,
+  b: ALFABE_IMAGE_URLS.b,
+  cotkar: ALFABE_IMAGE_URLS.c,
+  c: ALFABE_IMAGE_URLS.c,
+  çay: ALFABE_IMAGE_URLS.ç,
+  ç: ALFABE_IMAGE_URLS.ç,
+  dar: ALFABE_IMAGE_URLS.d,
+  d: ALFABE_IMAGE_URLS.d,
+  ewr: ALFABE_IMAGE_URLS.e,
+  e: ALFABE_IMAGE_URLS.e,
+  êvar: ALFABE_IMAGE_URLS.ê,
+  ê: ALFABE_IMAGE_URLS.ê,
+  firok: ALFABE_IMAGE_URLS.f,
+  f: ALFABE_IMAGE_URLS.f,
+  gul: ALFABE_IMAGE_URLS.g,
+  g: ALFABE_IMAGE_URLS.g,
+  hêvî: ALFABE_IMAGE_URLS.h,
+  h: ALFABE_IMAGE_URLS.h,
+  îşev: ALFABE_IMAGE_URLS.î,
+  î: ALFABE_IMAGE_URLS.î,
+  jîr: ALFABE_IMAGE_URLS.j,
+  j: ALFABE_IMAGE_URLS.j,
+  karton: ALFABE_IMAGE_URLS.k,
+  k: ALFABE_IMAGE_URLS.k,
+  lîmon: ALFABE_IMAGE_URLS.l,
+  l: ALFABE_IMAGE_URLS.l,
+  masî: ALFABE_IMAGE_URLS.m,
+  m: ALFABE_IMAGE_URLS.m,
+  nan: ALFABE_IMAGE_URLS.n,
+  n: ALFABE_IMAGE_URLS.n,
+  otobûs: ALFABE_IMAGE_URLS.o,
+  o: ALFABE_IMAGE_URLS.o,
+  pirtûk: ALFABE_IMAGE_URLS.p,
+  p: ALFABE_IMAGE_URLS.p,
+  qelem: ALFABE_IMAGE_URLS.q,
+  q: ALFABE_IMAGE_URLS.q,
+  roj: ALFABE_IMAGE_URLS.r,
+  r: ALFABE_IMAGE_URLS.r,
+  stêrk: ALFABE_IMAGE_URLS.s,
+  s: ALFABE_IMAGE_URLS.s,
+  şev: ALFABE_IMAGE_URLS.ş,
+  ş: ALFABE_IMAGE_URLS.ş,
+  top: ALFABE_IMAGE_URLS.t,
+  t: ALFABE_IMAGE_URLS.t,
+  uf: ALFABE_IMAGE_URLS.u,
+  u: ALFABE_IMAGE_URLS.u,
+  ûd: ALFABE_IMAGE_URLS.û,
+  û: ALFABE_IMAGE_URLS.û,
+  valîz: ALFABE_IMAGE_URLS.v,
+  v: ALFABE_IMAGE_URLS.v,
+  wêne: ALFABE_IMAGE_URLS.w,
+  w: ALFABE_IMAGE_URLS.w,
+  xew: ALFABE_IMAGE_URLS.x,
+  x: ALFABE_IMAGE_URLS.x,
+  yoyo: ALFABE_IMAGE_URLS.y,
+  y: ALFABE_IMAGE_URLS.y,
+  zebeş: ALFABE_IMAGE_URLS.z,
+  z: ALFABE_IMAGE_URLS.z
 };
 const cropAlfabeCellFromSheet = async (cellMeta) => {
   if (!cellMeta || typeof document === 'undefined') return '';
-  const sheetImg = await loadAlfabeSheetImage();
-  if (!sheetImg) return '';
-  const w = sheetImg.naturalWidth;
-  const h = sheetImg.naturalHeight;
-  const gridLeft = w * 0.06;
-  const gridWidth = w * 0.88;
-  const gridTop = h * 0.178;
-  const gridHeight = h * 0.785;
-  const colSpan = gridWidth / 5;
-  const rowSpan = gridHeight / 7;
-  const sx = gridLeft + cellMeta.gridCol * colSpan + colSpan * 0.14;
-  const sy = gridTop + cellMeta.gridRow * rowSpan + rowSpan * 0.28;
-  const sw = colSpan * 0.72;
-  const sh = rowSpan * 0.44;
-  const canvas = document.createElement('canvas');
-  canvas.width = 240;
-  canvas.height = 180;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
-  ctx.fillStyle = '#cbe7b8';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(sheetImg, sx, sy, sw, sh, 12, 12, canvas.width - 24, canvas.height - 24);
-  return canvas.toDataURL('image/png');
-};
-const buildAlfabeExercises = () => {
-  const chunks = [];
-  for (let i = 0; i < ALFABE_ITEMS.length; i += 4) {
-    chunks.push(ALFABE_ITEMS.slice(i, i + 4));
+  const sheetUrl =
+    (typeof ALFABE_SHEET_IMAGE_URL !== 'undefined' && ALFABE_SHEET_IMAGE_URL) ||
+    ALFABE_IMAGE_URLS.a ||
+    '';
+  if (!sheetUrl) return '';
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = sheetUrl;
+    });
+    const cols = 6;
+    const rows = 5;
+    const cellW = img.naturalWidth / cols;
+    const cellH = img.naturalHeight / rows;
+    const sx = cellMeta.col * cellW + cellW * 0.06;
+    const sy = cellMeta.row * cellH + cellH * 0.24;
+    const sw = cellW * 0.88;
+    const sh = cellH * 0.56;
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, Math.round(sw));
+    canvas.height = Math.max(1, Math.round(sh));
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return '';
+    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL('image/png');
+  } catch {
+    return '';
   }
-  return chunks.map((group, idx) => ({
-    id: `alfabe-match-${idx + 1}`,
+};
+const BUILTIN_EXERCISES = [
+  {
+    id: 'alfabe-match-1',
     unit_title: 'ALFABE',
     exercise_type: 'match',
-    question_text: `Peyvên ALFABE bi wêneyên wan re bighîne hev (${group.map((g) => g.word).join(', ')})`,
-    options: group.map((g) => `${g.letter} — ${g.word}=${g.image || `img:${g.word}`}`),
-    match_pairs: group.map((g, pIdx) => ({
-      id: pIdx,
-      left: `${g.letter} — ${g.word}`,
-      right: g.word,
-      word: g.word,
-      letter: g.letter,
-      cellMeta: g,
-      image: g.image || ''
-    })),
-    correct_answer: String(group.length),
-    explanation: group.map((g) => `${g.letter} — ${g.word}`).join(' • '),
-    image_url: '',
-    audio_url: '',
-    sort_order: idx + 1
-  }));
-};
-const BUILTIN_ALFABE_EXERCISES = buildAlfabeExercises();
-const normalizeKurdish = (str = '') =>
-  str
-    .toLocaleLowerCase('tr')
-    .replace(/[êéèë]/g, 'e')
-    .replace(/[îíìïı]/g, 'i')
-    .replace(/[ûúùü]/g, 'u')
-    .replace(/[ş]/g, 's')
-    .replace(/[ç]/g, 'c')
-    .trim();
-const sanitizeSearch = (str = '') => str.replace(/[,()%*\\]/g, ' ').trim();
-const slugify = (str = '') =>
-  normalizeKurdish(str)
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '') || `beş-${Date.now()}`;
-const getYouTubeEmbedUrl = (url = '') => {
-  const match = url.match(
-    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/
-  );
-  return match ? `https://www.youtube.com/embed/${match[1]}` : '';
-};
-const getWordMeaningByLang = (item, lang = 'KU') => {
-  const i18n = item?.meanings_i18n || {};
-  if (i18n[lang]) return i18n[lang];
-  const legacyMap = {
-    TR: item?.meaning_tr,
-    EN: item?.meaning_en,
-    KU: item?.meaning_ku
-  };
-  if (legacyMap[lang]) return legacyMap[lang];
-  return (
-    i18n.KU ||
-    i18n.TR ||
-    i18n.EN ||
-    item?.meaning_ku ||
-    item?.meaning_tr ||
-    item?.meaning_en ||
-    ''
-  );
-};
-const getWordExampleByLang = (item, lang = 'KU') => {
-  const exI18n = item?.examples_i18n || {};
-  return exI18n[lang] || exI18n.KU || item?.example_sentence || '';
-};
-const BUILTIN_DICTIONARY = [
-  { id: 'bi-1', word: 'heval', part_of_speech: 'navdêr', meaning_tr: 'arkadaş, dost', meaning_en: 'friend', meaning_ku: 'Kesê ku mirov pê re dostanî dike.', example_sentence: 'Ew hevalê min ê herî baş e.', meanings_i18n: { KU: 'Kesê ku mirov pê re dostanî dike.', TR: 'arkadaş, dost', EN: 'friend' }, examples_i18n: { KU: 'Ew hevalê min ê herî baş e.' } },
-  { id: 'bi-2', word: 'bijîşk', part_of_speech: 'navdêr', meaning_tr: 'doktor, hekim', meaning_en: 'doctor', meaning_ku: 'Kesê ku nexweşan derman dike.', example_sentence: 'Bijîşk li nexweşxaneyê dixebite.', meanings_i18n: { KU: 'Kesê ku nexweşan derman dike.', TR: 'doktor, hekim', EN: 'doctor' }, examples_i18n: { KU: 'Bijîşk li nexweşxaneyê dixebite.' } },
-  { id: 'bi-3', word: 'silav', part_of_speech: 'navdêr', meaning_tr: 'selam, merhaba', meaning_en: 'hello, greeting', meaning_ku: 'Peyva pêşwazîkirinê.', example_sentence: 'Silav û rêz ji bo we hemûyan.', meanings_i18n: { KU: 'Peyva pêşwazîkirinê.', TR: 'selam, merhaba', EN: 'hello, greeting' }, examples_i18n: { KU: 'Silav û rêz ji bo we hemûyan.' } },
-  { id: 'bi-4', word: 'rojbaş', part_of_speech: 'baneşan', meaning_tr: 'günaydın, iyi günler', meaning_en: 'good morning, good day', meaning_ku: 'Silava sibeh û nîvro.', example_sentence: 'Rojbaş hevalno, hûn çawa ne?', meanings_i18n: { KU: 'Silava sibeh û nîvro.', TR: 'günaydın, iyi günler', EN: 'good morning, good day' }, examples_i18n: { KU: 'Rojbaş hevalno, hûn çawa ne?' } },
-  { id: 'bi-5', word: 'spas', part_of_speech: 'navdêr', meaning_tr: 'teşekkür', meaning_en: 'thank you, thanks', meaning_ku: 'Peyva rêzdarî û minetdariyê.', example_sentence: 'Gelek spas ji bo alîkariya te.', meanings_i18n: { KU: 'Peyva rêzdarî û minetdariyê.', TR: 'teşekkür', EN: 'thank you, thanks' }, examples_i18n: { KU: 'Gelek spas ji bo alîkariya te.' } },
-  { id: 'bi-6', word: 'av', part_of_speech: 'navdêr', meaning_tr: 'su', meaning_en: 'water', meaning_ku: 'Şileya bingehîn a jiyanê.', example_sentence: 'Av jiyan e.', meanings_i18n: { KU: 'Şileya bingehîn a jiyanê.', TR: 'su', EN: 'water' }, examples_i18n: { KU: 'Av jiyan e.' } },
-  { id: 'bi-7', word: 'nan', part_of_speech: 'navdêr', meaning_tr: 'ekmek', meaning_en: 'bread', meaning_ku: 'Xwarina bingehîn a ji ardê.', example_sentence: 'Nanê germ gelekî xweş e.', meanings_i18n: { KU: 'Xwarina bingehîn a ji ardê.', TR: 'ekmek', EN: 'bread' }, examples_i18n: { KU: 'Nanê germ gelekî xweş e.' } },
-  { id: 'bi-8', word: 'pirtûk', part_of_speech: 'navdêr', meaning_tr: 'kitap', meaning_en: 'book', meaning_ku: 'Berhema nivîskî ya xwendinê.', example_sentence: 'Ez her roj pirtûkekê dixwînim.', meanings_i18n: { KU: 'Berhema nivîskî ya xwendinê.', TR: 'kitap', EN: 'book' }, examples_i18n: { KU: 'Ez her roj pirtûkekê dixwînim.' } },
-  { id: 'bi-9', word: 'dibistan', part_of_speech: 'navdêr', meaning_tr: 'okul', meaning_en: 'school', meaning_ku: 'Saziya perwerdehiyê.', example_sentence: 'Zarok sibehê zû diçin dibistanê.', meanings_i18n: { KU: 'Saziya perwerdehiyê.', TR: 'okul', EN: 'school' }, examples_i18n: { KU: 'Zarok sibehê zû diçin dibistanê.' } },
-  { id: 'bi-10', word: 'mamoste', part_of_speech: 'navdêr', meaning_tr: 'öğretmen', meaning_en: 'teacher', meaning_ku: 'Kesê ku dersê dide xwendekaran.', example_sentence: 'Mamoste dersa Kurdî dide.', meanings_i18n: { KU: 'Kesê ku dersê dide xwendekaran.', TR: 'öğretmen', EN: 'teacher' }, examples_i18n: { KU: 'Mamoste dersa Kurdî dide.' } }
+    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (1/5)',
+    options: [
+      'A — Agir=agir',
+      'B — Bilbil=bilbil',
+      'C — Cotkar=cotkar',
+      'Ç — Çay=çay',
+      'D — Dar=dar',
+      'E — Ewr=ewr'
+    ],
+    correct_answer: '6',
+    explanation: 'A: Agir, B: Bilbil, C: Cotkar, Ç: Çay, D: Dar, E: Ewr',
+    sort_order: 1
+  },
+  {
+    id: 'alfabe-match-2',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
+    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (2/5)',
+    options: [
+      'Ê — Êvar=êvar',
+      'F — Firok=firok',
+      'G — Gul=gul',
+      'H — Hêvî=hêvî',
+      'Î — Îşev=îşev',
+      'J — Jîr=jîr'
+    ],
+    correct_answer: '6',
+    explanation: 'Ê: Êvar, F: Firok, G: Gul, H: Hêvî, Î: Îşev, J: Jîr',
+    sort_order: 2
+  },
+  {
+    id: 'alfabe-match-3',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
+    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (3/5)',
+    options: [
+      'K — Karton=karton',
+      'L — Lîmon=lîmon',
+      'M — Masî=masî',
+      'N — Nan=nan',
+      'O — Otobûs=otobûs',
+      'P — Pirtûk=pirtûk'
+    ],
+    correct_answer: '6',
+    explanation: 'K: Karton, L: Lîmon, M: Masî, N: Nan, O: Otobûs, P: Pirtûk',
+    sort_order: 3
+  },
+  {
+    id: 'alfabe-match-4',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
+    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (4/5)',
+    options: [
+      'Q — Qelem=qelem',
+      'R — Roj=roj',
+      'S — Stêrk=stêrk',
+      'Ş — Şev=şev',
+      'T — Top=top',
+      'U — Uf=uf'
+    ],
+    correct_answer: '6',
+    explanation: 'Q: Qelem, R: Roj, S: Stêrk, Ş: Şev, T: Top, U: Uf',
+    sort_order: 4
+  },
+  {
+    id: 'alfabe-match-5',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
+    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (5/5)',
+    options: [
+      'Û — Ûd=ûd',
+      'V — Valîz=valîz',
+      'W — Wêne=wêne',
+      'X — Xew=xew',
+      'Y — Yoyo=yoyo',
+      'Z — Zebeş=zebeş'
+    ],
+    correct_answer: '6',
+    explanation: 'Û: Ûd, V: Valîz, W: Wêne, X: Xew, Y: Yoyo, Z: Zebeş',
+    sort_order: 5
+  }
 ];
-const DEFAULT_UI = {
+const defaultCategories = [
+  { slug: 'zarok', name: 'Zarok' },
+  { slug: 'ders', name: 'Ders' },
+  { slug: 'pirtuk', name: 'Pirtûk' },
+  { slug: 'video', name: 'Vîdyo' },
+  { slug: 'ferheng', name: 'Ferheng' }
+];
+const defaultLevels = ['Destpêk (A1-A2)', 'Navîn (B1-B2)', 'Pêşketî (C1)'];
+const defaultGrades = [
+  'Pêşdibistan',
+  'Pola 1-4',
+  'Pola 5-8',
+  'Lîse / Zanîngeh',
+  'Hemû Ast'
+];
+const defaultMediaTypes = [
+  { id: 'video', label: 'Vîdyo', icon: Video },
+  { id: 'document', label: 'Belge / PDF', icon: FileText },
+  { id: 'audio', label: 'Deng', icon: Headphones },
+  { id: 'book', label: 'Pirtûk', icon: BookOpen }
+];
+const DEFAULT_UI_TEXTS = {
   brand_first: 'Kurdi',
   brand_second: 'Klass',
   nav_site: 'Malper',
   nav_learn: 'Hînbûn / Lîstik',
   nav_ferheng: 'Ferheng',
   nav_admin: 'Rêveber',
-  all_categories_label: 'HEMÛ BEŞ',
-  hero_badge: 'ÇAVKANIYÊN PERWERDEHIYÊ',
-  hero_title: 'Navenda Fêrbûn û Materyalên Kurdî',
-  hero_subtitle: 'Vîdyo, belge, lîstik û rêberên mamosteyan ji bo hemû astan.',
-  search_placeholder: 'Li ders, mijar an peyvekê bigere...',
-  tab_content: 'Naveroka Dersê',
-  tab_guide: 'Rêbera Mamosteyan',
-  btn_open_material: 'Materyalê Veke',
-  guide_heading: 'Plana Dersê û Rêberê Mamosteyan',
-  guide_download_btn: 'PDFya Rêberê Daxe',
-  guide_empty_text: 'Ji bo vê dersê hîn nivîsa rêberê nehatiye zêdekirin.',
-  meta_level_prefix: 'Ast:',
-  meta_grade_prefix: 'Pol:',
-  filter_title: 'Parzûn (Fîltre)',
-  filter_level_label: 'Ast (Seviye)',
+  hero_badge: 'PLATFORMA PERWERDEHIYA KURDÎ',
+  hero_title: 'Çavkanî, Ders û Materyalên Fêrbûna Kurdî',
+  hero_subtitle:
+    'Vîdyo, pirtûk, belge, deng û çalakiyên perwerdehiyê yên ji bo xwendekar û mamosteyan li yek cihî.',
+  search_placeholder: 'Li ders, pirtûk, vîdyo an mijarekê bigere...',
+  all_categories_label: 'Hemû Beş',
+  filter_title: 'Parzûn:',
+  filter_level_label: 'Ast',
   filter_level_all: 'Hemû Ast',
   filter_media_label: 'Cureyê Materyalê',
   filter_media_all: 'Hemû Cure',
   reset_filters_btn: 'Parzûnan Paqij Bike',
-  level_1: 'Destpêk',
-  level_2: 'Navîn',
-  level_3: 'Pêşketî',
-  grade_1: 'Pêşdibistan',
-  grade_2: 'Dibistana Seretayî',
-  grade_3: 'Dibistana Navîn',
-  grade_4: 'Lîse / Mezinan',
-  media_video: 'Vîdyo',
-  media_document: 'Belge / PDF',
-  media_audio: 'Deng / Podcast',
-  media_interactive: 'Lîstik / Çalakî',
-  list_all_title: 'Hemû Ders û Materyal',
-  list_count_suffix: 'materyal hatin dîtin',
+  list_all_title: 'Hemû Materyal',
+  list_count_suffix: 'materyal',
   loading_text: 'Materyal tên barkirin...',
-  empty_title: 'Hîn materyal nehatiye dîtin',
-  empty_subtitle: 'Tu dikarî ji Panela Rêveber materyalên nû li vê beşê zêde bikî.',
-  empty_button: 'Materyal Zêde Bike',
-  card_guide_badge: 'RÊBER',
-  footer_text: 'Platforma Perwerdehiya Vekirî ya Kurdî • KurdiKlass',
-  ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-  ferheng_search_btn: 'Bigere',
-  ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
-  learn_title: 'Rêwîtiya Fêrbûna Kurmancî',
-  learn_subtitle: 'Beşa lîstikan amade ye. Tu dikarî lîstikên nû zêde bikî.',
-  learn_xp_label: 'Pûan',
-  learn_empty_units: 'Hîn lîstik nehatine zêdekirin.',
+  empty_title: 'Hîn materyal nehatine zêdekirin',
+  empty_subtitle: 'Ji beşa Rêveber (Admin) dikarî ders, PDF, vîdyo û pirtûkan bar bikî.',
+  empty_button: 'Here Beşa Rêveber',
+  card_guide_badge: 'RÊBERA MAMOSTEYAN',
+  meta_level_prefix: 'Ast:',
+  meta_grade_prefix: 'Pol:',
+  tab_content: 'Naveroka Dersê',
+  tab_guide: 'Rêbera Mamosteyan',
+  guide_heading: 'Not û Rêbera Mamosteyan',
+  guide_empty_text: 'Ji bo vê dersê hîn noteke nivîskî nehatiye nivîsandin.',
+  guide_download_btn: 'Rêbera Mamosteyan (PDF) Daxe',
+  btn_open_material: 'Materyalê Veke',
+  learn_title: 'Hînbûn û Lîstika Kurdî',
+  learn_subtitle: 'Qonaxekê hilbijêre, bersivên rast bide û xalên XP bi dest bixe!',
+  learn_xp_label: 'XP',
   learn_stage_prefix: 'Qonax',
-  learn_question_count_suffix: 'lîstik',
-  learn_win_title: 'Pîroz be! Te ev qonax bi serkeftî qedand!',
-  learn_lose_title: 'Dilên te qediyan! Careke din biceribîne.',
+  learn_question_count_suffix: 'pirs',
+  learn_empty_units: 'Hîn lîstik nehatine zêdekirin. Ji panela Rêveber (Admin) dikarî lîstikên nû lê zêde bikî.',
+  learn_win_title: 'Pîroz be! Te ev qonax qedand!',
+  learn_lose_title: 'Dilên te qediyan — ji nû ve biceribîne!',
   learn_replay_btn: 'Dîsa Bilîze',
   learn_back_units_btn: 'Vegere Qonaxan',
-  learn_type_choice: 'Vebijêrka Rast',
-  learn_type_sentence: 'Hevokê Saz Bike',
-  learn_type_match: 'Peyvan Bighîne Hev',
-  learn_type_fill: 'Valahiyê Tije Bike',
-  learn_type_image: 'Wêneyê Bibîne, Peyvê Hilbijêre',
-  learn_sentence_placeholder: 'Li peyvên jêrîn bitikîne da ku hevokê rêz bikî...',
-  learn_correct_msg: 'Gelek baş e! Bersiva te rast e.',
+  learn_type_choice: 'Hilbijartina Rast',
+  learn_type_sentence: 'Avakirina Hevokê',
+  learn_type_match: 'Hevberkirin',
+  learn_type_fill: 'Dagirtina Valahiyê',
+  learn_type_image: 'Wêne û Peyv',
+  learn_sentence_placeholder: 'Li jêr li peyvan bitikîne da ku hevokê ava bikî...',
+  learn_correct_msg: 'Pir baş e! Bersiva te rast e.',
   learn_wrong_prefix: 'Bersiva rast:',
   learn_check_btn: 'Kontrol Bike',
-  learn_next_btn: 'Berdewam Bike'
+  learn_next_btn: 'Pirsê Din',
+  ferheng_search_placeholder: 'Peyvekê binivîse (Kurmancî, Tirkî, îngilîzî...)',
+  ferheng_search_btn: 'Lê bigere',
+  ferheng_empty_text: 'Peyvek nehat dîtin. Bi tîp an peyveke din biceribîne.',
+  footer_text: 'KurdiKlass — Platforma Perwerdehî û Çavkaniyên Kurdî'
 };
-const UI_TRANSLATIONS = {
-  KU: {},
-  ZZA: {
-    nav_site: 'Keyepel',
-    nav_learn: 'Muşayîş / Kayî',
-    nav_ferheng: 'Ferheng',
-    nav_admin: 'Îdarekar',
-    all_categories_label: 'PÊRO BEŞÎ',
-    hero_badge: 'ÇAVKANÎYÊ PERWERDEYÎ',
-    hero_title: 'Merkezê Musayîş û Materyalanê Kirmanckî',
-    hero_subtitle: 'Vîdyoyî, belgeyî, kayî û rêberê mamostayan seba pêro sewîyan.',
-    search_placeholder: 'Ders, mijar ya zi çekuyêk bigêre...',
-    tab_content: 'Tedeokê Dersî',
-    tab_guide: 'Rêberê Mamostayan',
-    btn_open_material: 'Materyalî Rake',
-    guide_heading: 'Planê Dersî û Rêberê Mamostayan',
-    guide_download_btn: 'PDFyê Rêberî Daxî',
-    guide_empty_text: 'Seba na derse hewna nuşteyê rêberî çin o.',
-    meta_level_prefix: 'Sewîye:',
-    meta_grade_prefix: 'Sinif:',
-    filter_title: 'Fîltre',
-    filter_level_label: 'Sewîye',
-    filter_level_all: 'Pêro Sewîyeyî',
-    filter_media_label: 'Tevrê Materyalî',
-    filter_media_all: 'Pêro Tevrî',
-    reset_filters_btn: 'Fîltran Pak Bike',
-    level_1: 'Destpêk',
-    level_2: 'Miyanên',
-    level_3: 'Averşîyayîş',
-    grade_1: 'Ver-Mekteb',
-    grade_2: 'Mektebo Verên',
-    grade_3: 'Mektebo Miyanên',
-    grade_4: 'Lîse / Pîlî',
-    media_video: 'Vîdyo',
-    media_document: 'Belge / PDF',
-    media_audio: 'Veng / Podcast',
-    media_interactive: 'Kayî / Çalakî',
-    list_all_title: 'Pêro Ders û Materyalî',
-    list_count_suffix: 'materyalî vînîyayî',
-    loading_text: 'Materyalî bar benê...',
-    empty_title: 'Hewna materyal nêvînîya',
-    empty_subtitle: 'Ti şênayî Panelê Îdarekarî ra materyalê neweyî îlawe bikê.',
-    empty_button: 'Materyal Îlawe Bike',
-    card_guide_badge: 'RÊBER',
-    footer_text: 'Platformê Perwerdeyê Akerdeyî yê Kurdî • KurdiKlass',
-    ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-    ferheng_search_btn: 'Bigêre',
-    ferheng_empty_text: 'Çekuya ke ti gêrenê nêvînîya.',
-    learn_title: 'Raywanîya Musayîşê Kurmancî',
-    learn_subtitle: 'Beşê kayan amade yo; ti şênayî kayê neweyî îlawe bikê.',
-    learn_xp_label: 'Pûan',
-    learn_empty_units: 'Hewna kayî çin ê.',
-    learn_stage_prefix: 'Merhele',
-    learn_question_count_suffix: 'kayî',
-    learn_win_title: 'Bimbarek bo! To na merhele bi serkewtiş qedênaye!',
-    learn_lose_title: 'Zerreyê to qedîyayî! Reyna biceribne.',
-    learn_replay_btn: 'Reyna Kay Bike',
-    learn_back_units_btn: 'Ageyre Merheleyan',
-    learn_type_choice: 'Weçînayîşo Rast',
-    learn_type_sentence: 'Cumle Vıraze',
-    learn_type_match: 'Çekuyan Pê Girede',
-    learn_type_fill: 'Vengî Pirr Bike',
-    learn_type_image: 'Resimî Vîne, Çekuye Weçîne',
-    learn_sentence_placeholder: 'Çekuyanê cêrênan ser o bitikne ke cumle rêz bikê...',
-    learn_correct_msg: 'Zaf weş o! Cewabê to rast o.',
-    learn_wrong_prefix: 'Cewabo rast:',
-    learn_check_btn: 'Kontrol Bike',
-    learn_next_btn: 'Dewam Bike'
-  },
-  CKB: {
-    nav_site: 'ماڵپەڕ',
-    nav_learn: 'فێربوون / یاری',
-    nav_ferheng: 'فەرهەنگ',
-    nav_admin: 'بەڕێوەبەر',
-    all_categories_label: 'هەموو بەشەکان',
-    hero_badge: 'سەرچاوەکانی پەروەردە',
-    hero_title: 'ناوەندی فێربوون و ماددەکانی کوردی',
-    hero_subtitle: 'ڤیدیۆ، بەڵگەنامە، یاری و ڕێبەری مامۆستایان بۆ هەموو ئاستەکان.',
-    search_placeholder: 'بەدوای وانە، بابەت یان وشەیەکدا بگەڕێ...',
-    tab_content: 'ناوەڕۆکی وانە',
-    tab_guide: 'ڕێبەری مامۆستایان',
-    btn_open_material: 'کردنەوەی ماددە',
-    guide_heading: 'پلانی وانە و ڕێبەری مامۆستایان',
-    guide_download_btn: 'داگرتنی PDF ڕێبەر',
-    guide_empty_text: 'بۆ ئەم وانەیە هێشتا دەقی ڕێبەر زیاد نەکراوە.',
-    meta_level_prefix: 'ئاست:',
-    meta_grade_prefix: 'پۆل:',
-    filter_title: 'پاڵاوتن',
-    filter_level_label: 'ئاست',
-    filter_level_all: 'هەموو ئاستەکان',
-    filter_media_label: 'جۆری ماددە',
-    filter_media_all: 'هەموو جۆرەکان',
-    reset_filters_btn: 'پاککردنەوەی پاڵاوتن',
-    level_1: 'سەرەتایی',
-    level_2: 'ناوەند',
-    level_3: 'پێشکەوتوو',
-    grade_1: 'باخچەی ساوایان',
-    grade_2: 'قوتابخانەی سەرەتایی',
-    grade_3: 'ناوەندی',
-    grade_4: 'ئامادەیی / گەورەساڵان',
-    media_video: 'ڤیدیۆ',
-    media_document: 'بەڵگە / PDF',
-    media_audio: 'دەنگ / پۆدکاست',
-    media_interactive: 'یاری / چالاکی',
-    list_all_title: 'هەموو وانە و ماددەکان',
-    list_count_suffix: 'ماددە دۆزرانەوە',
-    loading_text: 'ماددەکان بار دەکرێن...',
-    empty_title: 'هێشتا هیچ ماددەیەک نەدۆزراوەتەوە',
-    empty_subtitle: 'دەتوانیت لە پانێڵی بەڕێوەبەر ماددەی نوێ زیاد بکەیت.',
-    empty_button: 'زیادکردنی ماددە',
-    card_guide_badge: 'ڕێبەر',
-    footer_text: 'پلاتفۆرمی پەروەردەی کراوەی کوردی • KurdiKlass',
-    ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-    ferheng_search_btn: 'گەڕان',
-    ferheng_empty_text: 'ئەو وشەیەی بەدوایدا دەگەڕێیت نەدۆزرایەوە.',
-    learn_title: 'گەشتی فێربوونی کورمانجی',
-    learn_subtitle: 'بەشی یارییەکان ئامادەیە؛ دەتوانیت یاری نوێ زیاد بکەیت.',
-    learn_xp_label: 'خاڵ',
-    learn_empty_units: 'هێشتا هیچ یارییەک زیاد نەکراوە.',
-    learn_stage_prefix: 'قۆناغ',
-    learn_question_count_suffix: 'یاری',
-    learn_win_title: 'پیرۆزە! ئەم قۆناغەت بە سەرکەوتوویی تەواو کرد!',
-    learn_lose_title: 'دڵەکانت تەواو بوون! دووبارە هەوڵ بدەرەوە.',
-    learn_replay_btn: 'دووبارە یاری بکە',
-    learn_back_units_btn: 'گەڕانەوە بۆ قۆناغەکان',
-    learn_type_choice: 'هەڵبژاردنی دروست',
-    learn_type_sentence: 'ڕستە دروست بکە',
-    learn_type_match: 'وشەکان بەیەکەوە ببەستەرەوە',
-    learn_type_fill: 'بۆشایی پڕ بکەرەوە',
-    learn_type_image: 'وێنەکە بدۆزەرەوە، وشەکە هەڵبژێرە',
-    learn_sentence_placeholder: 'لەسەر وشەکانی خوارەوە کلیک بکە بۆ ڕێکخستنی ڕستە...',
-    learn_correct_msg: 'زۆر باشە! وەڵامەکەت دروستە.',
-    learn_wrong_prefix: 'وەڵامی دروست:',
-    learn_check_btn: 'پشکنین',
-    learn_next_btn: 'بەردەوام بە'
-  },
-  TR: {
-    nav_site: 'Site',
-    nav_learn: 'Öğren / Oyun',
-    nav_ferheng: 'Sözlük',
-    nav_admin: 'Yönetici',
-    all_categories_label: 'TÜM BÖLÜMLER',
-    hero_badge: 'EĞİTİM KAYNAKLARI',
-    hero_title: 'Kürtçe Öğrenme ve Materyal Merkezi',
-    hero_subtitle: 'Tüm seviyeler için videolar, belgeler, oyunlar ve öğretmen rehberleri.',
-    search_placeholder: 'Ders, konu veya kelime ara...',
-    tab_content: 'Ders İçeriği',
-    tab_guide: 'Öğretmen Rehberi',
-    btn_open_material: 'Materyali Aç',
-    guide_heading: 'Ders Planı ve Öğretmen Rehberi',
-    guide_download_btn: 'Rehber PDF İndir',
-    guide_empty_text: 'Bu ders için henüz rehber metni eklenmemiş.',
-    meta_level_prefix: 'Seviye:',
-    meta_grade_prefix: 'Sınıf:',
-    filter_title: 'Filtre',
-    filter_level_label: 'Seviye',
-    filter_level_all: 'Tüm Seviyeler',
-    filter_media_label: 'Materyal Türü',
-    filter_media_all: 'Tüm Türler',
-    reset_filters_btn: 'Filtreleri Temizle',
-    level_1: 'Başlangıç',
-    level_2: 'Orta',
-    level_3: 'İleri',
-    grade_1: 'Okul Öncesi',
-    grade_2: 'İlkokul',
-    grade_3: 'Ortaokul',
-    grade_4: 'Lise / Yetişkin',
-    media_video: 'Video',
-    media_document: 'Belge / PDF',
-    media_audio: 'Ses / Podcast',
-    media_interactive: 'Oyun / Etkinlik',
-    list_all_title: 'Tüm Ders ve Materyaller',
-    list_count_suffix: 'materyal bulundu',
-    loading_text: 'Materyaller yükleniyor...',
-    empty_title: 'Henüz materyal bulunamadı',
-    empty_subtitle: 'Yönetici Panelinden bu bölüme yeni materyaller ekleyebilirsiniz.',
-    empty_button: 'Materyal Ekle',
-    card_guide_badge: 'REHBER',
-    footer_text: 'Açık Kürtçe Eğitim Platformu • KurdiKlass',
-    ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-    ferheng_search_btn: 'Ara',
-    ferheng_empty_text: 'Aradığınız kelime bulunamadı.',
-    learn_title: 'Kurmancî Öğrenme Yolculuğu',
-    learn_subtitle: 'Oyun bölümü hazır; yeni oyunlar ekleyebilirsiniz.',
-    learn_xp_label: 'Puan',
-    learn_empty_units: 'Henüz oyun eklenmemiş.',
-    learn_stage_prefix: 'Aşama',
-    learn_question_count_suffix: 'oyun',
-    learn_win_title: 'Tebrikler! Bu aşamayı başarıyla tamamladın!',
-    learn_lose_title: 'Canların bitti! Tekrar dene.',
-    learn_replay_btn: 'Tekrar Oyna',
-    learn_back_units_btn: 'Aşamalara Dön',
-    learn_type_choice: 'Doğru Seçenek',
-    learn_type_sentence: 'Cümle Kur',
-    learn_type_match: 'Kelimeleri Eşleştir',
-    learn_type_fill: 'Boşluğu Doldur',
-    learn_type_image: 'Görseli Bul, Kelimeyi Seç',
-    learn_sentence_placeholder: 'Cümleyi sıralamak için aşağıdaki kelimelere tıkla...',
-    learn_correct_msg: 'Harika! Cevabın doğru.',
-    learn_wrong_prefix: 'Doğru cevap:',
-    learn_check_btn: 'Kontrol Et',
-    learn_next_btn: 'Devam Et'
-  },
-  EN: {
-    nav_site: 'Site',
-    nav_learn: 'Learn / Game',
-    nav_ferheng: 'Dictionary',
-    nav_admin: 'Admin',
-    all_categories_label: 'ALL SECTIONS',
-    hero_badge: 'EDUCATIONAL RESOURCES',
-    hero_title: 'Kurdish Learning & Material Hub',
-    hero_subtitle: 'Videos, documents, games, and teacher guides for all levels.',
-    search_placeholder: 'Search lessons, topics, or words...',
-    tab_content: 'Lesson Content',
-    tab_guide: 'Teacher Guide',
-    btn_open_material: 'Open Material',
-    guide_heading: 'Lesson Plan & Teacher Guide',
-    guide_download_btn: 'Download Guide PDF',
-    guide_empty_text: 'No guide text has been added for this lesson yet.',
-    meta_level_prefix: 'Level:',
-    meta_grade_prefix: 'Grade:',
-    filter_title: 'Filter',
-    filter_level_label: 'Level',
-    filter_level_all: 'All Levels',
-    filter_media_label: 'Material Type',
-    filter_media_all: 'All Types',
-    reset_filters_btn: 'Clear Filters',
-    level_1: 'Beginner',
-    level_2: 'Intermediate',
-    level_3: 'Advanced',
-    grade_1: 'Preschool',
-    grade_2: 'Elementary',
-    grade_3: 'Middle School',
-    grade_4: 'High School / Adult',
-    media_video: 'Video',
-    media_document: 'Document / PDF',
-    media_audio: 'Audio / Podcast',
-    media_interactive: 'Game / Activity',
-    list_all_title: 'All Lessons & Materials',
-    list_count_suffix: 'materials found',
-    loading_text: 'Loading materials...',
-    empty_title: 'No materials found yet',
-    empty_subtitle: 'You can add new materials to this section from the Admin Panel.',
-    empty_button: 'Add Material',
-    card_guide_badge: 'GUIDE',
-    footer_text: 'Open Kurdish Education Platform • KurdiKlass',
-    ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-    ferheng_search_btn: 'Search',
-    ferheng_empty_text: 'The word you are looking for was not found.',
-    learn_title: 'Kurmanji Learning Journey',
-    learn_subtitle: 'The game section is ready; you can add new games.',
-    learn_xp_label: 'Points',
-    learn_empty_units: 'No games added yet.',
-    learn_stage_prefix: 'Stage',
-    learn_question_count_suffix: 'games',
-    learn_win_title: 'Congratulations! You completed this stage!',
-    learn_lose_title: 'Out of hearts! Try again.',
-    learn_replay_btn: 'Play Again',
-    learn_back_units_btn: 'Back to Stages',
-    learn_type_choice: 'Correct Choice',
-    learn_type_sentence: 'Build the Sentence',
-    learn_type_match: 'Match the Words',
-    learn_type_fill: 'Fill in the Blank',
-    learn_type_image: 'Find the Image, Pick the Word',
-    learn_sentence_placeholder: 'Click the words below to order the sentence...',
-    learn_correct_msg: 'Great job! Your answer is correct.',
-    learn_wrong_prefix: 'Correct answer:',
-    learn_check_btn: 'Check',
-    learn_next_btn: 'Continue'
-  },
-  DE: {
-    nav_site: 'Startseite',
-    nav_learn: 'Lernen / Spiel',
-    nav_ferheng: 'Wörterbuch',
-    nav_admin: 'Admin',
-    all_categories_label: 'ALLE BEREICHE',
-    hero_badge: 'BILDUNGSRESSOURCEN',
-    hero_title: 'Kurdisches Lern- & Materialzentrum',
-    hero_subtitle: 'Videos, Dokumente, Spiele und Lehrerhandbücher für alle Niveaus.',
-    search_placeholder: 'Nach Lektionen, Themen oder Wörtern suchen...',
-    tab_content: 'Lektionsinhalt',
-    tab_guide: 'Lehrerhandbuch',
-    btn_open_material: 'Material öffnen',
-    guide_heading: 'Unterrichtsplan & Lehrerhandbuch',
-    guide_download_btn: 'Handbuch-PDF laden',
-    guide_empty_text: 'Für diese Lektion wurde noch kein Handbuchtext hinzugefügt.',
-    meta_level_prefix: 'Niveau:',
-    meta_grade_prefix: 'Stufe:',
-    filter_title: 'Filter',
-    filter_level_label: 'Niveau',
-    filter_level_all: 'Alle Niveaus',
-    filter_media_label: 'Materialart',
-    filter_media_all: 'Alle Arten',
-    reset_filters_btn: 'Filter zurücksetzen',
-    level_1: 'Anfänger',
-    level_2: 'Mittelstufe',
-    level_3: 'Fortgeschritten',
-    grade_1: 'Vorschule',
-    grade_2: 'Grundschule',
-    grade_3: 'Sekundarstufe I',
-    grade_4: 'Gymnasium / Erwachsene',
-    media_video: 'Video',
-    media_document: 'Dokument / PDF',
-    media_audio: 'Audio / Podcast',
-    media_interactive: 'Spiel / Aktivität',
-    list_all_title: 'Alle Lektionen & Materialien',
-    list_count_suffix: 'Materialien gefunden',
-    loading_text: 'Materialien werden geladen...',
-    empty_title: 'Noch keine Materialien gefunden',
-    empty_subtitle: 'Über das Admin-Panel können neue Materialien hinzugefügt werden.',
-    empty_button: 'Material hinzufügen',
-    card_guide_badge: 'HANDBUCH',
-    footer_text: 'Offene Kurdische Bildungsplattform • KurdiKlass',
-    ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-    ferheng_search_btn: 'Suchen',
-    ferheng_empty_text: 'Das gesuchte Wort wurde nicht gefunden.',
-    learn_title: 'Kurmancî-Lernreise',
-    learn_subtitle: 'Der Spielbereich ist bereit; neue Spiele können hinzugefügt werden.',
-    learn_xp_label: 'Punkte',
-    learn_empty_units: 'Noch keine Spiele hinzugefügt.',
-    learn_stage_prefix: 'Stufe',
-    learn_question_count_suffix: 'Spiele',
-    learn_win_title: 'Glückwunsch! Du hast diese Stufe abgeschlossen!',
-    learn_lose_title: 'Keine Herzen mehr! Versuch es noch einmal.',
-    learn_replay_btn: 'Nochmal spielen',
-    learn_back_units_btn: 'Zurück zu den Stufen',
-    learn_type_choice: 'Richtige Wahl',
-    learn_type_sentence: 'Satz bilden',
-    learn_type_match: 'Wörter zuordnen',
-    learn_type_fill: 'Lücke füllen',
-    learn_type_image: 'Bild finden, Wort wählen',
-    learn_sentence_placeholder: 'Klicke unten auf die Wörter, um den Satz zu ordnen...',
-    learn_correct_msg: 'Sehr gut! Deine Antwort ist richtig.',
-    learn_wrong_prefix: 'Richtige Antwort:',
-    learn_check_btn: 'Prüfen',
-    learn_next_btn: 'Weiter'
-  },
-  FR: {
-    nav_site: 'Site',
-    nav_learn: 'Apprendre / Jeu',
-    nav_ferheng: 'Dictionnaire',
-    nav_admin: 'Admin',
-    all_categories_label: 'TOUTES SECTIONS',
-    hero_badge: 'RESSOURCES ÉDUCATIVES',
-    hero_title: 'Centre d’Apprentissage et de Ressources Kurdes',
-    hero_subtitle: 'Vidéos, documents, jeux et guides pédagogiques pour tous niveaux.',
-    search_placeholder: 'Rechercher des cours, sujets ou mots...',
-    tab_content: 'Contenu du cours',
-    tab_guide: 'Guide enseignant',
-    btn_open_material: 'Ouvrir le matériel',
-    guide_heading: 'Plan de cours et guide enseignant',
-    guide_download_btn: 'Télécharger le PDF',
-    guide_empty_text: 'Aucun texte de guide n’a encore été ajouté pour ce cours.',
-    meta_level_prefix: 'Niveau :',
-    meta_grade_prefix: 'Classe :',
-    filter_title: 'Filtre',
-    filter_level_label: 'Niveau',
-    filter_level_all: 'Tous les niveaux',
-    filter_media_label: 'Type de support',
-    filter_media_all: 'Tous les types',
-    reset_filters_btn: 'Réinitialiser les filtres',
-    level_1: 'Débutant',
-    level_2: 'Intermédiaire',
-    level_3: 'Avancé',
-    grade_1: 'Maternelle',
-    grade_2: 'École primaire',
-    grade_3: 'Collège',
-    grade_4: 'Lycée / Adultes',
-    media_video: 'Vidéo',
-    media_document: 'Document / PDF',
-    media_audio: 'Audio / Podcast',
-    media_interactive: 'Jeu / Activité',
-    list_all_title: 'Tous les cours et ressources',
-    list_count_suffix: 'ressources trouvées',
-    loading_text: 'Chargement des ressources...',
-    empty_title: 'Aucune ressource trouvée pour le moment',
-    empty_subtitle: 'Vous pouvez ajouter de nouvelles ressources depuis le panneau admin.',
-    empty_button: 'Ajouter une ressource',
-    card_guide_badge: 'GUIDE',
-    footer_text: 'Plateforme Éducative Kurde Ouverte • KurdiKlass',
-    ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-    ferheng_search_btn: 'Rechercher',
-    ferheng_empty_text: 'Le mot recherché est introuvable.',
-    learn_title: 'Parcours d’Apprentissage du Kurmanji',
-    learn_subtitle: 'La section jeux est prête ; vous pouvez ajouter de nouveaux jeux.',
-    learn_xp_label: 'Points',
-    learn_empty_units: 'Aucun jeu ajouté pour le moment.',
-    learn_stage_prefix: 'Étape',
-    learn_question_count_suffix: 'jeux',
-    learn_win_title: 'Bravo ! Tu as terminé cette étape !',
-    learn_lose_title: 'Plus de vies ! Réessaie.',
-    learn_replay_btn: 'Rejouer',
-    learn_back_units_btn: 'Retour aux étapes',
-    learn_type_choice: 'Bon choix',
-    learn_type_sentence: 'Construire la phrase',
-    learn_type_match: 'Associer les mots',
-    learn_type_fill: 'Compléter le blanc',
-    learn_type_image: 'Trouver l’image, choisir le mot',
-    learn_sentence_placeholder: 'Clique sur les mots ci-dessous pour ordonner la phrase...',
-    learn_correct_msg: 'Très bien ! Ta réponse est juste.',
-    learn_wrong_prefix: 'Bonne réponse :',
-    learn_check_btn: 'Vérifier',
-    learn_next_btn: 'Continuer'
-  },
-  IT: {
-    nav_site: 'Sito',
-    nav_learn: 'Impara / Gioco',
-    nav_ferheng: 'Dizionario',
-    nav_admin: 'Admin',
-    all_categories_label: 'TUTTE LE SEZIONI',
-    hero_badge: 'RISORSE EDUCATIVE',
-    hero_title: 'Centro di Apprendimento e Materiali Curdi',
-    hero_subtitle: 'Video, documenti, giochi e guide per insegnanti per tutti i livelli.',
-    search_placeholder: 'Cerca lezioni, argomenti o parole...',
-    tab_content: 'Contenuto lezione',
-    tab_guide: 'Guida insegnante',
-    btn_open_material: 'Apri materiale',
-    guide_heading: 'Piano di lezione e guida insegnante',
-    guide_download_btn: 'Scarica PDF guida',
-    guide_empty_text: 'Nessun testo di guida aggiunto ancora per questa lezione.',
-    meta_level_prefix: 'Livello:',
-    meta_grade_prefix: 'Classe:',
-    filter_title: 'Filtro',
-    filter_level_label: 'Livello',
-    filter_level_all: 'Tutti i livelli',
-    filter_media_label: 'Tipo materiale',
-    filter_media_all: 'Tutti i tipi',
-    reset_filters_btn: 'Azzera filtri',
-    level_1: 'Principiante',
-    level_2: 'Intermedio',
-    level_3: 'Avanzato',
-    grade_1: 'Scuola dell’infanzia',
-    grade_2: 'Scuola primaria',
-    grade_3: 'Scuola secondaria I grado',
-    grade_4: 'Scuola superiore / Adulti',
-    media_video: 'Video',
-    media_document: 'Documento / PDF',
-    media_audio: 'Audio / Podcast',
-    media_interactive: 'Gioco / Attività',
-    list_all_title: 'Tutte le lezioni e i materiali',
-    list_count_suffix: 'materiali trovati',
-    loading_text: 'Caricamento materiali...',
-    empty_title: 'Nessun materiale trovato finora',
-    empty_subtitle: 'Puoi aggiungere nuovi materiali dal pannello amministratore.',
-    empty_button: 'Aggiungi materiale',
-    card_guide_badge: 'GUIDA',
-    footer_text: 'Piattaforma Educativa Curda Aperta • KurdiKlass',
-    ferheng_search_placeholder: 'heval, bijîşk, doctor, arkadaş...',
-    ferheng_search_btn: 'Cerca',
-    ferheng_empty_text: 'La parola cercata non è stata trovata.',
-    learn_title: 'Percorso di Apprendimento del Kurmanji',
-    learn_subtitle: 'La sezione giochi è pronta; puoi aggiungere nuovi giochi.',
-    learn_xp_label: 'Punti',
-    learn_empty_units: 'Nessun gioco aggiunto finora.',
-    learn_stage_prefix: 'Tappa',
-    learn_question_count_suffix: 'giochi',
-    learn_win_title: 'Complimenti! Hai completato questa tappa!',
-    learn_lose_title: 'Cuori esauriti! Riprova.',
-    learn_replay_btn: 'Gioca ancora',
-    learn_back_units_btn: 'Torna alle tappe',
-    learn_type_choice: 'Scelta corretta',
-    learn_type_sentence: 'Componi la frase',
-    learn_type_match: 'Abbina le parole',
-    learn_type_fill: 'Riempi lo spazio',
-    learn_type_image: 'Trova l’immagine, scegli la parola',
-    learn_sentence_placeholder: 'Tocca le parole qui sotto per ordinare la frase...',
-    learn_correct_msg: 'Ottimo! La tua risposta è corretta.',
-    learn_wrong_prefix: 'Risposta corretta:',
-    learn_check_btn: 'Controlla',
-    learn_next_btn: 'Continua'
+const UI_FIELD_LABELS = [
+  { key: 'brand_first', label: 'Navê Malperê (Beşa Yekem)' },
+  { key: 'brand_second', label: 'Navê Malperê (Beşa Duyem)' },
+  { key: 'nav_site', label: 'Menû: Malper' },
+  { key: 'nav_learn', label: 'Menû: Hînbûn / Lîstik' },
+  { key: 'nav_ferheng', label: 'Menû: Ferheng' },
+  { key: 'nav_admin', label: 'Menû: Rêveber' },
+  { key: 'hero_badge', label: 'Etîketa Jorîn (Badge)' },
+  { key: 'hero_title', label: 'Sernavê Sereke (Hero)' },
+  { key: 'hero_subtitle', label: 'Binnivîsa Sereke' },
+  { key: 'search_placeholder', label: 'Qutiya Lêgerînê (Placeholder)' },
+  { key: 'all_categories_label', label: 'Bişkojka Hemû Beşan' },
+  { key: 'list_all_title', label: 'Sernavê Lîsteya Materyalan' },
+  { key: 'footer_text', label: 'Nivîsa Binê Malperê (Footer)' }
+];
+const getYouTubeEmbedUrl = (url = '') => {
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/
+  );
+  return match ? `https://www.youtube.com/embed/${match[1]}` : null;
+};
+const normalizeKurdish = (text = '') =>
+  text
+    .toLowerCase()
+    .replace(/[îìí]/g, 'i')
+    .replace(/[êëèé]/g, 'e')
+    .replace(/[ûùú]/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ç/g, 'c')
+    .replace(/ğ/g, 'g')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ü/g, 'u')
+    .replace(/['’ʼ`-]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+const sanitizeWiktionaryText = (raw = '') =>
+  String(raw || '')
+    .replace(/\{\{[^{}]*\}\}/g, ' ')
+    .replace(/\[\[(?:[^|\]]*\|)?([^\]]+)\]\]/g, '$1')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/'{2,}/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+const isLikelyInflectedForm = (gloss = '') => {
+  const g = gloss.toLowerCase();
+  return (
+    g.includes('inflection of ') ||
+    g.includes('plural of ') ||
+    g.includes('participle of ') ||
+    g.includes('imperative of ') ||
+    g.includes('subjunctive of ') ||
+    g.includes('past participle of ') ||
+    g.includes('form of ')
+  );
+};
+const extractPosFromWiktionarySection = (sectionText = '') => {
+  const posMatch = sectionText.match(
+    /^===\s*(Noun|Verb|Adjective|Adverb|Pronoun|Numeral|Conjunction|Preposition|Postposition|Interjection|Particle|Proper noun|Phrase|Idiom|Letter)\s*===/im
+  );
+  if (!posMatch) return 'navdêr';
+  const map = {
+    noun: 'navdêr',
+    'proper noun': 'navdêr',
+    verb: 'lêker',
+    adjective: 'rengdêr',
+    adverb: 'hoker',
+    pronoun: 'cînavk',
+    numeral: 'hejmar',
+    interjection: 'baneşan'
+  };
+  return map[posMatch[1].toLowerCase()] || 'navdêr';
+};
+const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
+  if (!wikitext) return { pos: 'navdêr', meanings: [], examples: [] };
+  const lines = wikitext.split('\n');
+  let inKurdishSection = false;
+  let currentPos = 'navdêr';
+  const meanings = [];
+  const examples = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const h2 = line.match(/^==\s*([^=]+)\s*==\s*$/);
+    if (h2) {
+      const secName = h2[1].trim().toLowerCase();
+      if (inKurdishSection && secName !== 'kurdish' && secName !== 'northern kurdish') {
+        break;
+      }
+      inKurdishSection = secName === 'kurdish' || secName === 'northern kurdish';
+      continue;
+    }
+    if (!inKurdishSection) continue;
+    const h3 = line.match(/^===\s*([^=]+)\s*===\s*$/);
+    if (h3) {
+      currentPos = extractPosFromWiktionarySection(`=== ${h3[1]} ===`);
+      continue;
+    }
+    const defMatch = line.match(/^#\s+([^:*#].*)$/);
+    if (defMatch) {
+      const cleaned = sanitizeWiktionaryText(defMatch[1]);
+      if (cleaned && cleaned.length > 1 && !isLikelyInflectedForm(cleaned)) {
+        meanings.push(cleaned);
+      }
+      continue;
+    }
+    const exMatch = line.match(/^#:\s*(.+)$/);
+    if (exMatch) {
+      const cleanedEx = sanitizeWiktionaryText(exMatch[1]);
+      if (cleanedEx && cleanedEx.length > 2) {
+        examples.push(cleanedEx);
+      }
+    }
   }
+  if (meanings.length === 0) {
+    const fallbackLines = lines
+      .filter((l) => /^#\s+[^:*#]/.test(l))
+      .map((l) => sanitizeWiktionaryText(l.replace(/^#\s+/, '')))
+      .filter((t) => t && t.length > 1 && !isLikelyInflectedForm(t));
+    meanings.push(...fallbackLines.slice(0, 3));
+  }
+  const uniqueMeanings = [...new Set(meanings)].slice(0, 4);
+  const uniqueExamples = [...new Set(examples)].slice(0, 2);
+  return {
+    pos: currentPos,
+    meanings: uniqueMeanings,
+    examples: uniqueExamples,
+    langCode: targetLangCode
+  };
 };
-const UI_FIELD_LABELS = Object.keys(DEFAULT_UI).map((key) => ({
-  key,
-  label: key
-}));
-const fetchFromWiktionary = async (rawWord) => {
-  const cleanWord = rawWord.trim().toLowerCase();
-  if (!cleanWord || cleanWord.length < 2) return null;
-  try {
-    const res = await fetch(
-      `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(cleanWord)}`
-    );
-    if (res.ok) {
+const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
+  const cleanTerm = String(rawTerm || '').trim();
+  if (!cleanTerm) return null;
+  const candidateTitles = [cleanTerm];
+  const lower = cleanTerm.toLocaleLowerCase('tr');
+  if (!candidateTitles.includes(lower)) candidateTitles.push(lower);
+  const capitalized = lower.charAt(0).toLocaleUpperCase('tr') + lower.slice(1);
+  if (!candidateTitles.includes(capitalized)) candidateTitles.push(capitalized);
+  for (const title of candidateTitles) {
+    try {
+      const endpoint = `https://en.wiktionary.org/w/api.php?action=query&prop=revisions|extracts&rvprop=content&rvslots=main&explaintext=1&exlimit=1&format=json&origin=*&titles=${encodeURIComponent(
+        title
+      )}`;
+      const res = await fetch(endpoint);
+      if (!res.ok) continue;
       const data = await res.json();
-      const kuEntries = data.kmr || data.ku || [];
-      if (kuEntries.length > 0) {
-        const firstEntry = kuEntries[0];
-        const posMap = {
-          Noun: 'navdêr',
-          Verb: 'lêker',
-          Adjective: 'rengdêr',
-          Adverb: 'hoker',
-          Pronoun: 'cînavk',
-          Interjection: 'baneşan'
-        };
-        const definitions = kuEntries
-          .flatMap((e) => (e.definitions || []).map((d) => d.definition.replace(/<[^>]+>/g, '')))
-          .filter(Boolean)
-          .slice(0, 3);
-        if (definitions.length > 0) {
-          return {
-            word: cleanWord,
-            part_of_speech: posMap[firstEntry.partOfSpeech] || 'navdêr',
-            meaning_tr: '',
-            meaning_en: definitions.join('; '),
-            meaning_ku: '',
-            example_sentence: '',
-            meanings_i18n: { EN: definitions.join('; ') },
-            examples_i18n: {}
-          };
+      const pages = data?.query?.pages || {};
+      const page = Object.values(pages).find((p) => p && !p.missing);
+      if (!page) continue;
+      const wikitext =
+        page?.revisions?.[0]?.slots?.main?.['*'] ||
+        page?.revisions?.[0]?.['*'] ||
+        '';
+      const parsed = extractGlossesFromWiktionary(wikitext, selectedLang);
+      let glossText = parsed.meanings.join(' ; ');
+      if (!glossText && page.extract) {
+        const cleanExtract = sanitizeWiktionaryText(page.extract);
+        if (cleanExtract && !isLikelyInflectedForm(cleanExtract)) {
+          glossText = cleanExtract.slice(0, 240);
         }
       }
-    }
-    const candidates = [cleanWord, cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1)];
-    for (const titleCandidate of candidates) {
-      const kuRes = await fetch(
-        `https://ku.wiktionary.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(
-          titleCandidate
-        )}&format=json&origin=*`
-      );
-      if (kuRes.ok) {
-        const kuData = await kuRes.json();
-        const pages = kuData?.query?.pages || {};
-        const page = Object.values(pages)[0];
-        if (page && !page.missing && page.extract) {
-          const lines = page.extract
-            .split('\n')
-            .map((l) => l.trim())
-            .filter((l) => l && !l.startsWith('=='));
-          const summary = lines.slice(1, 3).join(' ') || lines[0] || '';
-          if (summary) {
-            return {
-              word: cleanWord,
-              part_of_speech: 'navdêr',
-              meaning_tr: '',
-              meaning_en: '',
-              meaning_ku: summary.slice(0, 280),
-              example_sentence: '',
-              meanings_i18n: { KU: summary.slice(0, 280) },
-              examples_i18n: {}
-            };
-          }
-        }
+      if (!glossText) continue;
+      const primaryExample = parsed.examples[0] || '';
+      const i18nMap = {
+        KU: selectedLang === 'KU' ? glossText : '',
+        ZZA: selectedLang === 'ZZA' ? glossText : '',
+        CKB: selectedLang === 'CKB' ? glossText : '',
+        TR: selectedLang === 'TR' ? glossText : '',
+        EN: glossText,
+        DE: selectedLang === 'DE' ? glossText : '',
+        FR: selectedLang === 'FR' ? glossText : '',
+        IT: selectedLang === 'IT' ? glossText : ''
+      };
+      if (selectedLang) {
+        i18nMap[selectedLang] = glossText;
       }
+      return {
+        id: `wikt-${normalizeKurdish(page.title || cleanTerm)}`,
+        word: page.title || cleanTerm,
+        part_of_speech: parsed.pos || 'navdêr',
+        meaning_tr: selectedLang === 'TR' ? glossText : '',
+        meaning_en: glossText,
+        meaning_ku: selectedLang === 'KU' ? glossText : '',
+        example_sentence: primaryExample,
+        meanings_i18n: i18nMap,
+        examples_i18n: primaryExample ? { [selectedLang || 'EN']: primaryExample } : {},
+        sourceType: 'wiktionary'
+      };
+    } catch {
+      // Sonraki adaya geç
     }
-  } catch (err) {
-    console.error('Wiktionary API error:', err);
   }
   return null;
 };
 export default function App() {
-  const [viewMode, setViewMode] = useState('student');
-  const [selectedLang, setSelectedLang] = useState(() => localStorage.getItem('kk_lang') || 'KU');
+  const [selectedLang, setSelectedLang] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kk_lang');
+      return saved && LANGUAGE_OPTIONS.some((l) => l.code === saved) ? saved : 'KU';
+    } catch {
+      return 'KU';
+    }
+  });
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langDropdownRef = useRef(null);
-  const audioPlayerRef = useRef(null);
-  const fetchRequestRef = useRef(0);
-  const [rawUi, setRawUi] = useState(DEFAULT_UI);
-  const ui = { ...rawUi, ...(UI_TRANSLATIONS[selectedLang] || {}) };
-  const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
+  const [viewMode, setViewMode] = useState('student');
+  const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('kk_admin') === 'true');
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [categories, setCategories] = useState(defaultCategories);
+  const [newCatName, setNewCatName] = useState('');
+  const [catMsg, setCatMsg] = useState('');
+  const [dynamicLevels, setDynamicLevels] = useState(defaultLevels);
+  const [dynamicGrades, setDynamicGrades] = useState(defaultGrades);
+  const [dynamicMediaTypes, setDynamicMediaTypes] = useState(defaultMediaTypes);
+  const [rawUi, setRawUi] = useState(DEFAULT_UI_TEXTS);
+  const [settingsMsg, setSettingsMsg] = useState('');
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -936,64 +1360,22 @@ export default function App() {
   const [brokenExImages, setBrokenExImages] = useState({});
   const [croppedAlfabeImages, setCroppedAlfabeImages] = useState({});
   const [mediaLoadError, setMediaLoadError] = useState('');
-  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
-  const [passwordInput, setPasswordInput] = useState('');
-  const [authError, setAuthError] = useState('');
   const [editingId, setEditingId] = useState(null);
-  const [uploadingField, setUploadingField] = useState('');
+  const [uploadingField, setUploadingField] = useState(null);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
-  const [catMsg, setCatMsg] = useState('');
-  const [newCatName, setNewCatName] = useState('');
-  const [settingsMsg, setSettingsMsg] = useState('');
-  const emptyLessonForm = {
+  const [formData, setFormData] = useState({
     title: '',
-    description: '',
-    category_slug: 'zanist',
+    category_slug: 'zarok',
     media_type: 'video',
     media_url: '',
     thumbnail_url: '',
-    level: DEFAULT_UI.level_1,
-    grade_level: DEFAULT_UI.grade_2,
+    level: defaultLevels[0],
+    grade_level: defaultGrades[0],
+    description: '',
     teacher_guide: '',
     guide_pdf_url: ''
-  };
-  const [formData, setFormData] = useState(emptyLessonForm);
-  const [ferhengWords, setFerhengWords] = useState([]);
-  const [totalWordCount, setTotalWordCount] = useState(0);
-  const [searchingDict, setSearchingDict] = useState(false);
-  const [ferhengQuery, setFerhengQuery] = useState('');
-  const [selectedLetter, setSelectedLetter] = useState('all');
-  const [selectedWordDetail, setSelectedWordDetail] = useState(null);
-  const [editingWordId, setEditingWordId] = useState(null);
-  const [wordMsg, setWordMsg] = useState('');
-  const [syncingProgress, setSyncingProgress] = useState('');
-  const [uploadingWordAudio, setUploadingWordAudio] = useState(false);
-  const [searchHistory, setSearchHistory] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
-    } catch {
-      return [];
-    }
-  });
-  const [favoriteWords, setFavoriteWords] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('kk_fav_words') || '[]');
-    } catch {
-      return [];
-    }
-  });
-  const [wordForm, setWordForm] = useState({
-    word: '',
-    part_of_speech: 'navdêr',
-    meaning_tr: '',
-    meaning_ku: '',
-    example_sentence: '',
-    audio_url: '',
-    meanings_i18n: {},
-    examples_i18n: {}
   });
   const [exercises, setExercises] = useState([]);
-  const [alfabeReset, setAlfabeReset] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState('');
@@ -1003,6 +1385,12 @@ export default function App() {
   const [hearts, setHearts] = useState(5);
   const [comboCount, setComboCount] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioPlayerRef = useRef(null);
+  const [matchLeftSelected, setMatchLeftSelected] = useState(null);
+  const [matchRightSelected, setMatchRightSelected] = useState(null);
+  const [matchedPairs, setMatchedPairs] = useState([]);
+  const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
+  const [matchWrongFlash, setMatchWrongFlash] = useState(false);
   const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
   const [streakDays, setStreakDays] = useState(() => Number(localStorage.getItem('kk_streak') || 0));
   const [completedUnits, setCompletedUnits] = useState(() => {
@@ -1012,17 +1400,13 @@ export default function App() {
       return [];
     }
   });
-  const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
-  const [matchLeftSelected, setMatchLeftSelected] = useState(null);
-  const [matchRightSelected, setMatchRightSelected] = useState(null);
-  const [matchedPairs, setMatchedPairs] = useState([]);
-  const [matchWrongFlash, setMatchWrongFlash] = useState(false);
   const [editingExId, setEditingExId] = useState(null);
-  const [exMsg, setExMsg] = useState('');
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
   const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
   const [adminExSearch, setAdminExSearch] = useState('');
+  const [alfabeReset, setAlfabeReset] = useState(false);
+  const [exMsg, setExMsg] = useState('');
   const [exForm, setExForm] = useState({
     unit_title: '',
     exercise_type: 'choice',
@@ -1033,33 +1417,95 @@ export default function App() {
     image_url: '',
     audio_url: ''
   });
-  const kurdishAlphabet = [
-    'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î',
-    'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'Ş', 'T',
-    'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
-  ];
-  const dynamicLevels = [ui.level_1, ui.level_2, ui.level_3];
-  const dynamicGrades = [ui.grade_1, ui.grade_2, ui.grade_3, ui.grade_4];
-  const dynamicMediaTypes = [
-    { id: 'video', label: ui.media_video, icon: Video },
-    { id: 'document', label: ui.media_document, icon: FileText },
-    { id: 'audio', label: ui.media_audio, icon: Headphones },
-    { id: 'interactive', label: ui.media_interactive, icon: BookOpen }
-  ];
-  useEffect(() => {
-    fetchCategories();
-    fetchSiteSettings();
-    fetchLessons();
-    fetchExercises();
-    fetchDictionary('', 'all');
-  }, []);
+  const [dictionaryWords, setDictionaryWords] = useState([]);
+  const [totalWordCount, setTotalWordCount] = useState(0);
+  const [ferhengQuery, setFerhengQuery] = useState('');
+  const [wiktionaryMatches, setWiktionaryMatches] = useState([]);
+  const [searchingDict, setSearchingDict] = useState(false);
+  const [selectedLetter, setSelectedLetter] = useState('all');
+  const [selectedWordDetail, setSelectedWordDetail] = useState(null);
+  const [editingWordId, setEditingWordId] = useState(null);
+  const [uploadingWordAudio, setUploadingWordAudio] = useState(false);
+  const [syncingProgress, setSyncingProgress] = useState('');
+  const [wordMsg, setWordMsg] = useState('');
+  const [wordForm, setWordForm] = useState({
+    word: '',
+    part_of_speech: 'navdêr',
+    meaning_tr: '',
+    meaning_en: '',
+    meaning_ku: '',
+    example_sentence: '',
+    audio_url: '',
+    meanings_i18n: {
+      KU: '',
+      ZZA: '',
+      CKB: '',
+      TR: '',
+      EN: '',
+      DE: '',
+      FR: '',
+      IT: ''
+    },
+    examples_i18n: {
+      KU: '',
+      ZZA: '',
+      CKB: '',
+      TR: '',
+      EN: '',
+      DE: '',
+      FR: '',
+      IT: ''
+    }
+  });
+  const [searchHistory, setSearchHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [favoriteWords, setFavoriteWords] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_favorite_words') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const ui = (() => {
+    const langPrefix = `${selectedLang.toLowerCase()}_`;
+    const merged = { ...DEFAULT_UI_TEXTS };
+    Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
+      if (rawUi[langPrefix + k]) {
+        merged[k] = rawUi[langPrefix + k];
+      } else if (rawUi[k]) {
+        merged[k] = rawUi[k];
+      }
+    });
+    return merged;
+  })();
+  const handleSelectLanguage = async (langCode) => {
+    setSelectedLang(langCode);
+    setLangMenuOpen(false);
+    try {
+      localStorage.setItem('kk_lang', langCode);
+    } catch {
+      // ignore storage errors
+    }
+    try {
+      await supabase
+        .from('site_settings')
+        .upsert([{ key: 'active_ui_language', value: langCode }], { onConflict: 'key' });
+    } catch {
+      // ignore network errors
+    }
+  };
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
         setLangMenuOpen(false);
       }
     };
-    const handleEsc = (e) => {
+    const handleEscKey = (e) => {
       if (e.key === 'Escape') {
         setLangMenuOpen(false);
         setActiveLesson(null);
@@ -1067,289 +1513,443 @@ export default function App() {
       }
     };
     document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('keydown', handleEsc);
+    document.addEventListener('keydown', handleEscKey);
     return () => {
       document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEsc);
+      document.removeEventListener('keydown', handleEscKey);
     };
   }, []);
-  const handleSelectLanguage = (code) => {
-    setSelectedLang(code);
-    localStorage.setItem('kk_lang', code);
-    setLangMenuOpen(false);
+  const persistProgressSnapshot = async (nextXp, nextStreak, nextUnits) => {
+    try {
+      localStorage.setItem('kk_xp', String(nextXp));
+      localStorage.setItem('kk_streak', String(nextStreak));
+      localStorage.setItem('kk_completed_units', JSON.stringify(nextUnits));
+    } catch {
+      // ignore storage quota errors
+    }
+    try {
+      await supabase.from('site_settings').upsert(
+        [
+          { key: 'learner_xp_remote', value: String(nextXp) },
+          { key: 'learner_streak_remote', value: String(nextStreak) },
+          { key: 'learner_units_remote', value: JSON.stringify(nextUnits) }
+        ],
+        { onConflict: 'key' }
+      );
+    } catch {
+      // ignore network sync errors
+    }
   };
-  const fetchCategories = async () => {
-    const { data, error } = await supabase
-      .from('categories')
+  const fetchAllData = async () => {
+    setLoading(true);
+    const { data: lessonsData } = await supabase
+      .from('lessons')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (lessonsData) setLessons(lessonsData);
+    const { data: exData } = await supabase
+      .from('kurmanci_exercises')
       .select('*')
       .order('sort_order', { ascending: true });
-    if (!error && data && data.length > 0) setCategories(data);
-  };
-  const fetchSiteSettings = async () => {
-    const { data, error } = await supabase.from('site_settings').select('*');
-    if (!error && data) {
-      const merged = { ...DEFAULT_UI };
-      data.forEach((row) => {
-        if (row.key in DEFAULT_UI && row.value) merged[row.key] = row.value;
+    if (exData) setExercises(exData);
+    const { count: dictCount } = await supabase
+      .from('dictionary')
+      .select('*', { count: 'exact', head: true });
+    const { data: dictData } = await supabase
+      .from('dictionary')
+      .select('*')
+      .order('word', { ascending: true })
+      .range(0, 999);
+    const dbRows = dictData || [];
+    setDictionaryWords(dbRows);
+    setTotalWordCount(
+      Math.max(Number(dictCount || 0), dbRows.length, BUILTIN_DICTIONARY.length)
+    );
+    const { data: settingsData } = await supabase.from('site_settings').select('*');
+    if (settingsData) {
+      const uiMap = { ...DEFAULT_UI_TEXTS };
+      let remoteXp = null;
+      let remoteStreak = null;
+      let remoteUnits = null;
+      settingsData.forEach((row) => {
+        if (row.key === 'categories_json' && row.value) {
+          try {
+            const parsed = JSON.parse(row.value);
+            if (Array.isArray(parsed) && parsed.length > 0) setCategories(parsed);
+          } catch {
+            // ignore malformed JSON
+          }
+        } else if (row.key === 'levels_json' && row.value) {
+          try {
+            const parsed = JSON.parse(row.value);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setDynamicLevels(parsed);
+              setFormData((prev) => ({
+                ...prev,
+                level: parsed.includes(prev.level) ? prev.level : parsed[0]
+              }));
+            }
+          } catch {
+            // ignore
+          }
+        } else if (row.key === 'grades_json' && row.value) {
+          try {
+            const parsed = JSON.parse(row.value);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              setDynamicGrades(parsed);
+              setFormData((prev) => ({
+                ...prev,
+                grade_level: parsed.includes(prev.grade_level) ? prev.grade_level : parsed[0]
+              }));
+            }
+          } catch {
+            // ignore
+          }
+        } else if (row.key === 'media_types_json' && row.value) {
+          try {
+            const parsed = JSON.parse(row.value);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const iconMap = {
+                video: Video,
+                document: FileText,
+                audio: Headphones,
+                book: BookOpen
+              };
+              const hydrated = parsed.map((m) => ({
+                ...m,
+                icon: iconMap[m.id] || BookOpen
+              }));
+              setDynamicMediaTypes(hydrated);
+              setFormData((prev) => ({
+                ...prev,
+                media_type: hydrated.some((m) => m.id === prev.media_type)
+                  ? prev.media_type
+                  : hydrated[0].id
+              }));
+            }
+          } catch {
+            // ignore
+          }
+        } else if (row.key === 'learner_xp_remote' && row.value !== null) {
+          remoteXp = Number(row.value) || 0;
+        } else if (row.key === 'learner_streak_remote' && row.value !== null) {
+          remoteStreak = Number(row.value) || 0;
+        } else if (row.key === 'learner_units_remote' && row.value) {
+          try {
+            const parsedUnits = JSON.parse(row.value);
+            if (Array.isArray(parsedUnits)) remoteUnits = parsedUnits;
+          } catch {
+            // ignore
+          }
+        } else if (row.key && row.key !== 'active_ui_language') {
+          uiMap[row.key] = row.value;
+        }
       });
-      setRawUi(merged);
-      const remoteXpRow = data.find((r) => r.key === 'learner_xp_remote');
-      const remoteStreakRow = data.find((r) => r.key === 'learner_streak_remote');
-      const remoteUnitsRow = data.find((r) => r.key === 'learner_units_remote');
+      setRawUi(uiMap);
       const localXp = Number(localStorage.getItem('kk_xp') || 0);
-      const remoteXp = Number(remoteXpRow?.value || 0);
-      if (!Number.isNaN(remoteXp) && remoteXp > localXp) {
+      if (remoteXp !== null && remoteXp > localXp) {
         setXpPoints(remoteXp);
         localStorage.setItem('kk_xp', String(remoteXp));
       }
       const localStreak = Number(localStorage.getItem('kk_streak') || 0);
-      const remoteStreak = Number(remoteStreakRow?.value || 0);
-      if (!Number.isNaN(remoteStreak) && remoteStreak > localStreak) {
+      if (remoteStreak !== null && remoteStreak > localStreak) {
         setStreakDays(remoteStreak);
         localStorage.setItem('kk_streak', String(remoteStreak));
       }
-      if (remoteUnitsRow?.value) {
-        try {
-          const parsedRemote = JSON.parse(remoteUnitsRow.value);
-          if (Array.isArray(parsedRemote) && parsedRemote.length > 0) {
-            setCompletedUnits((prev) => {
-              const union = [...new Set([...prev, ...parsedRemote])];
-              localStorage.setItem('kk_completed_units', JSON.stringify(union));
-              return union;
-            });
-          }
-        } catch {
-          // geçersiz json yoksayılır
-        }
+      if (Array.isArray(remoteUnits) && remoteUnits.length > 0) {
+        setCompletedUnits((prev) => {
+          const mergedUnits = [...new Set([...prev, ...remoteUnits])];
+          localStorage.setItem('kk_completed_units', JSON.stringify(mergedUnits));
+          return mergedUnits;
+        });
       }
     }
+    setLoading(false);
   };
-  const persistProgressSnapshot = async (nextXp, nextStreak, nextUnits) => {
-    localStorage.setItem('kk_xp', String(nextXp));
-    localStorage.setItem('kk_streak', String(nextStreak));
-    localStorage.setItem('kk_completed_units', JSON.stringify(nextUnits));
-    await supabase.from('site_settings').upsert(
-      [
-        { key: 'learner_xp_remote', value: String(nextXp) },
-        { key: 'learner_streak_remote', value: String(nextStreak) },
-        { key: 'learner_units_remote', value: JSON.stringify(nextUnits) }
-      ],
-      { onConflict: 'key' }
-    );
-  };
-  const fetchLessons = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('lessons')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (!error && data) setLessons(data);
-    } finally {
-      setLoading(false);
-    }
-  };
-  const fetchExercises = async () => {
-    const { data, error } = await supabase
-      .from('kurmanci_exercises')
-      .select('*')
-      .order('sort_order', { ascending: true });
-    if (!error && data) setExercises(data);
-  };
-  const effectiveExercises = (() => {
-    const hasCustomAlfabe = exercises.some(
-      (ex) => (ex.unit_title || '').trim().toUpperCase() === 'ALFABE'
-    );
-    if (hasCustomAlfabe || alfabeReset) return exercises;
-    return [...BUILTIN_ALFABE_EXERCISES, ...exercises];
-  })();
+  useEffect(() => {
+    fetchAllData();
+  }, []);
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASS) {
+    if (passwordInput.trim() === ADMIN_PASSCODE) {
       setIsAdmin(true);
-      localStorage.setItem('kk_admin', 'true');
+      sessionStorage.setItem('kk_admin', 'true');
       setAuthError('');
       setPasswordInput('');
     } else {
-      setAuthError('Şîfre çewt e. Ji kerema xwe dîsa biceribîne.');
+      setAuthError('Şîfre şaş e! Ji kerema xwe dîsa biceribîne.');
     }
   };
   const handleLogout = () => {
     setIsAdmin(false);
-    localStorage.removeItem('kk_admin');
-    setViewMode('student');
+    sessionStorage.removeItem('kk_admin');
+    setEditingId(null);
+    setEditingWordId(null);
+    setEditingExId(null);
   };
-  const handleFileUpload = async (event, field) => {
-    const file = event.target.files?.[0];
+  const handleFileUpload = async (e, targetField) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-    setUploadingField(field);
+    setUploadingField(targetField);
+    setStatusMsg({ type: '', text: '' });
     const fileExt = file.name.split('.').pop();
-    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `${field}/${safeName}`;
-    const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `uploads/${fileName}`;
+    const { error: uploadError } = await supabase.storage
+      .from('materyal')
+      .upload(filePath, file);
     if (uploadError) {
-      setStatusMsg({ type: 'error', text: 'Barkirin têk çû: ' + uploadError.message });
+      setStatusMsg({
+        type: 'error',
+        text: 'Barkirina pelê têk çû: ' + uploadError.message
+      });
     } else {
-      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
-      if (publicData?.publicUrl) {
-        setFormData((prev) => ({ ...prev, [field]: publicData.publicUrl }));
+      const { data: publicUrlData } = supabase.storage
+        .from('materyal')
+        .getPublicUrl(filePath);
+      if (publicUrlData?.publicUrl) {
+        setFormData((prev) => ({ ...prev, [targetField]: publicUrlData.publicUrl }));
+        if (targetField === 'thumbnail_url') {
+          setBrokenThumbs({});
+        }
+        setStatusMsg({
+          type: 'success',
+          text: 'Pel bi serkeftî hat barkirin û lînk hat bicîkirin!'
+        });
       }
     }
-    setUploadingField('');
-    event.target.value = '';
-  };
-  const resetForm = () => {
-    setEditingId(null);
-    setFormData(emptyLessonForm);
-  };
-  const startEditing = (lesson) => {
-    setActiveLesson(null);
-    setViewMode('admin');
-    setEditingId(lesson.id);
-    setFormData({
-      title: lesson.title || '',
-      description: lesson.description || '',
-      category_slug: lesson.category_slug || 'zanist',
-      media_type: lesson.media_type || 'video',
-      media_url: lesson.media_url || '',
-      thumbnail_url: lesson.thumbnail_url || '',
-      level: lesson.level || DEFAULT_UI.level_1,
-      grade_level: lesson.grade_level || DEFAULT_UI.grade_2,
-      teacher_guide: lesson.teacher_guide || '',
-      guide_pdf_url: lesson.guide_pdf_url || ''
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setUploadingField(null);
+    e.target.value = '';
   };
   const handleSaveLesson = async (e) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
-    const payload = { ...formData, title: formData.title.trim() };
-    const query = editingId
-      ? supabase.from('lessons').update(payload).eq('id', editingId)
-      : supabase.from('lessons').insert([payload]);
-    const { error } = await query;
-    if (error) {
-      setStatusMsg({ type: 'error', text: 'Çewtî: ' + error.message });
-    } else {
-      setStatusMsg({
-        type: 'success',
-        text: editingId ? 'Ders bi serkeftî hat nûkirin!' : 'Materyala nû hat zêdekirin!'
-      });
-      resetForm();
-      fetchLessons();
+    setStatusMsg({ type: '', text: '' });
+    if (!formData.title.trim()) {
+      setStatusMsg({ type: 'error', text: 'Ji kerema xwe sernavê dersê binivîse.' });
+      return;
     }
-    setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
+    const payload = {
+      title: formData.title.trim(),
+      category_slug: formData.category_slug,
+      media_type: formData.media_type,
+      media_url: formData.media_url.trim(),
+      thumbnail_url: formData.thumbnail_url.trim(),
+      level: formData.level,
+      grade_level: formData.grade_level,
+      description: formData.description.trim(),
+      teacher_guide: formData.teacher_guide.trim(),
+      guide_pdf_url: formData.guide_pdf_url.trim()
+    };
+    if (editingId) {
+      const { error } = await supabase.from('lessons').update(payload).eq('id', editingId);
+      if (error) {
+        setStatusMsg({ type: 'error', text: 'Çewtî çêbû: ' + error.message });
+      } else {
+        setStatusMsg({ type: 'success', text: 'Ders bi serkeftî hat nûkirin!' });
+        setEditingId(null);
+        resetForm();
+        fetchAllData();
+      }
+    } else {
+      const { error } = await supabase.from('lessons').insert([payload]);
+      if (error) {
+        setStatusMsg({ type: 'error', text: 'Çewtî çêbû: ' + error.message });
+      } else {
+        setStatusMsg({ type: 'success', text: 'Materyala nû bi serkeftî hat zêdekirin!' });
+        resetForm();
+        fetchAllData();
+      }
+    }
+  };
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      category_slug: categories[0]?.slug || 'zarok',
+      media_type: dynamicMediaTypes[0]?.id || 'video',
+      media_url: '',
+      thumbnail_url: '',
+      level: dynamicLevels[0] || defaultLevels[0],
+      grade_level: dynamicGrades[0] || defaultGrades[0],
+      description: '',
+      teacher_guide: '',
+      guide_pdf_url: ''
+    });
+    setEditingId(null);
+  };
+  const startEditing = (lesson) => {
+    setActiveLesson(null);
+    setEditingId(lesson.id);
+    setFormData({
+      title: lesson.title || '',
+      category_slug: lesson.category_slug || 'zarok',
+      media_type: lesson.media_type || 'video',
+      media_url: lesson.media_url || '',
+      thumbnail_url: lesson.thumbnail_url || '',
+      level: lesson.level || dynamicLevels[0] || defaultLevels[0],
+      grade_level: lesson.grade_level || dynamicGrades[0] || defaultGrades[0],
+      description: lesson.description || '',
+      teacher_guide: lesson.teacher_guide || '',
+      guide_pdf_url: lesson.guide_pdf_url || ''
+    });
+    setViewMode('admin');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const handleDeleteLesson = async (id) => {
-    if (!window.confirm('Tu piştrast î ku dixwazî vî materyalî jê bibî?')) return;
+    if (!window.confirm('Tu piştrast î ku dixwazî vê materyalê jê bibî?')) return;
     const { error } = await supabase.from('lessons').delete().eq('id', id);
-    if (error) {
-      setStatusMsg({ type: 'error', text: 'Çewtî: ' + error.message });
-    } else {
-      setLessons((prev) => prev.filter((item) => item.id !== id));
-      if (activeLesson?.id === id) setActiveLesson(null);
-      if (editingId === id) resetForm();
-      setStatusMsg({ type: 'success', text: 'Materyal hat jêbirin.' });
+    if (!error) {
+      fetchAllData();
     }
-    setTimeout(() => setStatusMsg({ type: '', text: '' }), 3500);
-  };
-  const handleUpdateCategoryName = (slug, name) => {
-    setCategories((prev) => prev.map((c) => (c.slug === slug ? { ...c, name } : c)));
-  };
-  const handleSaveCategories = async () => {
-    const rows = categories.map((c, idx) => ({
-      slug: c.slug,
-      name: c.name,
-      sort_order: c.sort_order ?? idx + 1
-    }));
-    const { error } = await supabase.from('categories').upsert(rows, { onConflict: 'slug' });
-    setCatMsg(error ? 'Çewtî: ' + error.message : 'Navên beşan hatin tomarkirin!');
-    setTimeout(() => setCatMsg(''), 3500);
-  };
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    const name = newCatName.trim();
-    if (!name) return;
-    let slug = slugify(name);
-    if (categories.some((c) => c.slug === slug)) slug = `${slug}-${Date.now()}`;
-    const row = { slug, name, sort_order: categories.length + 1 };
-    const { error } = await supabase.from('categories').upsert([row], { onConflict: 'slug' });
-    if (error) {
-      setCatMsg('Çewtî: ' + error.message);
-    } else {
-      setCategories((prev) => [...prev, row]);
-      setNewCatName('');
-      setCatMsg('Beşa nû hat zêdekirin!');
-    }
-    setTimeout(() => setCatMsg(''), 3500);
-  };
-  const handleDeleteCategory = async (slug) => {
-    if (!window.confirm('Tu piştrast î ku dixwazî vê beşê jê bibî?')) return;
-    const { error } = await supabase.from('categories').delete().eq('slug', slug);
-    if (error) {
-      setCatMsg('Çewtî: ' + error.message);
-    } else {
-      setCategories((prev) => prev.filter((c) => c.slug !== slug));
-      if (selectedCategory === slug) setSelectedCategory('all');
-      setCatMsg('Beş hat jêbirin.');
-    }
-    setTimeout(() => setCatMsg(''), 3500);
-  };
-  const handleSaveAllUiTexts = async (e) => {
-    e.preventDefault();
-    const rows = UI_FIELD_LABELS.map((f) => ({ key: f.key, value: rawUi[f.key] || '' }));
-    const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
-    setSettingsMsg(error ? 'Çewtî: ' + error.message : 'Hemû nivîsên malperê hatin tomarkirin!');
-    setTimeout(() => setSettingsMsg(''), 3500);
-  };
-  const handleResetFilters = () => {
-    setSelectedCategory('all');
-    setSelectedLevel('all');
-    setSelectedMedia('all');
-    setSearchQuery('');
   };
   const hasActiveFilters =
     selectedCategory !== 'all' ||
     selectedLevel !== 'all' ||
     selectedMedia !== 'all' ||
     searchQuery.trim() !== '';
+  const handleResetFilters = () => {
+    setSelectedCategory('all');
+    setSelectedLevel('all');
+    setSelectedMedia('all');
+    setSearchQuery('');
+  };
+  const handleUpdateCategoryName = (slug, newName) => {
+    setCategories((prev) =>
+      prev.map((c) => (c.slug === slug ? { ...c, name: newName } : c))
+    );
+  };
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    const trimmed = newCatName.trim();
+    if (!trimmed) return;
+    const baseSlug = trimmed
+      .toLowerCase()
+      .replace(/[^a-z0-9çğıöşü\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-');
+    const slug = `${baseSlug || 'bes'}-${Date.now().toString().slice(-4)}`;
+    const updated = [...categories, { slug, name: trimmed }];
+    setCategories(updated);
+    setNewCatName('');
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert([{ key: 'categories_json', value: JSON.stringify(updated) }], {
+        onConflict: 'key'
+      });
+    setCatMsg(error ? 'Çewtî: ' + error.message : 'Beşa nû hat zêdekirin û tomarkirin!');
+    setTimeout(() => setCatMsg(''), 3500);
+  };
+  const handleDeleteCategory = async (slug) => {
+    if (categories.length <= 1) {
+      setCatMsg('Divê herî kêm beşek bimîne.');
+      return;
+    }
+    const updated = categories.filter((c) => c.slug !== slug);
+    setCategories(updated);
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert([{ key: 'categories_json', value: JSON.stringify(updated) }], {
+        onConflict: 'key'
+      });
+    setCatMsg(error ? 'Çewtî: ' + error.message : 'Beş hat jêbirin.');
+    setTimeout(() => setCatMsg(''), 3500);
+  };
+  const handleSaveCategories = async () => {
+    const { error } = await supabase
+      .from('site_settings')
+      .upsert([{ key: 'categories_json', value: JSON.stringify(categories) }], {
+        onConflict: 'key'
+      });
+    setCatMsg(error ? 'Çewtî: ' + error.message : 'Navên beşan hatin tomarkirin!');
+    setTimeout(() => setCatMsg(''), 3500);
+  };
+  const handleSaveAllUiTexts = async (e) => {
+    e.preventDefault();
+    const langPrefix = `${selectedLang.toLowerCase()}_`;
+    const rows = Object.entries(ui).map(([k, v]) => ({
+      key: `${langPrefix}${k}`,
+      value: v
+    }));
+    if (selectedLang === 'KU') {
+      Object.entries(ui).forEach(([k, v]) => {
+        rows.push({ key: k, value: v });
+      });
+    }
+    const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
+    setSettingsMsg(
+      error
+        ? 'Çewtî: ' + error.message
+        : `Hemû nivîsên malperê (${selectedLang}) bi serkeftî hatin tomarkirin!`
+    );
+    setTimeout(() => setSettingsMsg(''), 3500);
+  };
   const recordSearchHistory = (term) => {
-    const cleaned = term.trim();
-    if (!cleaned) return;
+    const clean = term.trim();
+    if (!clean) return;
     setSearchHistory((prev) => {
-      const next = [cleaned, ...prev.filter((t) => t !== cleaned)].slice(0, 6);
-      localStorage.setItem('kk_search_history', JSON.stringify(next));
+      const next = [clean, ...prev.filter((t) => t.toLowerCase() !== clean.toLowerCase())].slice(0, 8);
+      try {
+        localStorage.setItem('kk_search_history', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
       return next;
     });
   };
   const toggleFavoriteWord = (word) => {
+    if (!word) return;
     setFavoriteWords((prev) => {
       const exists = prev.includes(word);
       const next = exists ? prev.filter((w) => w !== word) : [word, ...prev];
-      localStorage.setItem('kk_fav_words', JSON.stringify(next));
+      try {
+        localStorage.setItem('kk_favorite_words', JSON.stringify(next));
+      } catch {
+        // ignore
+      }
       return next;
     });
   };
-  const speakWord = (word) => {
-    if (!word || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utter = new SpeechSynthesisUtterance(word);
-    utter.lang = 'ku';
-    window.speechSynthesis.speak(utter);
+  const getWordMeaningByLang = (item, lang = selectedLang) => {
+    if (!item) return '';
+    const i18n = item.meanings_i18n || {};
+    if (i18n[lang]) return i18n[lang];
+    if (lang === 'TR' && item.meaning_tr) return item.meaning_tr;
+    if (lang === 'EN' && item.meaning_en) return item.meaning_en;
+    if (lang === 'KU' && item.meaning_ku) return item.meaning_ku;
+    return (
+      i18n.KU ||
+      i18n.TR ||
+      i18n.EN ||
+      item.meaning_ku ||
+      item.meaning_tr ||
+      item.meaning_en ||
+      Object.values(i18n).find(Boolean) ||
+      ''
+    );
+  };
+  const getWordExampleByLang = (item, lang = selectedLang) => {
+    if (!item) return '';
+    const exMap = item.examples_i18n || {};
+    return exMap[lang] || exMap.KU || exMap.EN || exMap.TR || item.example_sentence || '';
   };
   const playDictionaryPronunciation = (item) => {
     if (!item) return;
     if (item.audio_url) {
-      if (audioPlayerRef.current) audioPlayerRef.current.pause();
-      const audio = new Audio(item.audio_url);
-      audioPlayerRef.current = audio;
-      audio.play().catch(() => speakWord(item.word));
+      playCurrentAudio(item.audio_url);
       return;
     }
-    speakWord(item.word);
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(item.word);
+        utter.lang = selectedLang === 'TR' ? 'tr-TR' : selectedLang === 'EN' ? 'en-US' : 'ku';
+        window.speechSynthesis.speak(utter);
+      } catch {
+        // ignore speech errors
+      }
+    }
   };
-  const handleWordAudioUpload = async (event) => {
-    const file = event.target.files?.[0];
+  const handleWordAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     setUploadingWordAudio(true);
     const fileExt = file.name.split('.').pop();
@@ -1357,141 +1957,63 @@ export default function App() {
     const filePath = `dictionary_audio/${safeName}`;
     const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
     if (uploadError) {
-      setWordMsg('Barkirin têk çû: ' + uploadError.message);
+      setWordMsg('Barkirina dengî têk çû: ' + uploadError.message);
     } else {
       const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
       if (publicData?.publicUrl) {
         setWordForm((prev) => ({ ...prev, audio_url: publicData.publicUrl }));
+        setWordMsg('Dengê telaffuzê hat barkirin!');
       }
     }
     setUploadingWordAudio(false);
-    event.target.value = '';
-  };
-  const fetchDictionary = async (searchText = '', letter = 'all') => {
-    const requestId = ++fetchRequestRef.current;
-    setSearchingDict(true);
-    try {
-      let query = supabase
-        .from('dictionary')
-        .select('*', { count: 'exact' })
-        .order('word', { ascending: true });
-      const q = sanitizeSearch(searchText);
-      if (q) {
-        query = query.or(
-          `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%,meaning_en.ilike.%${q}%,meanings_i18n::text.ilike.%${q}%,examples_i18n::text.ilike.%${q}%`
-        );
-      } else if (letter !== 'all') {
-        const normLetter = normalizeKurdish(letter);
-        query = query.ilike('word', `${normLetter}%`);
-      }
-      const { data, count, error } = await query.limit(100);
-      if (requestId !== fetchRequestRef.current) return;
-      let results = !error && data ? data : [];
-      if (
-        q &&
-        q.length >= 2 &&
-        !results.some((r) => normalizeKurdish(r.word) === normalizeKurdish(q))
-      ) {
-        const liveEntry = await fetchFromWiktionary(q);
-        if (requestId !== fetchRequestRef.current) return;
-        if (liveEntry) {
-          results = [
-            {
-              id: `wiktionary-${normalizeKurdish(liveEntry.word)}`,
-              sourceType: 'wiktionary',
-              ...liveEntry
-            },
-            ...results
-          ];
-        }
-      }
-      setFerhengWords(results);
-      if (count !== null && !q && letter === 'all') {
-        setTotalWordCount(count);
-      }
-    } catch (err) {
-      console.error('Dictionary fetch error:', err);
-    } finally {
-      if (requestId === fetchRequestRef.current) {
-        setSearchingDict(false);
-      }
-    }
-  };
-  useEffect(() => {
-    if (viewMode !== 'ferheng') return;
-    const timer = setTimeout(() => {
-      fetchDictionary(ferhengQuery, selectedLetter);
-    }, 250);
-    return () => clearTimeout(timer);
-  }, [ferhengQuery, selectedLetter, viewMode]);
-  const handleDictionarySearchSubmit = (e) => {
-    e.preventDefault();
-    if (ferhengQuery.trim()) recordSearchHistory(ferhengQuery);
-    fetchDictionary(ferhengQuery, selectedLetter);
-  };
-  const handleBulkImportDictionary = async () => {
-    setSyncingProgress('Peyvên bingehîn tên barkirin...');
-    const sampleWords = BUILTIN_DICTIONARY.map(
-      ({ word, part_of_speech, meaning_tr, meaning_ku, example_sentence, meanings_i18n, examples_i18n }) => ({
-        word,
-        part_of_speech,
-        meaning_tr,
-        meaning_ku,
-        example_sentence,
-        meanings_i18n,
-        examples_i18n
-      })
-    );
-    const { error } = await supabase.from('dictionary').insert(sampleWords);
-    if (error) {
-      setSyncingProgress('Çewtî: ' + error.message);
-    } else {
-      setSyncingProgress('Peyv bi serkeftî hatin zêdekirin!');
-      fetchDictionary(ferhengQuery, selectedLetter);
-    }
-    setTimeout(() => setSyncingProgress(''), 4000);
+    e.target.value = '';
   };
   const handleSaveWord = async (e) => {
     e.preventDefault();
     const activeMeaning = (
-      wordForm.meanings_i18n?.[selectedLang] ||
-      wordForm.meaning_tr ||
-      wordForm.meaning_ku ||
-      ''
+      wordForm.meanings_i18n?.[selectedLang] ?? wordForm.meaning_tr ?? ''
     ).trim();
     if (!wordForm.word.trim() || !activeMeaning) return;
-    const mergedMeanings = {
+    const activeExample = (
+      wordForm.examples_i18n?.[selectedLang] ?? wordForm.example_sentence ?? ''
+    ).trim();
+    const updatedMeanings = {
       ...(wordForm.meanings_i18n || {}),
-      [selectedLang]: activeMeaning,
-      ...(wordForm.meaning_tr ? { TR: wordForm.meaning_tr } : {}),
-      ...(wordForm.meaning_ku ? { KU: wordForm.meaning_ku } : {})
+      [selectedLang]: activeMeaning
     };
-    const activeExample = (wordForm.examples_i18n?.[selectedLang] || wordForm.example_sentence || '').trim();
-    const mergedExamples = {
+    const updatedExamples = {
       ...(wordForm.examples_i18n || {}),
-      ...(activeExample ? { [selectedLang]: activeExample } : {}),
-      ...(wordForm.example_sentence ? { KU: wordForm.example_sentence } : {})
+      ...(activeExample ? { [selectedLang]: activeExample } : {})
     };
     const payload = {
       word: wordForm.word.trim(),
       part_of_speech: wordForm.part_of_speech,
-      meaning_tr: wordForm.meaning_tr || (selectedLang === 'TR' ? activeMeaning : ''),
-      meaning_ku: wordForm.meaning_ku || (selectedLang === 'KU' ? activeMeaning : ''),
-      example_sentence: wordForm.example_sentence || activeExample,
+      meaning_tr: selectedLang === 'TR' ? activeMeaning : (wordForm.meaning_tr || '').trim(),
+      meaning_en: selectedLang === 'EN' ? activeMeaning : (wordForm.meaning_en || '').trim(),
+      meaning_ku: selectedLang === 'KU' ? activeMeaning : (wordForm.meaning_ku || '').trim(),
+      example_sentence: activeExample,
       audio_url: (wordForm.audio_url || '').trim(),
-      meanings_i18n: mergedMeanings,
-      examples_i18n: mergedExamples
+      meanings_i18n: updatedMeanings,
+      examples_i18n: updatedExamples
     };
-    const query = editingWordId
-      ? supabase.from('dictionary').update(payload).eq('id', editingWordId)
-      : supabase.from('dictionary').insert([payload]);
-    const { error } = await query;
-    if (error) {
-      setWordMsg('Çewtî: ' + error.message);
+    if (editingWordId) {
+      const { error } = await supabase.from('dictionary').update(payload).eq('id', editingWordId);
+      if (error) {
+        setWordMsg('Çewtî: ' + error.message);
+      } else {
+        setWordMsg('Peyv bi serkeftî hat nûkirin!');
+        resetWordForm();
+        fetchAllData();
+      }
     } else {
-      setWordMsg(editingWordId ? 'Peyv hat nûkirin!' : 'Peyva nû hat zêdekirin!');
-      resetWordForm();
-      fetchDictionary(ferhengQuery, selectedLetter);
+      const { error } = await supabase.from('dictionary').insert([payload]);
+      if (error) {
+        setWordMsg('Çewtî: ' + error.message);
+      } else {
+        setWordMsg('Peyva nû li ferhengê hat zêdekirin!');
+        resetWordForm();
+        fetchAllData();
+      }
     }
     setTimeout(() => setWordMsg(''), 3500);
   };
@@ -1501,11 +2023,30 @@ export default function App() {
       word: item.word || '',
       part_of_speech: item.part_of_speech || 'navdêr',
       meaning_tr: item.meaning_tr || '',
+      meaning_en: item.meaning_en || '',
       meaning_ku: item.meaning_ku || '',
       example_sentence: item.example_sentence || '',
       audio_url: item.audio_url || '',
-      meanings_i18n: item.meanings_i18n || {},
-      examples_i18n: item.examples_i18n || {}
+      meanings_i18n: {
+        KU: item.meanings_i18n?.KU || item.meaning_ku || '',
+        ZZA: item.meanings_i18n?.ZZA || '',
+        CKB: item.meanings_i18n?.CKB || '',
+        TR: item.meanings_i18n?.TR || item.meaning_tr || '',
+        EN: item.meanings_i18n?.EN || item.meaning_en || '',
+        DE: item.meanings_i18n?.DE || '',
+        FR: item.meanings_i18n?.FR || '',
+        IT: item.meanings_i18n?.IT || ''
+      },
+      examples_i18n: {
+        KU: item.examples_i18n?.KU || item.example_sentence || '',
+        ZZA: item.examples_i18n?.ZZA || '',
+        CKB: item.examples_i18n?.CKB || '',
+        TR: item.examples_i18n?.TR || '',
+        EN: item.examples_i18n?.EN || '',
+        DE: item.examples_i18n?.DE || '',
+        FR: item.examples_i18n?.FR || '',
+        IT: item.examples_i18n?.IT || ''
+      }
     });
   };
   const resetWordForm = () => {
@@ -1514,47 +2055,183 @@ export default function App() {
       word: '',
       part_of_speech: 'navdêr',
       meaning_tr: '',
+      meaning_en: '',
       meaning_ku: '',
       example_sentence: '',
       audio_url: '',
-      meanings_i18n: {},
-      examples_i18n: {}
+      meanings_i18n: {
+        KU: '',
+        ZZA: '',
+        CKB: '',
+        TR: '',
+        EN: '',
+        DE: '',
+        FR: '',
+        IT: ''
+      },
+      examples_i18n: {
+        KU: '',
+        ZZA: '',
+        CKB: '',
+        TR: '',
+        EN: '',
+        DE: '',
+        FR: '',
+        IT: ''
+      }
     });
   };
   const handleDeleteWord = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê peyvê jê bibî?')) return;
     const { error } = await supabase.from('dictionary').delete().eq('id', id);
-    if (error) {
-      setWordMsg('Çewtî: ' + error.message);
-    } else {
-      setFerhengWords((prev) => prev.filter((item) => item.id !== id));
-      if (selectedWordDetail?.id === id) setSelectedWordDetail(null);
+    if (!error) {
       if (editingWordId === id) resetWordForm();
-      setWordMsg('Peyv hat jêbirin.');
+      fetchAllData();
     }
-    setTimeout(() => setWordMsg(''), 3500);
   };
+  const handleBulkImportDictionary = async () => {
+    setSyncingProgress('Peyvên bingehîn tên tomarkirin...');
+    let added = 0;
+    const existingSet = new Set(
+      dictionaryWords.map((w) => normalizeKurdish(w.word || ''))
+    );
+    for (const entry of BUILTIN_DICTIONARY) {
+      const key = normalizeKurdish(entry.word);
+      if (existingSet.has(key)) continue;
+      const { error } = await supabase.from('dictionary').insert([
+        {
+          word: entry.word,
+          part_of_speech: entry.part_of_speech,
+          meaning_tr: entry.meaning_tr,
+          meaning_en: entry.meaning_en,
+          meaning_ku: entry.meaning_ku,
+          example_sentence: entry.example_sentence,
+          meanings_i18n: entry.meanings_i18n,
+          examples_i18n: entry.examples_i18n
+        }
+      ]);
+      if (!error) {
+        added += 1;
+        existingSet.add(key);
+      }
+    }
+    setSyncingProgress('');
+    setWordMsg(`${added} peyvên nû li ferhengê hatin zêdekirin.`);
+    fetchAllData();
+    setTimeout(() => setWordMsg(''), 4000);
+  };
+  useEffect(() => {
+    const trimmed = ferhengQuery.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setWiktionaryMatches([]);
+      setSearchingDict(false);
+      return;
+    }
+    let cancelled = false;
+    setSearchingDict(true);
+    const timer = setTimeout(async () => {
+      try {
+        const entry = await fetchWiktionaryEntry(trimmed, selectedLang);
+        if (cancelled) return;
+        if (entry) {
+          setWiktionaryMatches([entry]);
+        } else {
+          setWiktionaryMatches([]);
+        }
+      } catch {
+        if (!cancelled) setWiktionaryMatches([]);
+      } finally {
+        if (!cancelled) setSearchingDict(false);
+      }
+    }, 250);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [ferhengQuery, selectedLang]);
+  const handleDictionarySearchSubmit = (e) => {
+    e.preventDefault();
+    if (ferhengQuery.trim()) {
+      recordSearchHistory(ferhengQuery.trim());
+    }
+  };
+  const effectiveExercises = (() => {
+    const hasCustomAlfabe = exercises.some(
+      (ex) => (ex.unit_title || '').trim().toUpperCase() === 'ALFABE'
+    );
+    const base =
+      alfabeReset || hasCustomAlfabe
+        ? exercises
+        : [...BUILTIN_EXERCISES, ...exercises];
+    return [...base].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+  })();
+  const combinedDictionary = (() => {
+    const map = new Map();
+    BUILTIN_DICTIONARY.forEach((item) => {
+      const key = normalizeKurdish(item.word || '');
+      if (key) {
+        map.set(key, { ...item, sourceType: 'builtin' });
+      }
+    });
+    dictionaryWords.forEach((item) => {
+      const key = normalizeKurdish(item.word || '');
+      if (key) {
+        const prev = map.get(key);
+        map.set(key, {
+          ...(prev || {}),
+          ...item,
+          meanings_i18n: {
+            ...(prev?.meanings_i18n || {}),
+            ...(item.meanings_i18n || {})
+          },
+          examples_i18n: {
+            ...(prev?.examples_i18n || {}),
+            ...(item.examples_i18n || {})
+          },
+          sourceType: 'db'
+        });
+      }
+    });
+    wiktionaryMatches.forEach((item) => {
+      const key = normalizeKurdish(item.word || '');
+      if (key) {
+        const existing = map.get(key);
+        if (existing) {
+          map.set(key, {
+            ...existing,
+            meanings_i18n: {
+              ...(item.meanings_i18n || {}),
+              ...(existing.meanings_i18n || {})
+            },
+            examples_i18n: {
+              ...(item.examples_i18n || {}),
+              ...(existing.examples_i18n || {})
+            }
+          });
+        } else {
+          map.set(key, { ...item, sourceType: 'wiktionary' });
+        }
+      }
+    });
+    return Array.from(map.values());
+  })();
   const filteredDictionary = (() => {
     const rawQ = ferhengQuery.trim();
     const normQ = normalizeKurdish(rawQ);
-    const normLetter = selectedLetter === 'all' ? 'all' : normalizeKurdish(selectedLetter);
-    const dbList = ferhengWords.map((w) => ({
-      ...w,
-      sourceType: w.sourceType || 'db'
-    }));
-    const seenWords = new Set(dbList.map((w) => normalizeKurdish(w.word)));
-    const builtinList = BUILTIN_DICTIONARY.filter(
-      (b) => !seenWords.has(normalizeKurdish(b.word))
-    ).map((b) => ({
-      ...b,
-      sourceType: 'builtin'
-    }));
-    const combined = [...dbList, ...builtinList].filter((item) => {
-      if (normLetter === 'all') return true;
-      return normalizeKurdish(item.word || '').startsWith(normLetter);
-    });
-    if (!normQ) return combined;
-    return combined
+    if (!normQ) {
+      return combinedDictionary
+        .filter((item) => {
+          if (selectedLetter === 'all') return true;
+          const firstChar = (item.word || '').trim().charAt(0).toLocaleUpperCase('tr');
+          return normalizeKurdish(firstChar) === normalizeKurdish(selectedLetter);
+        })
+        .sort((a, b) =>
+          (a.word || '').localeCompare(b.word || '', ['ku', 'tr', 'en'], {
+            sensitivity: 'base'
+          })
+        );
+    }
+    return combinedDictionary
       .map((item) => {
         const wNorm = normalizeKurdish(item.word || '');
         const trNorm = normalizeKurdish(item.meaning_tr || '');
@@ -1873,7 +2550,7 @@ export default function App() {
   }, []);
   const resolveMatchVisual = (rawRight, leftText) => {
     const cleanedRight = (rawRight || '').trim();
-    const isUrl = /^https?:\/\//i.test(cleanedRight);
+    const isUrl = /^(https?:\/\/|data:image\/)/i.test(cleanedRight);
     const wordCandidate = cleanedRight.startsWith('img:')
       ? cleanedRight.replace(/^img:/i, '').trim()
       : cleanedRight;
@@ -2791,7 +3468,7 @@ export default function App() {
                             type="button"
                             disabled={done}
                             onClick={() => handleMatchSelect('left', p.id)}
-                            className={`w-full min-h-[104px] border-2 rounded-xl px-4 py-3 font-bold text-base text-left transition flex items-center justify-between ${
+                            className={`w-full min-h-[112px] border-2 rounded-xl px-4 py-3 font-bold text-base text-left transition flex items-center justify-between ${
                               done
                                 ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
@@ -2819,7 +3496,7 @@ export default function App() {
                             type="button"
                             disabled={done}
                             onClick={() => handleMatchSelect('right', p.id)}
-                            className={`w-full min-h-[104px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
+                            className={`w-full min-h-[112px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
                               done
                                 ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
