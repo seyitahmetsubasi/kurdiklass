@@ -922,13 +922,13 @@ export default function App() {
       const remoteUnitsRow = data.find((r) => r.key === 'learner_units_remote');
       const localXp = Number(localStorage.getItem('kk_xp') || 0);
       const remoteXp = Number(remoteXpRow?.value || 0);
-      if (remoteXp > localXp) {
+      if (!Number.isNaN(remoteXp) && remoteXp > localXp) {
         setXpPoints(remoteXp);
         localStorage.setItem('kk_xp', String(remoteXp));
       }
       const localStreak = Number(localStorage.getItem('kk_streak') || 0);
       const remoteStreak = Number(remoteStreakRow?.value || 0);
-      if (remoteStreak > localStreak) {
+      if (!Number.isNaN(remoteStreak) && remoteStreak > localStreak) {
         setStreakDays(remoteStreak);
         localStorage.setItem('kk_streak', String(remoteStreak));
       }
@@ -963,12 +963,15 @@ export default function App() {
   };
   const fetchLessons = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('lessons')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (!error && data) setLessons(data);
-    setLoading(false);
+    try {
+      const { data, error } = await supabase
+        .from('lessons')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && data) setLessons(data);
+    } finally {
+      setLoading(false);
+    }
   };
   const fetchExercises = async () => {
     const { data, error } = await supabase
@@ -1201,26 +1204,30 @@ export default function App() {
       const { data, count, error } = await query.limit(100);
       if (requestId !== fetchRequestRef.current) return;
       let results = !error && data ? data : [];
-      if (q && !results.some((r) => normalizeKurdish(r.word) === normalizeKurdish(q))) {
+      if (
+        q &&
+        q.length >= 2 &&
+        !results.some((r) => normalizeKurdish(r.word) === normalizeKurdish(q))
+      ) {
         const liveEntry = await fetchFromWiktionary(q);
         if (requestId !== fetchRequestRef.current) return;
         if (liveEntry) {
-          const { data: inserted } = await supabase
-            .from('dictionary')
-            .insert([liveEntry])
-            .select();
-          if (requestId !== fetchRequestRef.current) return;
-          if (inserted && inserted.length > 0) {
-            results = [inserted[0], ...results];
-          } else {
-            results = [{ id: `live-${Date.now()}`, ...liveEntry }, ...results];
-          }
+          results = [
+            {
+              id: `wiktionary-${normalizeKurdish(liveEntry.word)}`,
+              sourceType: 'wiktionary',
+              ...liveEntry
+            },
+            ...results
+          ];
         }
       }
       setFerhengWords(results);
       if (count !== null && !q && letter === 'all') {
         setTotalWordCount(count);
       }
+    } catch (err) {
+      console.error('Dictionary fetch error:', err);
     } finally {
       if (requestId === fetchRequestRef.current) {
         setSearchingDict(false);
@@ -1350,12 +1357,15 @@ export default function App() {
     const normLetter = selectedLetter === 'all' ? 'all' : normalizeKurdish(selectedLetter);
     const dbList = ferhengWords.map((w) => ({
       ...w,
-      sourceType: 'db'
+      sourceType: w.sourceType || 'db'
     }));
     const seenWords = new Set(dbList.map((w) => normalizeKurdish(w.word)));
     const builtinList = BUILTIN_DICTIONARY.filter(
       (b) => !seenWords.has(normalizeKurdish(b.word))
-    );
+    ).map((b) => ({
+      ...b,
+      sourceType: 'builtin'
+    }));
     const combined = [...dbList, ...builtinList].filter((item) => {
       if (normLetter === 'all') return true;
       return normalizeKurdish(item.word || '').startsWith(normLetter);
@@ -1389,10 +1399,17 @@ export default function App() {
         return { ...item, _score: score };
       })
       .filter((item) => item._score > 0)
-      .sort((a, b) => b._score - a._score || a.word.localeCompare(b.word));
+      .sort(
+        (a, b) =>
+          b._score - a._score ||
+          (a.word || '').localeCompare(b.word || '', ['ku', 'tr', 'en'], {
+            sensitivity: 'base'
+          })
+      );
   })();
   const handleResetGamesSection = async () => {
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
+    setIsPlayingAudio(false);
     localStorage.removeItem('kk_xp');
     localStorage.removeItem('kk_streak');
     localStorage.removeItem('kk_completed_units');
@@ -1724,6 +1741,10 @@ export default function App() {
     }
   };
   const startUnit = (unitName) => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+    }
+    setIsPlayingAudio(false);
     setSelectedUnit(unitName);
     setCurrentExIndex(0);
     setSelectedOption('');
@@ -1736,6 +1757,7 @@ export default function App() {
   const closeActiveUnit = () => {
     const wasZarok = selectedUnit?.toUpperCase().startsWith('ZAROK:');
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
+    setIsPlayingAudio(false);
     setSelectedUnit(null);
     if (wasZarok) {
       setViewMode('student');
