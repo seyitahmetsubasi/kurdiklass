@@ -66,6 +66,7 @@ const LANGUAGE_OPTIONS = [
 ];
 const ALFABE_BASE_URL = '';
 const ALFABE_DEFAULT_EXT = 'png';
+const ALFABE_SHEET_SRC = '/alfabe-gisti-2.png';
 const ALFABE_IMAGE_URLS = {
   Agir: '',
   Bilbil: '',
@@ -132,7 +133,7 @@ const RAW_ALFABE_ITEMS = [
   { letter: 'Y', word: 'Heyv', image: '' },
   { letter: 'Z', word: 'Zebeş', image: '' }
 ];
-const ALFABE_ITEMS = RAW_ALFABE_ITEMS.map((item) => {
+const ALFABE_ITEMS = RAW_ALFABE_ITEMS.map((item, idx) => {
   const customUrl = (ALFABE_IMAGE_URLS[item.word] || '').trim();
   const baseUrl = ALFABE_BASE_URL.trim().replace(/\/+$/, '');
   const slug = item.word
@@ -147,13 +148,69 @@ const ALFABE_ITEMS = RAW_ALFABE_ITEMS.map((item) => {
     (item.image || '').trim() ||
     customUrl ||
     (baseUrl ? `${baseUrl}/${slug}.${ALFABE_DEFAULT_EXT}` : '');
-  return { ...item, image: resolvedImage };
+  const row = Math.floor(idx / 5);
+  const col = idx < 30 ? idx % 5 : 2;
+  return {
+    ...item,
+    cellIndex: idx,
+    gridRow: row,
+    gridCol: col,
+    image: resolvedImage
+  };
 });
 const ALFABE_WORD_IMAGE_MAP = ALFABE_ITEMS.reduce((acc, item) => {
   acc[item.word.toLocaleLowerCase('tr')] = item.image || '';
   acc[item.letter.toLocaleLowerCase('tr')] = item.image || '';
   return acc;
 }, {});
+const ALFABE_CELL_META_MAP = ALFABE_ITEMS.reduce((acc, item) => {
+  acc[item.word.toLocaleLowerCase('tr')] = item;
+  acc[item.letter.toLocaleLowerCase('tr')] = item;
+  return acc;
+}, {});
+let cachedAlfabeSheetImg = null;
+const loadAlfabeSheetImage = () => {
+  if (!ALFABE_SHEET_SRC || typeof window === 'undefined') return Promise.resolve(null);
+  if (cachedAlfabeSheetImg && cachedAlfabeSheetImg.complete && cachedAlfabeSheetImg.naturalWidth > 0) {
+    return Promise.resolve(cachedAlfabeSheetImg);
+  }
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      cachedAlfabeSheetImg = img;
+      resolve(img);
+    };
+    img.onerror = () => resolve(null);
+    img.src = ALFABE_SHEET_SRC;
+  });
+};
+const cropAlfabeCellFromSheet = async (cellMeta) => {
+  if (!cellMeta || typeof document === 'undefined') return '';
+  const sheetImg = await loadAlfabeSheetImage();
+  if (!sheetImg) return '';
+  const w = sheetImg.naturalWidth;
+  const h = sheetImg.naturalHeight;
+  const gridLeft = w * 0.06;
+  const gridWidth = w * 0.88;
+  const gridTop = h * 0.178;
+  const gridHeight = h * 0.785;
+  const colSpan = gridWidth / 5;
+  const rowSpan = gridHeight / 7;
+  const sx = gridLeft + cellMeta.gridCol * colSpan + colSpan * 0.14;
+  const sy = gridTop + cellMeta.gridRow * rowSpan + rowSpan * 0.28;
+  const sw = colSpan * 0.72;
+  const sh = rowSpan * 0.44;
+  const canvas = document.createElement('canvas');
+  canvas.width = 240;
+  canvas.height = 180;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+  ctx.fillStyle = '#cbe7b8';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(sheetImg, sx, sy, sw, sh, 12, 12, canvas.width - 24, canvas.height - 24);
+  return canvas.toDataURL('image/png');
+};
 const buildAlfabeExercises = () => {
   const chunks = [];
   for (let i = 0; i < ALFABE_ITEMS.length; i += 4) {
@@ -171,6 +228,7 @@ const buildAlfabeExercises = () => {
       right: g.word,
       word: g.word,
       letter: g.letter,
+      cellMeta: g,
       image: g.image || ''
     })),
     correct_answer: String(group.length),
@@ -876,6 +934,7 @@ export default function App() {
   const [lessonTab, setLessonTab] = useState('content');
   const [brokenThumbs, setBrokenThumbs] = useState({});
   const [brokenExImages, setBrokenExImages] = useState({});
+  const [croppedAlfabeImages, setCroppedAlfabeImages] = useState({});
   const [mediaLoadError, setMediaLoadError] = useState('');
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
   const [passwordInput, setPasswordInput] = useState('');
@@ -1821,6 +1880,11 @@ export default function App() {
     const leftParts = (leftText || '').split('—');
     const letter = leftParts.length > 1 ? leftParts[0].trim() : '';
     const wordFromLeft = leftParts.length > 1 ? leftParts.slice(1).join('—').trim() : wordCandidate;
+    const cellMeta =
+      ALFABE_CELL_META_MAP[wordCandidate.toLocaleLowerCase('tr')] ||
+      ALFABE_CELL_META_MAP[wordFromLeft.toLocaleLowerCase('tr')] ||
+      ALFABE_CELL_META_MAP[letter.toLocaleLowerCase('tr')] ||
+      null;
     const mappedImage =
       (isUrl ? cleanedRight : '') ||
       ALFABE_WORD_IMAGE_MAP[wordCandidate.toLocaleLowerCase('tr')] ||
@@ -1831,7 +1895,8 @@ export default function App() {
       right: cleanedRight,
       image: mappedImage,
       word: wordFromLeft || wordCandidate,
-      letter
+      letter,
+      cellMeta
     };
   };
   const parsedMatchPairs = (() => {
@@ -1845,7 +1910,8 @@ export default function App() {
           right: mp.right || resolved.right,
           image: mp.image || resolved.image,
           word: mp.word || resolved.word,
-          letter: mp.letter || resolved.letter
+          letter: mp.letter || resolved.letter,
+          cellMeta: mp.cellMeta || resolved.cellMeta
         };
       });
     }
@@ -1871,7 +1937,8 @@ export default function App() {
         right: p.right,
         image: p.image || '',
         word: p.word || '',
-        letter: p.letter || ''
+        letter: p.letter || '',
+        cellMeta: p.cellMeta || null
       }));
       const shuffled = [...rightItems].sort(() => Math.random() - 0.5);
       setShuffledRightOptions(shuffled);
@@ -1880,6 +1947,23 @@ export default function App() {
       setMatchedPairs([]);
       setMatchWrongFlash(false);
     }
+  }, [currentEx?.id]);
+  useEffect(() => {
+    if (currentEx?.exercise_type !== 'match' || parsedMatchPairs.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      for (const p of parsedMatchPairs) {
+        const key = (p.word || p.right || String(p.id)).toLocaleLowerCase('tr');
+        if (p.image || croppedAlfabeImages[key] || !p.cellMeta) continue;
+        const cropped = await cropAlfabeCellFromSheet(p.cellMeta);
+        if (!cancelled && cropped) {
+          setCroppedAlfabeImages((prev) => ({ ...prev, [key]: cropped }));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [currentEx?.id]);
   const handleMatchSelect = (side, pairId) => {
     if (answerState || matchedPairs.includes(pairId) || hearts === 0) return;
@@ -2707,7 +2791,7 @@ export default function App() {
                             type="button"
                             disabled={done}
                             onClick={() => handleMatchSelect('left', p.id)}
-                            className={`w-full min-h-[92px] border-2 rounded-xl px-4 py-3 font-bold text-base text-left transition flex items-center justify-between ${
+                            className={`w-full min-h-[104px] border-2 rounded-xl px-4 py-3 font-bold text-base text-left transition flex items-center justify-between ${
                               done
                                 ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
@@ -2726,14 +2810,16 @@ export default function App() {
                       {shuffledRightOptions.map((p) => {
                         const done = matchedPairs.includes(p.id);
                         const sel = matchRightSelected === p.id;
-                        const hasRealImage = Boolean(p.image) && !brokenExImages[`match-${p.id}`];
+                        const cropKey = (p.word || p.right || String(p.id)).toLocaleLowerCase('tr');
+                        const resolvedSrc = p.image || croppedAlfabeImages[cropKey] || '';
+                        const hasRealImage = Boolean(resolvedSrc) && !brokenExImages[`match-${p.id}`];
                         return (
                           <button
                             key={p.id}
                             type="button"
                             disabled={done}
                             onClick={() => handleMatchSelect('right', p.id)}
-                            className={`w-full min-h-[92px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
+                            className={`w-full min-h-[104px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
                               done
                                 ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
@@ -2745,7 +2831,7 @@ export default function App() {
                           >
                             {hasRealImage ? (
                               <img
-                                src={p.image}
+                                src={resolvedSrc}
                                 alt={p.word || p.right || ''}
                                 onError={() =>
                                   setBrokenExImages((prev) => ({
@@ -2753,13 +2839,13 @@ export default function App() {
                                     [`match-${p.id}`]: true
                                   }))
                                 }
-                                className="h-20 w-full object-contain rounded-lg"
+                                className="h-24 w-full object-contain rounded-lg"
                               />
                             ) : (
-                              <div className="w-full h-20 rounded-lg bg-lime-50 border border-lime-200 flex flex-col items-center justify-center text-slate-700 px-2">
+                              <div className="w-full h-24 rounded-lg bg-[#cbe7b8] border border-emerald-200 flex flex-col items-center justify-center text-slate-800 px-2">
                                 <ImageIcon className="w-5 h-5 text-red-700 mb-0.5" />
-                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-full">
-                                  Wêne: {p.word || p.right}
+                                <span className="text-xs font-extrabold text-slate-800 truncate max-w-full">
+                                  {p.word || p.right}
                                 </span>
                               </div>
                             )}
