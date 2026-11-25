@@ -130,6 +130,7 @@ const DEFAULT_UI = {
   filter_level_all: 'Hemû Ast',
   filter_media_label: 'Cureyê Materyalê',
   filter_media_all: 'Hemû Cure',
+  reset_filters_btn: 'Parzûnan Paqij Bike',
   level_1: 'Destpêk',
   level_2: 'Navîn',
   level_3: 'Pêşketî',
@@ -199,6 +200,7 @@ const UI_TRANSLATIONS = {
     filter_level_all: 'Pêro Sewîyeyî',
     filter_media_label: 'Tevrê Materyalî',
     filter_media_all: 'Pêro Tevrî',
+    reset_filters_btn: 'Fîltran Pak Bike',
     level_1: 'Destpêk',
     level_2: 'Miyanên',
     level_3: 'Averşîyayîş',
@@ -265,6 +267,7 @@ const UI_TRANSLATIONS = {
     filter_level_all: 'هەموو ئاستەکان',
     filter_media_label: 'جۆری ماددە',
     filter_media_all: 'هەموو جۆرەکان',
+    reset_filters_btn: 'پاککردنەوەی پاڵاوتن',
     level_1: 'سەرەتایی',
     level_2: 'ناوەند',
     level_3: 'پێشکەوتوو',
@@ -331,6 +334,7 @@ const UI_TRANSLATIONS = {
     filter_level_all: 'Tüm Seviyeler',
     filter_media_label: 'Materyal Türü',
     filter_media_all: 'Tüm Türler',
+    reset_filters_btn: 'Filtreleri Temizle',
     level_1: 'Başlangıç',
     level_2: 'Orta',
     level_3: 'İleri',
@@ -397,6 +401,7 @@ const UI_TRANSLATIONS = {
     filter_level_all: 'All Levels',
     filter_media_label: 'Material Type',
     filter_media_all: 'All Types',
+    reset_filters_btn: 'Clear Filters',
     level_1: 'Beginner',
     level_2: 'Intermediate',
     level_3: 'Advanced',
@@ -463,6 +468,7 @@ const UI_TRANSLATIONS = {
     filter_level_all: 'Alle Niveaus',
     filter_media_label: 'Materialart',
     filter_media_all: 'Alle Arten',
+    reset_filters_btn: 'Filter zurücksetzen',
     level_1: 'Anfänger',
     level_2: 'Mittelstufe',
     level_3: 'Fortgeschritten',
@@ -529,6 +535,7 @@ const UI_TRANSLATIONS = {
     filter_level_all: 'Tous les niveaux',
     filter_media_label: 'Type de support',
     filter_media_all: 'Tous les types',
+    reset_filters_btn: 'Réinitialiser les filtres',
     level_1: 'Débutant',
     level_2: 'Intermédiaire',
     level_3: 'Avancé',
@@ -595,6 +602,7 @@ const UI_TRANSLATIONS = {
     filter_level_all: 'Tutti i livelli',
     filter_media_label: 'Tipo materiale',
     filter_media_all: 'Tutti i tipi',
+    reset_filters_btn: 'Azzera filtri',
     level_1: 'Principiante',
     level_2: 'Intermedio',
     level_3: 'Avanzato',
@@ -652,13 +660,47 @@ const UI_FIELD_LABELS = [
   { key: 'hero_title', label: 'Sernavê Sereke (Hero Title)' },
   { key: 'hero_subtitle', label: 'Binnivîsa Sereke (Hero Subtitle)' },
   { key: 'search_placeholder', label: 'Nivîsa Qutiya Lêgerînê' },
+  { key: 'reset_filters_btn', label: 'Bişkojka Paqijkirina Parzûnan' },
   { key: 'learn_title', label: 'Sernavê Hînbûn / Lîstik' },
   { key: 'learn_subtitle', label: 'Binnivîsa Hînbûn / Lîstik' },
   { key: 'footer_text', label: 'Nivîsa Jêrîn (Footer)' }
 ];
 
-const STARTER_GAMES = [];
-const BUILTIN_ZAROK_FEKI = [];
+const STARTER_GAMES = [
+  {
+    unit_title: 'Beşa 1: Silav û Nasîn',
+    exercise_type: 'choice',
+    question_text: 'Kîjan silav ji bo sibehê tê bikaranîn?',
+    options: ['Rojbaş', 'Şevbaş', 'Bi xatirê te', 'Spas'],
+    correct_answer: 'Rojbaş',
+    explanation: 'Rojbaş ji bo silavdayîna sibeh û rojê tê bikaranîn.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 1
+  },
+  {
+    unit_title: 'Beşa 1: Silav û Nasîn',
+    exercise_type: 'sentence',
+    question_text: 'Hevoka "Ez hevalê te me." saz bike:',
+    options: ['hevalê', 'Ez', 'me.', 'te'],
+    correct_answer: 'Ez hevalê te me.',
+    explanation: 'Di Kurmancî de rêza hevokê bi gelemperî Kirde + Têrker + Lêker e.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 2
+  },
+  {
+    unit_title: 'Beşa 1: Silav û Nasîn',
+    exercise_type: 'match',
+    question_text: 'Peyvên dijwate bighîne hev:',
+    options: ['Mezin=Biçûk', 'Germ=Sar', 'Dirêj=Kurt', 'Spî=Reş'],
+    correct_answer: '4',
+    explanation: 'Her cotek ji peyvên dijwate pêk tê.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 3
+  }
+];
 
 const fetchFromWiktionary = async (rawWord) => {
   const cleanWord = rawWord.trim().toLowerCase();
@@ -994,10 +1036,13 @@ export default function App() {
     const { error } = await supabase.from('lessons').delete().eq('id', id);
     if (error) {
       setStatusMsg({ type: 'error', text: 'Çewtî: ' + error.message });
-      setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
     } else {
-      fetchLessons();
+      setLessons((prev) => prev.filter((item) => item.id !== id));
+      if (activeLesson?.id === id) setActiveLesson(null);
+      if (editingId === id) resetForm();
+      setStatusMsg({ type: 'success', text: 'Materyal hat jêbirin.' });
     }
+    setTimeout(() => setStatusMsg({ type: '', text: '' }), 3500);
   };
 
   const handleUpdateCategoryName = (slug, name) => {
@@ -1053,6 +1098,19 @@ export default function App() {
     setSettingsMsg(error ? 'Çewtî: ' + error.message : 'Hemû nivîsên malperê hatin tomarkirin!');
     setTimeout(() => setSettingsMsg(''), 3500);
   };
+
+  const handleResetFilters = () => {
+    setSelectedCategory('all');
+    setSelectedLevel('all');
+    setSelectedMedia('all');
+    setSearchQuery('');
+  };
+
+  const hasActiveFilters =
+    selectedCategory !== 'all' ||
+    selectedLevel !== 'all' ||
+    selectedMedia !== 'all' ||
+    searchQuery.trim() !== '';
 
   const fetchDictionary = async (searchText = '', letter = 'all') => {
     const requestId = ++fetchRequestRef.current;
@@ -1124,13 +1182,15 @@ export default function App() {
 
   const handleBulkImportDictionary = async () => {
     setSyncingProgress('Peyvên bingehîn tên barkirin...');
-    const sampleWords = BUILTIN_DICTIONARY.map(({ word, part_of_speech, meaning_tr, meaning_ku, example_sentence }) => ({
-      word,
-      part_of_speech,
-      meaning_tr,
-      meaning_ku,
-      example_sentence
-    }));
+    const sampleWords = BUILTIN_DICTIONARY.map(
+      ({ word, part_of_speech, meaning_tr, meaning_ku, example_sentence }) => ({
+        word,
+        part_of_speech,
+        meaning_tr,
+        meaning_ku,
+        example_sentence
+      })
+    );
     const { error } = await supabase.from('dictionary').insert(sampleWords);
     if (error) {
       setSyncingProgress('Çewtî: ' + error.message);
@@ -1187,10 +1247,13 @@ export default function App() {
     const { error } = await supabase.from('dictionary').delete().eq('id', id);
     if (error) {
       setWordMsg('Çewtî: ' + error.message);
-      setTimeout(() => setWordMsg(''), 3500);
     } else {
-      fetchDictionary(ferhengQuery, selectedLetter);
+      setFerhengWords((prev) => prev.filter((item) => item.id !== id));
+      if (selectedWordDetail?.id === id) setSelectedWordDetail(null);
+      if (editingWordId === id) resetWordForm();
+      setWordMsg('Peyv hat jêbirin.');
     }
+    setTimeout(() => setWordMsg(''), 3500);
   };
 
   const filteredDictionary = (() => {
@@ -1236,8 +1299,9 @@ export default function App() {
         return { ...item, _score: score };
       })
       .filter((item) => item._score > 0)
-      .sort((a, b) => b._score - a._score);
+      .sort((a, b) => b._score - a._score || a.word.localeCompare(b.word));
   })();
+
   const fetchExercises = async () => {
     const { data, error } = await supabase
       .from('kurmanci_exercises')
@@ -1250,10 +1314,21 @@ export default function App() {
   };
 
   const handleLoadStarterGames = async () => {
-    setExMsg('Paketa lîstikên destpêkê vala ye.');
-    setTimeout(() => setExMsg(''), 3000);
-  };
+    if (!STARTER_GAMES.length) {
+      setExMsg('Paketa lîstikên destpêkê vala ye.');
+      setTimeout(() => setExMsg(''), 3000);
+      return;
+    }
 
+    const { error } = await supabase.from('kurmanci_exercises').insert(STARTER_GAMES);
+    if (error) {
+      setExMsg('Çewtî: ' + error.message);
+    } else {
+      setExMsg('Paketa destpêkê ya lîstikan hat barkirin!');
+      fetchExercises();
+    }
+    setTimeout(() => setExMsg(''), 4000);
+  };
   const uploadExFile = async (event, folder, setBusy, field) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -1393,21 +1468,17 @@ export default function App() {
     const { error } = await supabase.from('kurmanci_exercises').delete().eq('id', id);
     if (error) {
       setExMsg('Çewtî: ' + error.message);
-      setTimeout(() => setExMsg(''), 4000);
     } else {
-      fetchExercises();
+      setExercises((prev) => prev.filter((item) => item.id !== id));
+      if (editingExId === id) resetExForm();
+      setExMsg('Lîstik hat jêbirin.');
     }
+    setTimeout(() => setExMsg(''), 3500);
   };
 
   const isZarokUnit = (title = '') => {
     const t = title.toLowerCase().trim();
-    return (
-      t.startsWith('zarok') ||
-      t.includes('fêkî') ||
-      t.includes('feki') ||
-      t.includes('hevnasîn') ||
-      t.includes('hevnasin')
-    );
+    return t.startsWith('zarok');
   };
 
   const unitList = [
@@ -1418,17 +1489,12 @@ export default function App() {
 
   const zarokUnitList = [
     ...new Set(
-      exercises
-        .filter((ex) => (ex.unit_title || '').toLowerCase().trim().startsWith('zarok'))
-        .map((ex) => ex.unit_title)
+      exercises.filter((ex) => isZarokUnit(ex.unit_title)).map((ex) => ex.unit_title)
     )
   ];
 
   const unitExercises = (() => {
     if (!selectedUnit) return [];
-    if (selectedUnit === 'ZAROK: Fêkî') {
-      return exercises.filter((ex) => ex.unit_title === 'ZAROK: Fêkî' && ex.audio_url);
-    }
     return exercises.filter((ex) => ex.unit_title === selectedUnit);
   })();
 
@@ -1828,6 +1894,15 @@ export default function App() {
                   ))}
                 </select>
               </div>
+              {hasActiveFilters && (
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="ml-auto text-xs font-bold text-red-700 hover:text-red-800 underline px-2 py-2"
+                >
+                  {ui.reset_filters_btn}
+                </button>
+              )}
             </div>
 
             {selectedCategory === 'zarok' && zarokUnitList.length > 0 && (
@@ -1868,13 +1943,24 @@ export default function App() {
                 <BookOpen className="w-10 h-10 text-slate-300 mx-auto mb-3" />
                 <h3 className="font-bold text-slate-800">{ui.empty_title}</h3>
                 <p className="text-sm text-slate-500 mb-4">{ui.empty_subtitle}</p>
-                <button
-                  type="button"
-                  onClick={() => setViewMode('admin')}
-                  className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-lg text-sm"
-                >
-                  {ui.empty_button}
-                </button>
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={handleResetFilters}
+                      className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-5 py-2 rounded-lg text-sm"
+                    >
+                      {ui.reset_filters_btn}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('admin')}
+                    className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-lg text-sm"
+                  >
+                    {ui.empty_button}
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1977,7 +2063,7 @@ export default function App() {
                         {ui.meta_level_prefix} {activeLesson.level} • {ui.meta_grade_prefix}{' '}
                         {activeLesson.grade_level}
                       </div>
-                      {activeLesson.media_url && (
+                      {activeLesson.media_url ? (
                         <a
                           href={activeLesson.media_url}
                           target="_blank"
@@ -1987,6 +2073,10 @@ export default function App() {
                           <ExternalLink className="w-4 h-4" />
                           <span>{ui.btn_open_material}</span>
                         </a>
+                      ) : (
+                        <p className="text-xs text-slate-400">
+                          Lînka materyalê ya derveyî nehatiye zêdekirin.
+                        </p>
                       )}
                     </div>
                   ) : (
@@ -2041,6 +2131,15 @@ export default function App() {
                     <Flame className="w-5 h-5 text-orange-500" />
                     <span>{streakDays}</span>
                   </div>
+                  {unitList.length > 0 && (
+                    <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
+                      <Award className="w-5 h-5 text-emerald-600" />
+                      <span>
+                        {completedUnits.filter((u) => unitList.includes(u)).length} / {unitList.length}{' '}
+                        {ui.learn_stage_prefix}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {unitList.length === 0 ? (
@@ -2225,7 +2324,7 @@ export default function App() {
                         </button>
                       ))}
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {(currentEx.options || []).map((word, idx) => {
                         const used = builtWords.some((b) => b.idx === idx);
                         return (
@@ -2242,6 +2341,15 @@ export default function App() {
                           </button>
                         );
                       })}
+                      {builtWords.length > 0 && !answerState && (
+                        <button
+                          type="button"
+                          onClick={() => setBuiltWords([])}
+                          className="ml-auto text-xs font-bold text-slate-500 hover:text-slate-800 underline"
+                        >
+                          Ji nû ve rêz bike
+                        </button>
+                      )}
                     </div>
                   </div>
                 )}
