@@ -1403,6 +1403,9 @@ export default function App() {
   const [editingExId, setEditingExId] = useState(null);
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
+  const [inlinePhotoTarget, setInlinePhotoTarget] = useState(null);
+  const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
+  const inlinePhotoInputRef = useRef(null);
   const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
   const [adminExSearch, setAdminExSearch] = useState('');
   const [alfabeReset, setAlfabeReset] = useState(false);
@@ -1686,6 +1689,7 @@ export default function App() {
     setEditingId(null);
     setEditingWordId(null);
     setEditingExId(null);
+    setInlinePhotoTarget(null);
   };
   const handleFileUpload = async (e, targetField) => {
     const file = e.target.files?.[0];
@@ -2339,6 +2343,132 @@ export default function App() {
     uploadExFile(event, 'exercises', setUploadingExImg, 'image_url');
   const handleExAudioUpload = (event) =>
     uploadExFile(event, 'exercise_audio', setUploadingExAudio, 'audio_url');
+  const triggerInlinePhotoPicker = (e, target) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!isAdmin || inlinePhotoSaving) return;
+    setInlinePhotoTarget(target);
+    setTimeout(() => {
+      inlinePhotoInputRef.current?.click();
+    }, 0);
+  };
+  const handleInlinePhotoFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    const target = inlinePhotoTarget;
+    e.target.value = '';
+    if (!file || !target) return;
+    setInlinePhotoSaving(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+      const filePath = `exercises/${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('materyal')
+        .upload(filePath, file);
+      if (uploadError) {
+        setExMsg('Barkirina wêneyî têk çû: ' + uploadError.message);
+        setTimeout(() => setExMsg(''), 4000);
+        return;
+      }
+      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
+      const publicUrl = publicData?.publicUrl || '';
+      if (!publicUrl) return;
+      const sourceEx =
+        exercises.find((item) => item.id === target.exerciseId) ||
+        effectiveExercises.find((item) => item.id === target.exerciseId);
+      if (!sourceEx) return;
+      const isBuiltinAlfabe = String(sourceEx.id || '').startsWith('alfabe-match-');
+      const hasCustomAlfabeNow = exercises.some(
+        (item) => (item.unit_title || '').trim().toUpperCase() === 'ALFABE'
+      );
+      let basePool = sourceEx;
+      if (isBuiltinAlfabe && !hasCustomAlfabeNow) {
+        const siblingBuiltins = BUILTIN_EXERCISES.filter(
+          (b) => (b.unit_title || '').trim().toUpperCase() === 'ALFABE'
+        );
+        const insertedSiblings = [];
+        for (const b of siblingBuiltins) {
+          const bPayload = {
+            unit_title: b.unit_title,
+            exercise_type: b.exercise_type,
+            question_text: b.question_text,
+            options: [...(b.options || [])],
+            correct_answer: b.correct_answer,
+            explanation: b.explanation || '',
+            image_url: b.image_url || '',
+            audio_url: b.audio_url || '',
+            sort_order: b.sort_order ?? 1
+          };
+          const { data: insRows, error: insErr } = await supabase
+            .from('kurmanci_exercises')
+            .insert([bPayload])
+            .select();
+          const savedRow =
+            !insErr && insRows && insRows[0]
+              ? insRows[0]
+              : { id: `local-${b.id}-${Date.now()}`, ...bPayload };
+          insertedSiblings.push(savedRow);
+          if (b.id === sourceEx.id) {
+            basePool = savedRow;
+          }
+        }
+        setExercises((prev) => [...prev, ...insertedSiblings]);
+        setAlfabeReset(false);
+      }
+      const targetId = basePool.id;
+      let updatedPayload = {
+        unit_title: basePool.unit_title,
+        exercise_type: basePool.exercise_type,
+        question_text: basePool.question_text,
+        options: Array.isArray(basePool.options) ? [...basePool.options] : [],
+        correct_answer: basePool.correct_answer,
+        explanation: basePool.explanation || '',
+        image_url: basePool.image_url || '',
+        audio_url: basePool.audio_url || ''
+      };
+      if (target.mode === 'question') {
+        updatedPayload.image_url = publicUrl;
+        setBrokenExImages((prev) => ({
+          ...prev,
+          [targetId]: false,
+          [publicUrl]: false
+        }));
+      } else if (target.mode === 'match_pair') {
+        const nextOpts = [...updatedPayload.options];
+        const pairIdx = Number(target.pairId);
+        const existingOpt = nextOpts[pairIdx] || '';
+        const leftPart = existingOpt.includes('=')
+          ? existingOpt.split('=')[0].trim()
+          : existingOpt.trim() || `Peyv ${pairIdx + 1}`;
+        nextOpts[pairIdx] = `${leftPart}=${publicUrl}`;
+        updatedPayload.options = nextOpts;
+        setBrokenExImages((prev) => ({
+          ...prev,
+          [`match-${pairIdx}`]: false,
+          [publicUrl]: false
+        }));
+      }
+      const isLocalOnly = String(targetId || '').startsWith('local-');
+      if (!isLocalOnly) {
+        await supabase.from('kurmanci_exercises').update(updatedPayload).eq('id', targetId);
+      }
+      setExercises((prev) =>
+        prev.map((item) => (item.id === targetId ? { ...item, ...updatedPayload } : item))
+      );
+      if (editingExId === targetId) {
+        setExForm((prev) => ({
+          ...prev,
+          image_url: updatedPayload.image_url,
+          options_raw: updatedPayload.options.join(', ')
+        }));
+      }
+      setExMsg('Wêne bi serkeftî hat barkirin û li lîstikê hat zêdekirin!');
+      setTimeout(() => setExMsg(''), 3500);
+    } finally {
+      setInlinePhotoSaving(false);
+      setInlinePhotoTarget(null);
+    }
+  };
   const handleSaveExercise = async (e) => {
     e.preventDefault();
     const parsedOptions = exForm.options_raw
@@ -3217,6 +3347,13 @@ export default function App() {
         {/* ===================== HÎNBÛN / LÎSTIK ===================== */}
         {viewMode === 'learn' && (
           <div className="max-w-3xl mx-auto">
+            <input
+              ref={inlinePhotoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleInlinePhotoFileChange}
+            />
             {!selectedUnit ? (
               <div className="space-y-6">
                 <div className="text-center">
@@ -3346,15 +3483,44 @@ export default function App() {
                     <span>{hearts}</span>
                   </div>
                 </div>
+                {isAdmin && exMsg && (
+                  <div className="px-3.5 py-2 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs font-semibold">
+                    {exMsg}
+                  </div>
+                )}
                 <div className="space-y-3">
-                  <div className="text-xs font-bold text-red-700">
-                    {{
-                      choice: ui.learn_type_choice,
-                      sentence: ui.learn_type_sentence,
-                      match: ui.learn_type_match,
-                      fill_blank: ui.learn_type_fill,
-                      image_choice: ui.learn_type_image
-                    }[currentEx.exercise_type] || ''}
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div className="text-xs font-bold text-red-700">
+                      {{
+                        choice: ui.learn_type_choice,
+                        sentence: ui.learn_type_sentence,
+                        match: ui.learn_type_match,
+                        fill_blank: ui.learn_type_fill,
+                        image_choice: ui.learn_type_image
+                      }[currentEx.exercise_type] || ''}
+                    </div>
+                    {isAdmin && currentEx.exercise_type !== 'match' && (
+                      <button
+                        type="button"
+                        disabled={inlinePhotoSaving}
+                        onClick={(e) =>
+                          triggerInlinePhotoPicker(e, {
+                            mode: 'question',
+                            exerciseId: currentEx.id
+                          })
+                        }
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5 text-red-400" />
+                        <span>
+                          {inlinePhotoSaving && inlinePhotoTarget?.exerciseId === currentEx.id
+                            ? 'Tê barkirin...'
+                            : currentEx.image_url
+                            ? 'Wêneyê Biguherîne'
+                            : '+ Foto Ekle'}
+                        </span>
+                      </button>
+                    )}
                   </div>
                   <h2 className="text-xl font-bold text-slate-900">{currentEx.question_text}</h2>
                   {currentEx.image_url && !brokenExImages[currentEx.id] && (
@@ -3490,43 +3656,72 @@ export default function App() {
                         const cropKey = (p.word || p.right || String(p.id)).toLocaleLowerCase('tr');
                         const resolvedSrc = p.image || croppedAlfabeImages[cropKey] || '';
                         const hasRealImage = Boolean(resolvedSrc) && !brokenExImages[`match-${p.id}`];
+                        const isThisUploading =
+                          inlinePhotoSaving &&
+                          inlinePhotoTarget?.mode === 'match_pair' &&
+                          inlinePhotoTarget?.exerciseId === currentEx.id &&
+                          inlinePhotoTarget?.pairId === p.id;
                         return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={done}
-                            onClick={() => handleMatchSelect('right', p.id)}
-                            className={`w-full min-h-[112px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
-                              done
-                                ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                                : sel
-                                ? matchWrongFlash
-                                  ? 'border-red-600 bg-red-50'
-                                  : 'border-red-700 bg-red-50'
-                                : 'border-slate-200 hover:border-red-300 bg-white'
-                            }`}
-                          >
-                            {hasRealImage ? (
-                              <img
-                                src={resolvedSrc}
-                                alt={p.word || p.right || ''}
-                                onError={() =>
-                                  setBrokenExImages((prev) => ({
-                                    ...prev,
-                                    [`match-${p.id}`]: true
-                                  }))
+                          <div key={p.id} className="relative">
+                            <button
+                              type="button"
+                              disabled={done}
+                              onClick={() => handleMatchSelect('right', p.id)}
+                              className={`w-full min-h-[112px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
+                                done
+                                  ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
+                                  : sel
+                                  ? matchWrongFlash
+                                    ? 'border-red-600 bg-red-50'
+                                    : 'border-red-700 bg-red-50'
+                                  : 'border-slate-200 hover:border-red-300 bg-white'
+                              }`}
+                            >
+                              {hasRealImage ? (
+                                <img
+                                  src={resolvedSrc}
+                                  alt={p.word || p.right || ''}
+                                  onError={() =>
+                                    setBrokenExImages((prev) => ({
+                                      ...prev,
+                                      [`match-${p.id}`]: true
+                                    }))
+                                  }
+                                  className="h-24 w-full object-contain rounded-lg"
+                                />
+                              ) : (
+                                <div className="w-full h-24 rounded-lg bg-[#cbe7b8] border border-emerald-200 flex flex-col items-center justify-center text-slate-800 px-2">
+                                  <ImageIcon className="w-5 h-5 text-red-700 mb-0.5" />
+                                  <span className="text-xs font-extrabold text-slate-800 truncate max-w-full">
+                                    {p.word || p.right}
+                                  </span>
+                                </div>
+                              )}
+                            </button>
+                            {isAdmin && (
+                              <button
+                                type="button"
+                                disabled={inlinePhotoSaving}
+                                onClick={(e) =>
+                                  triggerInlinePhotoPicker(e, {
+                                    mode: 'match_pair',
+                                    exerciseId: currentEx.id,
+                                    pairId: p.id
+                                  })
                                 }
-                                className="h-24 w-full object-contain rounded-lg"
-                              />
-                            ) : (
-                              <div className="w-full h-24 rounded-lg bg-[#cbe7b8] border border-emerald-200 flex flex-col items-center justify-center text-slate-800 px-2">
-                                <ImageIcon className="w-5 h-5 text-red-700 mb-0.5" />
-                                <span className="text-xs font-extrabold text-slate-800 truncate max-w-full">
-                                  {p.word || p.right}
+                                className="mt-1.5 w-full inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-[11px] font-bold transition"
+                              >
+                                <ImageIcon className="w-3 h-3 text-red-400" />
+                                <span>
+                                  {isThisUploading
+                                    ? 'Tê barkirin...'
+                                    : hasRealImage
+                                    ? 'Foto Biguherîne'
+                                    : '+ Foto Ekle'}
                                 </span>
-                              </div>
+                              </button>
                             )}
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
