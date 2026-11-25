@@ -64,6 +64,71 @@ const LANGUAGE_OPTIONS = [
   { code: 'FR', nativeName: 'Français' },
   { code: 'IT', nativeName: 'Italiano' }
 ];
+const ALFABE_ITEMS = [
+  { letter: 'A', word: 'Agir', image: '' },
+  { letter: 'B', word: 'Bilbil', image: '' },
+  { letter: 'C', word: 'Cemed', image: '' },
+  { letter: 'Ç', word: 'Çay', image: '' },
+  { letter: 'D', word: 'Dar', image: '' },
+  { letter: 'E', word: 'Endezyar', image: '' },
+  { letter: 'Ê', word: 'Êlek', image: '' },
+  { letter: 'F', word: 'Ferheng', image: '' },
+  { letter: 'G', word: 'Gore', image: '' },
+  { letter: 'H', word: 'Hesp', image: '' },
+  { letter: 'I', word: 'Tivir', image: '' },
+  { letter: 'Î', word: 'Îsot', image: '' },
+  { letter: 'J', word: 'Jûjî', image: '' },
+  { letter: 'K', word: 'Ker', image: '' },
+  { letter: 'L', word: 'Lembe', image: '' },
+  { letter: 'M', word: 'Masî', image: '' },
+  { letter: 'N', word: 'Nan', image: '' },
+  { letter: 'O', word: 'Roj', image: '' },
+  { letter: 'P', word: 'Pisîk', image: '' },
+  { letter: 'Q', word: 'Qaz', image: '' },
+  { letter: 'R', word: 'Rovî', image: '' },
+  { letter: 'S', word: 'Stêrk', image: '' },
+  { letter: 'Ş', word: 'Şêr', image: '' },
+  { letter: 'T', word: 'Telefon', image: '' },
+  { letter: 'U', word: 'Guh', image: '' },
+  { letter: 'Û', word: 'Gûz', image: '' },
+  { letter: 'V', word: 'Nivîn', image: '' },
+  { letter: 'W', word: 'Werdek', image: '' },
+  { letter: 'X', word: 'Xiyar', image: '' },
+  { letter: 'Y', word: 'Heyv', image: '' },
+  { letter: 'Z', word: 'Zebeş', image: '' }
+];
+const ALFABE_WORD_IMAGE_MAP = ALFABE_ITEMS.reduce((acc, item) => {
+  acc[item.word.toLocaleLowerCase('tr')] = item.image || '';
+  acc[item.letter.toLocaleLowerCase('tr')] = item.image || '';
+  return acc;
+}, {});
+const buildAlfabeExercises = () => {
+  const chunks = [];
+  for (let i = 0; i < ALFABE_ITEMS.length; i += 4) {
+    chunks.push(ALFABE_ITEMS.slice(i, i + 4));
+  }
+  return chunks.map((group, idx) => ({
+    id: `alfabe-match-${idx + 1}`,
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
+    question_text: `Peyvên ALFABE bi wêneyên wan re bighîne hev (${group.map((g) => g.word).join(', ')})`,
+    options: group.map((g) => `${g.letter} — ${g.word}=${g.image || `img:${g.word}`}`),
+    match_pairs: group.map((g, pIdx) => ({
+      id: pIdx,
+      left: `${g.letter} — ${g.word}`,
+      right: g.word,
+      word: g.word,
+      letter: g.letter,
+      image: g.image || ''
+    })),
+    correct_answer: String(group.length),
+    explanation: group.map((g) => `${g.letter} — ${g.word}`).join(' • '),
+    image_url: '',
+    audio_url: '',
+    sort_order: idx + 1
+  }));
+};
+const BUILTIN_ALFABE_EXERCISES = buildAlfabeExercises();
 const normalizeKurdish = (str = '') =>
   str
     .toLocaleLowerCase('tr')
@@ -818,6 +883,7 @@ export default function App() {
   });
   // Oyun ve kalıcı XP / Seri / Tamamlanan Qonaxlar
   const [exercises, setExercises] = useState([]);
+  const [alfabeReset, setAlfabeReset] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState('');
@@ -980,6 +1046,13 @@ export default function App() {
       .order('sort_order', { ascending: true });
     if (!error && data) setExercises(data);
   };
+  const effectiveExercises = (() => {
+    const hasCustomAlfabe = exercises.some(
+      (ex) => (ex.unit_title || '').trim().toUpperCase() === 'ALFABE'
+    );
+    if (hasCustomAlfabe || alfabeReset) return exercises;
+    return [...BUILTIN_ALFABE_EXERCISES, ...exercises];
+  })();
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (passwordInput === ADMIN_PASS) {
@@ -1424,6 +1497,7 @@ export default function App() {
     );
     const { error } = await supabase.from('kurmanci_exercises').delete().not('id', 'is', null);
     setExercises([]);
+    setAlfabeReset(true);
     setSelectedUnit(null);
     setCurrentExIndex(0);
     setSelectedOption('');
@@ -1549,6 +1623,9 @@ export default function App() {
         setExercises((prev) => [...prev, ...(inserted && inserted.length ? inserted : [newRecord])]);
         setExMsg('Lîstika nû hat zêdekirin!');
       }
+      if (payload.unit_title.toUpperCase() === 'ALFABE') {
+        setAlfabeReset(false);
+      }
       resetExForm();
     }
     setTimeout(() => setExMsg(''), 4000);
@@ -1597,16 +1674,22 @@ export default function App() {
   };
   const unitList = [
     ...new Set(
-      exercises.filter((ex) => !isZarokUnit(ex.unit_title)).map((ex) => ex.unit_title)
+      effectiveExercises
+        .filter((ex) => !isZarokUnit(ex.unit_title))
+        .map((ex) => ex.unit_title)
     )
   ];
   const zarokUnitList = [
     ...new Set(
-      exercises.filter((ex) => isZarokUnit(ex.unit_title)).map((ex) => ex.unit_title)
+      effectiveExercises
+        .filter((ex) => isZarokUnit(ex.unit_title))
+        .map((ex) => ex.unit_title)
     )
   ];
-  const allExerciseUnits = [...new Set(exercises.map((ex) => ex.unit_title).filter(Boolean))];
-  const filteredAdminExercises = exercises.filter((ex) => {
+  const allExerciseUnits = [
+    ...new Set(effectiveExercises.map((ex) => ex.unit_title).filter(Boolean))
+  ];
+  const filteredAdminExercises = effectiveExercises.filter((ex) => {
     if (adminExUnitFilter !== 'all' && ex.unit_title !== adminExUnitFilter) return false;
     const q = normalizeKurdish(adminExSearch);
     if (!q) return true;
@@ -1618,7 +1701,7 @@ export default function App() {
   });
   const unitExercises = (() => {
     if (!selectedUnit) return [];
-    return exercises.filter((ex) => ex.unit_title === selectedUnit);
+    return effectiveExercises.filter((ex) => ex.unit_title === selectedUnit);
   })();
   const currentEx = unitExercises[currentExIndex];
   const playCurrentAudio = (url) => {
@@ -1678,30 +1761,68 @@ export default function App() {
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
     };
   }, []);
+  const resolveMatchVisual = (rawRight, leftText) => {
+    const cleanedRight = (rawRight || '').trim();
+    const isUrl = /^https?:\/\//i.test(cleanedRight);
+    const wordCandidate = cleanedRight.startsWith('img:')
+      ? cleanedRight.replace(/^img:/i, '').trim()
+      : cleanedRight;
+    const leftParts = (leftText || '').split('—');
+    const letter = leftParts.length > 1 ? leftParts[0].trim() : '';
+    const wordFromLeft = leftParts.length > 1 ? leftParts.slice(1).join('—').trim() : wordCandidate;
+    const mappedImage =
+      (isUrl ? cleanedRight : '') ||
+      ALFABE_WORD_IMAGE_MAP[wordCandidate.toLocaleLowerCase('tr')] ||
+      ALFABE_WORD_IMAGE_MAP[wordFromLeft.toLocaleLowerCase('tr')] ||
+      ALFABE_WORD_IMAGE_MAP[letter.toLocaleLowerCase('tr')] ||
+      '';
+    return {
+      right: cleanedRight,
+      image: mappedImage,
+      word: wordFromLeft || wordCandidate,
+      letter
+    };
+  };
   const parsedMatchPairs = (() => {
     if (!currentEx || currentEx.exercise_type !== 'match') return [];
+    if (Array.isArray(currentEx.match_pairs) && currentEx.match_pairs.length > 0) {
+      return currentEx.match_pairs.map((mp, idx) => {
+        const resolved = resolveMatchVisual(mp.image || mp.right || mp.word, mp.left);
+        return {
+          id: mp.id ?? idx,
+          left: mp.left,
+          right: mp.right || resolved.right,
+          image: mp.image || resolved.image,
+          word: mp.word || resolved.word,
+          letter: mp.letter || resolved.letter
+        };
+      });
+    }
     return (currentEx.options || [])
       .map((pairStr, idx) => {
         const parts = pairStr.split('=');
         if (parts.length < 2) return null;
+        const left = parts[0].trim();
+        const rawRight = parts.slice(1).join('=').trim();
+        const resolved = resolveMatchVisual(rawRight, left);
         return {
           id: idx,
-          left: parts[0].trim(),
-          right: parts.slice(1).join('=').trim()
+          left,
+          ...resolved
         };
       })
       .filter(Boolean);
   })();
   useEffect(() => {
     if (currentEx?.exercise_type === 'match') {
-      const pairs = (currentEx.options || [])
-        .map((pairStr, idx) => {
-          const parts = pairStr.split('=');
-          if (parts.length < 2) return null;
-          return { id: idx, right: parts.slice(1).join('=').trim() };
-        })
-        .filter(Boolean);
-      const shuffled = [...pairs].sort(() => Math.random() - 0.5);
+      const rightItems = parsedMatchPairs.map((p) => ({
+        id: p.id,
+        right: p.right,
+        image: p.image || '',
+        word: p.word || '',
+        letter: p.letter || ''
+      }));
+      const shuffled = [...rightItems].sort(() => Math.random() - 0.5);
       setShuffledRightOptions(shuffled);
       setMatchLeftSelected(null);
       setMatchRightSelected(null);
@@ -2319,7 +2440,9 @@ export default function App() {
                 ) : (
                   <div className="space-y-3">
                     {unitList.map((unit, idx) => {
-                      const count = exercises.filter((ex) => ex.unit_title === unit).length;
+                      const count = effectiveExercises.filter(
+                        (ex) => ex.unit_title === unit
+                      ).length;
                       const done = completedUnits.includes(unit);
                       return (
                         <button
@@ -2533,17 +2656,17 @@ export default function App() {
                             type="button"
                             disabled={done}
                             onClick={() => handleMatchSelect('left', p.id)}
-                            className={`w-full border-2 rounded-xl px-3 py-3 font-semibold text-sm transition ${
+                            className={`w-full min-h-[92px] border-2 rounded-xl px-4 py-3 font-bold text-base text-left transition flex items-center justify-between ${
                               done
                                 ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
                                 ? matchWrongFlash
                                   ? 'border-red-600 bg-red-50'
                                   : 'border-red-700 bg-red-50'
-                                : 'border-slate-200 hover:border-red-300'
+                                : 'border-slate-200 hover:border-red-300 bg-white'
                             }`}
                           >
-                            {p.left}
+                            <span>{p.left}</span>
                           </button>
                         );
                       })}
@@ -2552,23 +2675,43 @@ export default function App() {
                       {shuffledRightOptions.map((p) => {
                         const done = matchedPairs.includes(p.id);
                         const sel = matchRightSelected === p.id;
+                        const hasRealImage = Boolean(p.image) && !brokenExImages[`match-${p.id}`];
                         return (
                           <button
                             key={p.id}
                             type="button"
                             disabled={done}
                             onClick={() => handleMatchSelect('right', p.id)}
-                            className={`w-full border-2 rounded-xl px-3 py-3 font-semibold text-sm transition ${
+                            className={`w-full min-h-[92px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
                               done
                                 ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
                                 ? matchWrongFlash
                                   ? 'border-red-600 bg-red-50'
                                   : 'border-red-700 bg-red-50'
-                                : 'border-slate-200 hover:border-red-300'
+                                : 'border-slate-200 hover:border-red-300 bg-white'
                             }`}
                           >
-                            {p.right}
+                            {hasRealImage ? (
+                              <img
+                                src={p.image}
+                                alt={p.word || p.right || ''}
+                                onError={() =>
+                                  setBrokenExImages((prev) => ({
+                                    ...prev,
+                                    [`match-${p.id}`]: true
+                                  }))
+                                }
+                                className="h-20 w-full object-contain rounded-lg"
+                              />
+                            ) : (
+                              <div className="w-full h-20 rounded-lg bg-lime-50 border border-lime-200 flex flex-col items-center justify-center text-slate-700 px-2">
+                                <ImageIcon className="w-5 h-5 text-red-700 mb-0.5" />
+                                <span className="text-[11px] font-bold text-slate-700 truncate max-w-full">
+                                  Wêne: {p.word || p.right}
+                                </span>
+                              </div>
+                            )}
                           </button>
                         );
                       })}
@@ -2937,7 +3080,7 @@ export default function App() {
                       <span>
                         {editingExId
                           ? 'Lîstika Hînbûnê Sererast Bike'
-                          : `Hînbûn / Lîstik (${exercises.length} lîstik)`}
+                          : `Hînbûn / Lîstik (${effectiveExercises.length} lîstik)`}
                       </span>
                     </h2>
                     <button
@@ -2963,7 +3106,7 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Navê beşê binivîse..."
+                        placeholder="Mînak: ALFABE"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
@@ -3047,7 +3190,7 @@ export default function App() {
                     <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
-                          ? 'Cotên Peyvan (A=B, C=D)'
+                          ? 'Cotên Peyv û Wêneyan (Mînak: A — Agir=https://.../agir.png, B — Bilbil=https://.../bilbil.png)'
                           : exForm.exercise_type === 'image_choice'
                           ? 'Vebijêrk (bi bêhnokê veqetandî) — wêne li jor bar bike'
                           : 'Vebijêrk an Peyv (bi bêhnokê veqetandî)'}
@@ -3057,7 +3200,7 @@ export default function App() {
                         required
                         value={exForm.options_raw}
                         onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
-                        placeholder="vebijêrk 1, vebijêrk 2, vebijêrk 3"
+                        placeholder="A — Agir=https://.../agir.png, B — Bilbil=https://.../bilbil.png"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -3112,7 +3255,7 @@ export default function App() {
                       onChange={(e) => setAdminExUnitFilter(e.target.value)}
                       className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-red-700"
                     >
-                      <option value="all">Hemû Beş / Qonax ({exercises.length})</option>
+                      <option value="all">Hemû Beş / Qonax ({effectiveExercises.length})</option>
                       {allExerciseUnits.map((u) => (
                         <option key={u} value={u}>{u}</option>
                       ))}
@@ -3126,48 +3269,55 @@ export default function App() {
                     />
                   </div>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
-                    {filteredAdminExercises.map((ex) => (
-                      <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
-                        <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                          {ex.audio_url && (
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-50 text-red-700 shrink-0">
-                              <Volume2 className="w-4 h-4" />
-                            </span>
-                          )}
-                          {ex.image_url && !brokenExImages[ex.id] && (
-                            <img
-                              src={ex.image_url}
-                              alt=""
-                              onError={() =>
-                                setBrokenExImages((prev) => ({ ...prev, [ex.id]: true }))
-                              }
-                              className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
-                            />
-                          )}
-                          <div className="truncate">
-                            <span className="text-xs font-bold text-red-700 mr-2">[{ex.unit_title}]</span>
-                            <span className="font-medium text-slate-800">{ex.question_text}</span>
+                    {filteredAdminExercises.map((ex) => {
+                      const isBuiltinAlfabe = String(ex.id || '').startsWith('alfabe-match-');
+                      return (
+                        <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
+                          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                            {ex.audio_url && (
+                              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-50 text-red-700 shrink-0">
+                                <Volume2 className="w-4 h-4" />
+                              </span>
+                            )}
+                            {ex.image_url && !brokenExImages[ex.id] && (
+                              <img
+                                src={ex.image_url}
+                                alt=""
+                                onError={() =>
+                                  setBrokenExImages((prev) => ({ ...prev, [ex.id]: true }))
+                                }
+                                className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
+                              />
+                            )}
+                            <div className="truncate">
+                              <span className="text-xs font-bold text-red-700 mr-2">[{ex.unit_title}]</span>
+                              <span className="font-medium text-slate-800">{ex.question_text}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {!isBuiltinAlfabe && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => startEditingExercise(ex)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-xs font-medium"
+                                >
+                                  <Edit3 className="w-3.5 h-3.5" />
+                                  <span>Sererast</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteExercise(ex.id)}
+                                  className="text-red-700 hover:text-red-900 p-1"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => startEditingExercise(ex)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-xs font-medium"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Sererast</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteExercise(ex.id)}
-                            className="text-red-700 hover:text-red-900 p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
                 {/* DERS EKLEME FORMU */}
