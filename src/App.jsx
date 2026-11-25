@@ -120,7 +120,7 @@ const DEFAULT_UI = {
   tab_content: 'Naveroka Dersê',
   tab_guide: 'Rêbera Mamosteyan',
   btn_open_material: 'Materyalê Veke',
-  guide_heading: 'Plana Dersê û Rêbera Mamosteyan',
+  guide_heading: 'Plana Dersê û Rêberê Mamosteyan',
   guide_download_btn: 'PDFya Rêberê Daxe',
   guide_empty_text: 'Ji bo vê dersê hîn nivîsa rêberê nehatiye zêdekirin.',
   meta_level_prefix: 'Ast:',
@@ -154,9 +154,9 @@ const DEFAULT_UI = {
   ferheng_search_btn: 'Bigere',
   ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
   learn_title: 'Rêwîtiya Fêrbûna Kurmancî',
-  learn_subtitle: 'Bi lîstikên kurt û kêfxweş gav bi gav Kurmancî fêr bibe!',
+  learn_subtitle: 'Beşa lîstikan hatiye sifirkirin. Tu dikarî lîstikên nû zêde bikî.',
   learn_xp_label: 'Pûan',
-  learn_empty_units: 'Hîn lîstik nehatine zêdekirin. Ji Panela Rêveber paketa destpêkê bar bike.',
+  learn_empty_units: 'Beşa lîstikan sifir bûye; hîn lîstik tune ne.',
   learn_stage_prefix: 'Qonax',
   learn_question_count_suffix: 'lîstik',
   learn_win_title: 'Pîroz be! Te ev qonax bi serkeftî qedand!',
@@ -224,9 +224,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Bigêre',
     ferheng_empty_text: 'Çekuya ke ti gêrenê nêvînîya.',
     learn_title: 'Raywanîya Musayîşê Kurmancî',
-    learn_subtitle: 'Bi kayanê kılman û weşan gam bi gam musa!',
+    learn_subtitle: 'Beşê kayan sifir bîyo; ti şênayî kayê neweyî îlawe bikê.',
     learn_xp_label: 'Pûan',
-    learn_empty_units: 'Hewna kayî çin ê. Panelê Îdarekarî ra paketa destpêkî bar bike.',
+    learn_empty_units: 'Beşê kayan sifir bîyo; hewna kayî çin ê.',
     learn_stage_prefix: 'Merhele',
     learn_question_count_suffix: 'kayî',
     learn_win_title: 'Bimbarek bo! To na merhele bi serkewtiş qedênaye!',
@@ -291,9 +291,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'گەڕان',
     ferheng_empty_text: 'ئەو وشەیەی بەدوایدا دەگەڕێیت نەدۆزرایەوە.',
     learn_title: 'گەشتی فێربوونی کورمانجی',
-    learn_subtitle: 'بە یاریی کورت و چێژبەخش هەنگاو بە هەنگاو فێر ببە!',
+    learn_subtitle: 'بەشی یارییەکان سفر کراوەتەوە؛ دەتوانیت یاری نوێ زیاد بکەیت.',
     learn_xp_label: 'خاڵ',
-    learn_empty_units: 'هێشتا یاری زیاد نەکراوە. پاکێجی دەستپێک لە بەڕێوەبەر بار بکە.',
+    learn_empty_units: 'بەشی یارییەکان سفر کراوەتەوە؛ هێشتا یاری نییە.',
     learn_stage_prefix: 'قۆناغ',
     learn_question_count_suffix: 'یاری',
     learn_win_title: 'پیرۆزە! ئەم قۆناغەت بە سەرکەوتوویی تەواو کرد!',
@@ -358,9 +358,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Ara',
     ferheng_empty_text: 'Aradığınız kelime bulunamadı.',
     learn_title: 'Kurmancî Öğrenme Yolculuğu',
-    learn_subtitle: 'Kısa ve eğlenceli oyunlarla adım adım Kurmancî öğren!',
+    learn_subtitle: 'Oyun bölümü sıfırlandı; yeni oyunlar ekleyebilirsiniz.',
     learn_xp_label: 'Puan',
-    learn_empty_units: 'Henüz oyun eklenmemiş. Yönetici Panelinden başlangıç paketini yükleyin.',
+    learn_empty_units: 'Oyun bölümü sıfırlandı; henüz oyun yok.',
     learn_stage_prefix: 'Aşama',
     learn_question_count_suffix: 'oyun',
     learn_win_title: 'Tebrikler! Bu aşamayı başarıyla tamamladın!',
@@ -425,9 +425,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Search',
     ferheng_empty_text: 'The word you are looking for was not found.',
     learn_title: 'Kurmanji Learning Journey',
-    learn_subtitle: 'Learn Kurmanji step by step with short, fun games!',
+    learn_subtitle: 'The game section has been reset; you can add new games.',
     learn_xp_label: 'Points',
-    learn_empty_units: 'No games added yet. Load the starter pack from the Admin Panel.',
+    learn_empty_units: 'The game section has been reset; no games yet.',
     learn_stage_prefix: 'Stage',
     learn_question_count_suffix: 'games',
     learn_win_title: 'Congratulations! You completed this stage!',
@@ -492,9 +492,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Suchen',
     ferheng_empty_text: 'Das gesuchte Wort wurde nicht gefunden.',
     learn_title: 'Kurmancî-Lernreise',
-    learn_subtitle: 'Lerne Schritt für Schritt Kurmancî mit kurzen Spielen!',
+    learn_subtitle: 'Der Spielbereich wurde zurückgesetzt; neue Spiele können hinzugefügt werden.',
     learn_xp_label: 'Punkte',
-    learn_empty_units: 'Noch keine Spiele hinzugefügt. Lade das Starterpaket im Admin-Panel.',
+    learn_empty_units: 'Der Spielbereich wurde zurückgesetzt; noch keine Spiele.',
     learn_stage_prefix: 'Stufe',
     learn_question_count_suffix: 'Spiele',
     learn_win_title: 'Glückwunsch! Du hast diese Stufe abgeschlossen!',
@@ -559,9 +559,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Rechercher',
     ferheng_empty_text: 'Le mot recherché est introuvable.',
     learn_title: 'Parcours d’Apprentissage du Kurmanji',
-    learn_subtitle: 'Apprends le kurmanji pas à pas avec des jeux courts !',
+    learn_subtitle: 'La section jeux a été réinitialisée ; vous pouvez ajouter de nouveaux jeux.',
     learn_xp_label: 'Points',
-    learn_empty_units: 'Aucun jeu ajouté. Chargez le pack de départ depuis l’admin.',
+    learn_empty_units: 'La section jeux a été réinitialisée ; aucun jeu pour le moment.',
     learn_stage_prefix: 'Étape',
     learn_question_count_suffix: 'jeux',
     learn_win_title: 'Bravo ! Tu as terminé cette étape !',
@@ -626,9 +626,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Cerca',
     ferheng_empty_text: 'La parola cercata non è stata trovata.',
     learn_title: 'Percorso di Apprendimento del Kurmanji',
-    learn_subtitle: 'Impara il kurmanji passo dopo passo con brevi giochi!',
+    learn_subtitle: 'La sezione giochi è stata azzerata; puoi aggiungere nuovi giochi.',
     learn_xp_label: 'Punti',
-    learn_empty_units: 'Nessun gioco aggiunto. Carica il pacchetto iniziale dall’admin.',
+    learn_empty_units: 'La sezione giochi è stata azzerata; nessun gioco al momento.',
     learn_stage_prefix: 'Tappa',
     learn_question_count_suffix: 'giochi',
     learn_win_title: 'Complimenti! Hai completato questa tappa!',
@@ -666,218 +666,8 @@ const UI_FIELD_LABELS = [
   { key: 'footer_text', label: 'Nivîsa Jêrîn (Footer)' }
 ];
 
-const STARTER_GAMES = [
-  {
-    unit_title: 'Beşa 1: Silav û Nasîn',
-    exercise_type: 'choice',
-    question_text: 'Kîjan silav ji bo sibehê tê bikaranîn?',
-    options: ['Rojbaş', 'Şevbaş', 'Bi xatirê te', 'Spas'],
-    correct_answer: 'Rojbaş',
-    explanation: 'Rojbaş ji bo silavdayîna sibeh û rojê tê bikaranîn.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 1
-  },
-  {
-    unit_title: 'Beşa 1: Silav û Nasîn',
-    exercise_type: 'sentence',
-    question_text: 'Hevoka "Ez hevalê te me." saz bike:',
-    options: ['hevalê', 'Ez', 'me.', 'te'],
-    correct_answer: 'Ez hevalê te me.',
-    explanation: 'Di Kurmancî de rêza hevokê bi gelemperî Kirde + Têrker + Lêker e.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 2
-  },
-  {
-    unit_title: 'Beşa 1: Silav û Nasîn',
-    exercise_type: 'match',
-    question_text: 'Peyvên dijwate bighîne hev:',
-    options: ['Mezin=Biçûk', 'Germ=Sar', 'Dirêj=Kurt', 'Spî=Reş'],
-    correct_answer: '4',
-    explanation: 'Her cotek ji peyvên dijwate pêk tê.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 3
-  },
-  // --- UNÎTE 1: SILAVDAN, HEVNASÎN, LIHEVPIRSÎN (SESSÎZ LÎSTIKÊN RÊZIKÎ) ---
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'choice',
-    question_text: 'Destpêk: Rojkey di destpêkê de çi dibêje? ("... Ez Rojkey im.")',
-    options: ['Silav!', 'Şevbaş!', 'Bi xatirê te!', 'Spas!'],
-    correct_answer: 'Silav!',
-    explanation: 'Rojkey bi "Silav! Ez Rojkey im." xwe dide nasîn.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 4
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'fill_blank',
-    question_text: 'Beşa Yekem: Ji bo pirsa tiştan em dibêjin: "Ev ____ ye?"',
-    options: ['çi', 'kî', 'ku', 'çawa'],
-    correct_answer: 'çi',
-    explanation: 'Ji bo nîşandan û pirsa tiştan "Ev çi ye?" tê bikaranîn.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 5
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'sentence',
-    question_text: 'Beşa Yekem (Peyv: nan): Bersiva "Ev çi ye?" ji bo nanî saz bike:',
-    options: ['nan', 'Ev', 'e.', 'wekî'],
-    correct_answer: 'Ev nan e.',
-    explanation: 'Bersiva rast a pirsa "Ev çi ye?" ji bo nan "Ev nan e." ye.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 6
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'choice',
-    question_text: 'Beşa Yekem (Peyv: av): Kîjan peyv şileya vexwarinê nîşan dide?',
-    options: ['av', 'nan', 'sêv', 'hêk'],
-    correct_answer: 'av',
-    explanation: 'Peyva "av" şileya bingehîn a jiyanê ye.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 7
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'match',
-    question_text: 'Beşa Yekem (Silavdan): Silav û wateyên wan bighîne hev:',
-    options: ['Silav=Merhaba / Selam', 'Rojbaş=İyi günler / Günaydın', 'Êvarbaş=İyi akşamlar', 'Nan=Ekmek'],
-    correct_answer: '4',
-    explanation: 'Silav, rojbaş û êvarbaş di demên cuda yên rojê de tên bikaranîn.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 8
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'sentence',
-    question_text: 'Beşa Yekem (Navpirsîn): Pirsa "Navê te çi ye?" rêz bike:',
-    options: ['te', 'Navê', 'ye?', 'çi'],
-    correct_answer: 'Navê te çi ye?',
-    explanation: 'Dema em navê kesekî bipirsin em dibêjin: "Navê te çi ye?"',
-    image_url: '',
-    audio_url: '',
-    sort_order: 9
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'fill_blank',
-    question_text: 'Beşa Duyem (Tu çawa yî?): Bersiva halpirsînê tije bike: "Ez ____ im."',
-    options: ['baş', 'nav', 'nan', 'av'],
-    correct_answer: 'baş',
-    explanation: 'Ji bo bersiva "Tu çawa yî?" em dibêjin: "Ez baş im."',
-    image_url: '',
-    audio_url: '',
-    sort_order: 10
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'sentence',
-    question_text: 'Beşa Duyem: Bersiva "Ez jî baş im." bi peyvên jêrîn ava bike:',
-    options: ['jî', 'Ez', 'im.', 'baş'],
-    correct_answer: 'Ez jî baş im.',
-    explanation: 'Ji bo gotina "ben de iyiyim" em "jî" lê zêde dikin.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 11
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'choice',
-    question_text: 'Beşa Duyem (Peyv: sêv, hêk): Di rîzika "Hêk, hêk, hêk ____ ye" de çi tê?',
-    options: ['spî', 'şîn', 'kesk', 'sor'],
-    correct_answer: 'spî',
-    explanation: 'Di mînaka beşa duyem de "Hêk, hêk, hêk spî ye" hatiye nivîsandin.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 12
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'match',
-    question_text: 'Beşa Duyem (Pifdank, Dar, Selik): Peyvên sêv û hêkê bighîne hev:',
-    options: ['sêv=Fêkiyê darê', 'hêk=Spî û di selikê de', 'nan=Ji ardê', 'av=Şileya zelal'],
-    correct_answer: '4',
-    explanation: 'Sêv û hêk peyvên nû yên beşa duyem in.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 13
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'match',
-    question_text: 'Beşa Sêyem (Lîstika Nexşeyê): Baran, Zelal û Berfînê bi bajarên wan re bighîne hev:',
-    options: ['Baran=Mêrdîn', 'Zelal=Semsûr', 'Berfîn=Amed'],
-    correct_answer: '3',
-    explanation: 'Baran ji Mêrdînê ye, Zelal ji Semsûrê ye, Berfîn ji Amedê ye.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 14
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'sentence',
-    question_text: 'Beşa Sêyem (Tu ji ku yî?): Hevoka "Ez ji Semsûrê me." saz bike:',
-    options: ['Semsûrê', 'Ez', 'me.', 'ji'],
-    correct_answer: 'Ez ji Semsûrê me.',
-    explanation: 'Ji bo nîşandana cihê ku kesek jê tê: "Ez ji ... me."',
-    image_url: '',
-    audio_url: '',
-    sort_order: 15
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'choice',
-    question_text: 'Beşa Sêyem: Pirsa "Tu ji ku yî?" kîjan agahiyê dixwaze?',
-    options: ['Cih û bajarê kesekî', 'Navê xwarinê', 'Rengê cil û bergan', 'Demjimêra rojê'],
-    correct_answer: 'Cih û bajarê kesekî',
-    explanation: '"Tu ji ku yî?" pirsa cih û warê kesekî ye.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 16
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'fill_blank',
-    question_text: 'Beşa Çarem: Ji bo Baran em dibêjin: "Navê ____ çi ye?"',
-    options: ['wî', 'wê', 'te', 'min'],
-    correct_answer: 'wî',
-    explanation: 'Ji bo kesê nêr "wî" tê bikaranîn: "Navê wî çi ye?"',
-    image_url: '',
-    audio_url: '',
-    sort_order: 17
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'fill_blank',
-    question_text: 'Beşa Çarem: Ji bo Berfînê em dibêjin: "Navê ____ çi ye?"',
-    options: ['wê', 'wî', 'we', 'me'],
-    correct_answer: 'wê',
-    explanation: 'Ji bo kesa mê "wê" tê bikaranîn: "Navê wê çi ye?"',
-    image_url: '',
-    audio_url: '',
-    sort_order: 18
-  },
-  {
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
-    exercise_type: 'choice',
-    question_text: 'Kurteçîrok: Rojkey, Baran, Zelal û Berfîn li hev civiyane. Li ber wan nan, av, sêv û hêk hene. Zelal dibêje: "Silav! Navê min Zelal e, ez ji Semsûrê me. Navê wî çi ye?" Bersiv kîjan e?',
-    options: ['Navê wî Baran e.', 'Navê wî Semsûr e.', 'Navê wî Nan e.', 'Navê wî Sêv e.'],
-    correct_answer: 'Navê wî Baran e.',
-    explanation: 'Di çîrokê de lehengê ji Mêrdînê Baran e û bersiv "Navê wî Baran e." ye.',
-    image_url: '',
-    audio_url: '',
-    sort_order: 19
-  }
-];
+// Oyun bölümü sıfırlandı; yeni oyun eklenene kadar boş başlatılır.
+const STARTER_GAMES = [];
 
 const fetchFromWiktionary = async (rawWord) => {
   const cleanWord = rawWord.trim().toLowerCase();
@@ -1015,6 +805,7 @@ export default function App() {
     example_sentence: ''
   });
 
+  // Oyun bölümü sıfırlandı
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -1025,15 +816,9 @@ export default function App() {
   const [hearts, setHearts] = useState(5);
   const [comboCount, setComboCount] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
-  const [streakDays, setStreakDays] = useState(() => Number(localStorage.getItem('kk_streak') || 1));
-  const [completedUnits, setCompletedUnits] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('kk_completed_units') || '[]');
-    } catch {
-      return [];
-    }
-  });
+  const [xpPoints, setXpPoints] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [completedUnits, setCompletedUnits] = useState([]);
 
   const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
   const [matchLeftSelected, setMatchLeftSelected] = useState(null);
@@ -1046,7 +831,7 @@ export default function App() {
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
   const [exForm, setExForm] = useState({
-    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    unit_title: '',
     exercise_type: 'choice',
     question_text: '',
     options_raw: '',
@@ -1076,7 +861,6 @@ export default function App() {
     fetchSiteSettings();
     fetchLessons();
     fetchDictionary('', 'all');
-    fetchExercises();
   }, []);
 
   useEffect(() => {
@@ -1479,32 +1263,33 @@ export default function App() {
       .sort((a, b) => b._score - a._score || a.word.localeCompare(b.word));
   })();
 
-  const fetchExercises = async () => {
-    const { data, error } = await supabase
-      .from('kurmanci_exercises')
-      .select('*')
-      .order('sort_order', { ascending: true });
-
-    if (!error && data) {
-      setExercises(data);
-    }
-  };
-
-  const handleLoadStarterGames = async () => {
-    if (!STARTER_GAMES.length) {
-      setExMsg('Paketa lîstikên destpêkê vala ye.');
-      setTimeout(() => setExMsg(''), 3000);
-      return;
-    }
-
-    const { error } = await supabase.from('kurmanci_exercises').insert(STARTER_GAMES);
-    if (error) {
-      setExMsg('Çewtî: ' + error.message);
-    } else {
-      setExMsg('Paketa destpêkê ya lîstikan (Unîte 1 jî tê de) hat barkirin!');
-      fetchExercises();
-    }
-    setTimeout(() => setExMsg(''), 4000);
+  const handleResetGamesSection = () => {
+    if (audioPlayerRef.current) audioPlayerRef.current.pause();
+    setExercises([]);
+    setSelectedUnit(null);
+    setCurrentExIndex(0);
+    setSelectedOption('');
+    setBuiltWords([]);
+    setAnswerState(null);
+    setUnitCompleted(false);
+    setHearts(5);
+    setComboCount(0);
+    setXpPoints(0);
+    setStreakDays(0);
+    setCompletedUnits([]);
+    setEditingExId(null);
+    setExForm({
+      unit_title: '',
+      exercise_type: 'choice',
+      question_text: '',
+      options_raw: '',
+      correct_answer: '',
+      explanation: '',
+      image_url: '',
+      audio_url: ''
+    });
+    setExMsg('Beşa lîstikan bi temamî hat sifirkirin.');
+    setTimeout(() => setExMsg(''), 3500);
   };
   const uploadExFile = async (event, folder, setBusy, field) => {
     const file = event.target.files?.[0];
@@ -1592,22 +1377,31 @@ export default function App() {
       if (error) {
         setExMsg('Çewtî: ' + error.message);
       } else {
+        setExercises((prev) =>
+          prev.map((item) => (item.id === editingExId ? { ...item, ...payload } : item))
+        );
         setExMsg('Lîstik bi serkeftî hat nûkirin!');
         resetExForm();
-        fetchExercises();
       }
     } else {
-      const { error } = await supabase.from('kurmanci_exercises').insert([
-        { ...payload, sort_order: exercises.length + 1 }
-      ]);
+      const newRecord = {
+        id: `local-ex-${Date.now()}`,
+        ...payload,
+        sort_order: exercises.length + 1
+      };
+      const { data: inserted, error } = await supabase
+        .from('kurmanci_exercises')
+        .insert([{ ...payload, sort_order: exercises.length + 1 }])
+        .select();
 
       if (error) {
-        setExMsg('Çewtî: ' + error.message);
+        setExercises((prev) => [...prev, newRecord]);
+        setExMsg('Lîstik li beşa nû hat zêdekirin.');
       } else {
+        setExercises((prev) => [...prev, ...(inserted && inserted.length ? inserted : [newRecord])]);
         setExMsg('Lîstika nû hat zêdekirin!');
-        resetExForm();
-        fetchExercises();
       }
+      resetExForm();
     }
     setTimeout(() => setExMsg(''), 4000);
   };
@@ -1629,7 +1423,7 @@ export default function App() {
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
-      unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+      unit_title: '',
       exercise_type: 'choice',
       question_text: '',
       options_raw: '',
@@ -1794,7 +1588,6 @@ export default function App() {
           const nextXp = xpPoints + 15;
           setXpPoints(nextXp);
           setComboCount((c) => c + 1);
-          localStorage.setItem('kk_xp', String(nextXp));
         }
       } else {
         setMatchWrongFlash(true);
@@ -1855,7 +1648,6 @@ export default function App() {
       const nextXp = xpPoints + bonus;
       setXpPoints(nextXp);
       setComboCount((c) => c + 1);
-      localStorage.setItem('kk_xp', String(nextXp));
     } else {
       setAnswerState('wrong');
       setComboCount(0);
@@ -1864,14 +1656,7 @@ export default function App() {
   };
 
   const updateStreak = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    const last = localStorage.getItem('kk_last_day');
-    if (last === today) return;
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
-    const nextStreak = last === yesterday ? streakDays + 1 : 1;
-    setStreakDays(nextStreak);
-    localStorage.setItem('kk_streak', String(nextStreak));
-    localStorage.setItem('kk_last_day', today);
+    setStreakDays((prev) => (prev > 0 ? prev + 1 : 1));
   };
 
   const goToNextExercise = () => {
@@ -1885,9 +1670,7 @@ export default function App() {
       setUnitCompleted(true);
       updateStreak();
       if (selectedUnit && !completedUnits.includes(selectedUnit)) {
-        const updatedUnits = [...completedUnits, selectedUnit];
-        setCompletedUnits(updatedUnits);
-        localStorage.setItem('kk_completed_units', JSON.stringify(updatedUnits));
+        setCompletedUnits((prev) => [...prev, selectedUnit]);
       }
     }
   };
@@ -2288,7 +2071,7 @@ export default function App() {
           </div>
         )}
 
-        {/* ===================== HÎNBÛN / LÎSTIK ===================== */}
+        {/* ===================== HÎNBÛN / LÎSTIK (SIFIRLANMIŞ) ===================== */}
         {viewMode === 'learn' && (
           <div className="max-w-3xl mx-auto">
             {!selectedUnit ? (
@@ -2308,21 +2091,23 @@ export default function App() {
                     <Flame className="w-5 h-5 text-orange-500" />
                     <span>{streakDays}</span>
                   </div>
-                  {unitList.length > 0 && (
-                    <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
-                      <Award className="w-5 h-5 text-emerald-600" />
-                      <span>
-                        {completedUnits.filter((u) => unitList.includes(u)).length} / {unitList.length}{' '}
-                        {ui.learn_stage_prefix}
-                      </span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
+                    <Award className="w-5 h-5 text-emerald-600" />
+                    <span>0 / {unitList.length} {ui.learn_stage_prefix}</span>
+                  </div>
                 </div>
 
                 {unitList.length === 0 ? (
-                  <p className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8">
-                    {ui.learn_empty_units}
-                  </p>
+                  <div className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8 space-y-4">
+                    <p>{ui.learn_empty_units}</p>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('admin')}
+                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition"
+                    >
+                      + Lîstika Nû Zêde Bike
+                    </button>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {unitList.map((unit, idx) => {
@@ -2853,7 +2638,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* HÎNBÛN / LÎSTİK YÖNETİMİ */}
+                {/* HÎNBÛN / LÎSTİK YÖNETİMİ (SIFIRLANMIŞ) */}
                 <div className="bg-white rounded-2xl border-2 border-emerald-300 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -2861,16 +2646,16 @@ export default function App() {
                       <span>
                         {editingExId
                           ? 'Lîstika Hînbûnê Sererast Bike'
-                          : 'Hînbûn / Lîstik — Lîstikan Zêde Bike û Biguherîne'}
+                          : `Hînbûn / Lîstik — Sifirkirî (${exercises.length} lîstik)`}
                       </span>
                     </h2>
 
                     <button
                       type="button"
-                      onClick={handleLoadStarterGames}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+                      onClick={handleResetGamesSection}
+                      className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
                     >
-                      + Paketa Destpêkê ya Lîstikan Bar Bike
+                      Beşa Lîstikan Sifir Bike
                     </button>
                   </div>
 
@@ -2890,7 +2675,7 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Unîte 1: Silavdan û Hevnasîn"
+                        placeholder="Navê beşê binivîse..."
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2921,7 +2706,7 @@ export default function App() {
                         required
                         value={exForm.question_text}
                         onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
-                        placeholder="Ev çi ye? Bersiva rast bibîne:"
+                        placeholder="Pirsê binivîse..."
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2979,7 +2764,7 @@ export default function App() {
                     <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
-                          ? 'Cotên Peyvan (Baran=Mêrdîn, Zelal=Semsûr)'
+                          ? 'Cotên Peyvan (A=B, C=D)'
                           : exForm.exercise_type === 'image_choice'
                           ? 'Vebijêrk (bi bêhnokê veqetandî) — wêne li jor bar bike'
                           : 'Vebijêrk an Peyv (bi bêhnokê veqetandî)'}
@@ -2989,11 +2774,7 @@ export default function App() {
                         required
                         value={exForm.options_raw}
                         onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
-                        placeholder={
-                          exForm.exercise_type === 'match'
-                            ? 'Baran=Mêrdîn, Zelal=Semsûr, Berfîn=Amed'
-                            : 'nan, av, sêv, hêk'
-                        }
+                        placeholder="vebijêrk 1, vebijêrk 2, vebijêrk 3"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -3008,7 +2789,7 @@ export default function App() {
                           required
                           value={exForm.correct_answer}
                           onChange={(e) => setExForm({ ...exForm, correct_answer: e.target.value })}
-                          placeholder="nan"
+                          placeholder="Bersiva rast"
                           className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                         />
                       </div>
@@ -3022,7 +2803,7 @@ export default function App() {
                         type="text"
                         value={exForm.explanation}
                         onChange={(e) => setExForm({ ...exForm, explanation: e.target.value })}
-                        placeholder="Ravekirin bi Kurmancî..."
+                        placeholder="Ravekirin..."
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
