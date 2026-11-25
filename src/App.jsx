@@ -38,9 +38,7 @@ import {
   Eye,
   Zap
 } from 'lucide-react';
-
 const ADMIN_PASSCODE = import.meta.env.VITE_ADMIN_PASSCODE || 'kurdiklass2025';
-
 const LANGUAGE_OPTIONS = [
   { code: 'KU', name: 'Kurmancî', nativeName: 'Kurmancî' },
   { code: 'ZZA', name: 'Zazakî / Kirmanckî', nativeName: 'Zazakî' },
@@ -51,12 +49,10 @@ const LANGUAGE_OPTIONS = [
   { code: 'FR', name: 'French', nativeName: 'Français' },
   { code: 'IT', name: 'Italian', nativeName: 'Italiano' }
 ];
-
 const kurdishAlphabet = [
   'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î', 'J', 'K', 'L',
   'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'Ş', 'T', 'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
 ];
-
 const BUILTIN_DICTIONARY = [
   {
     id: 'builtin-1',
