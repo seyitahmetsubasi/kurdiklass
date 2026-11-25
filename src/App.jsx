@@ -37,18 +37,15 @@ import {
   Star,
   History
 } from 'lucide-react';
-
 // =========================================================================
 // SUPABASE BAĞLANTI AYARLARI
 // =========================================================================
 const SUPABASE_URL = 'https://mzsxryxuvyllljvbrzul.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
 // Not: İstemci tarafı ADMIN_PASS yalnızca arayüz kilidi içindir;
-// üretim güvenliği için Supabase RLS politikaları ve Auth oturumu ile desteklenmelidir.
+// üretim güvenliği için Supabase RLS politikaları ile desteklenmelidir.
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'kurdiklass2026';
-
 const DEFAULT_CATEGORIES = [
   { slug: 'zanist', name: 'ZANIST', sort_order: 1 },
   { slug: 'birkari', name: 'BÎRKARÎ', sort_order: 2 },
@@ -57,7 +54,6 @@ const DEFAULT_CATEGORIES = [
   { slug: 'huner', name: 'HUNER', sort_order: 5 },
   { slug: 'teknoloji', name: 'TEKNOLOJÎ', sort_order: 6 }
 ];
-
 const LANGUAGE_OPTIONS = [
   { code: 'KU', nativeName: 'Kurmancî' },
   { code: 'ZZA', nativeName: 'Zazakî' },
@@ -68,7 +64,6 @@ const LANGUAGE_OPTIONS = [
   { code: 'FR', nativeName: 'Français' },
   { code: 'IT', nativeName: 'Italiano' }
 ];
-
 const normalizeKurdish = (str = '') =>
   str
     .toLocaleLowerCase('tr')
@@ -78,44 +73,52 @@ const normalizeKurdish = (str = '') =>
     .replace(/[ş]/g, 's')
     .replace(/[ç]/g, 'c')
     .trim();
-
 const sanitizeSearch = (str = '') => str.replace(/[,()%*\\]/g, ' ').trim();
-
 const slugify = (str = '') =>
   normalizeKurdish(str)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || `beş-${Date.now()}`;
-
 const getYouTubeEmbedUrl = (url = '') => {
   const match = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/
   );
   return match ? `https://www.youtube.com/embed/${match[1]}` : '';
 };
-
+const getWordMeaningByLang = (item, lang = 'KU') => {
+  const i18n = item?.meanings_i18n || {};
+  if (i18n[lang]) return i18n[lang];
+  const legacyMap = {
+    TR: item?.meaning_tr,
+    EN: item?.meaning_en,
+    KU: item?.meaning_ku
+  };
+  if (legacyMap[lang]) return legacyMap[lang];
+  return (
+    i18n.KU ||
+    i18n.TR ||
+    i18n.EN ||
+    item?.meaning_ku ||
+    item?.meaning_tr ||
+    item?.meaning_en ||
+    ''
+  );
+};
+const getWordExampleByLang = (item, lang = 'KU') => {
+  const exI18n = item?.examples_i18n || {};
+  return exI18n[lang] || exI18n.KU || item?.example_sentence || '';
+};
 const BUILTIN_DICTIONARY = [
-  { id: 'bi-1', word: 'heval', part_of_speech: 'navdêr', meaning_tr: 'arkadaş, dost', meaning_en: 'friend', meaning_ku: 'Kesê ku mirov pê re dostanî dike.', example_sentence: 'Ew hevalê min ê herî baş e.' },
-  { id: 'bi-2', word: 'bijîşk', part_of_speech: 'navdêr', meaning_tr: 'doktor, hekim', meaning_en: 'doctor', meaning_ku: 'Kesê ku nexweşan derman dike.', example_sentence: 'Bijîşk li nexweşxaneyê dixebite.' },
-  { id: 'bi-3', word: 'silav', part_of_speech: 'navdêr', meaning_tr: 'selam, merhaba', meaning_en: 'hello, greeting', meaning_ku: 'Peyva pêşwazîkirinê.', example_sentence: 'Silav û rêz ji bo we hemûyan.' },
-  { id: 'bi-4', word: 'rojbaş', part_of_speech: 'baneşan', meaning_tr: 'günaydın, iyi günler', meaning_en: 'good morning, good day', meaning_ku: 'Silava sibeh û nîvro.', example_sentence: 'Rojbaş hevalno, hûn çawa ne?' },
-  { id: 'bi-5', word: 'spas', part_of_speech: 'navdêr', meaning_tr: 'teşekkür', meaning_en: 'thank you, thanks', meaning_ku: 'Peyva rêzdarî û minetdariyê.', example_sentence: 'Gelek spas ji bo alîkariya te.' },
-  { id: 'bi-6', word: 'av', part_of_speech: 'navdêr', meaning_tr: 'su', meaning_en: 'water', meaning_ku: 'Şileya bingehîn a jiyanê.', example_sentence: 'Av jiyan e.' },
-  { id: 'bi-7', word: 'nan', part_of_speech: 'navdêr', meaning_tr: 'ekmek', meaning_en: 'bread', meaning_ku: 'Xwarina bingehîn a ji ardê.', example_sentence: 'Nanê germ gelekî xweş e.' },
-  { id: 'bi-8', word: 'pirtûk', part_of_speech: 'navdêr', meaning_tr: 'kitap', meaning_en: 'book', meaning_ku: 'Berhema nivîskî ya xwendinê.', example_sentence: 'Ez her roj pirtûkekê dixwînim.' },
-  { id: 'bi-9', word: 'dibistan', part_of_speech: 'navdêr', meaning_tr: 'okul', meaning_en: 'school', meaning_ku: 'Saziya perwerdehiyê.', example_sentence: 'Zarok sibehê zû diçin dibistanê.' },
-  { id: 'bi-10', word: 'mamoste', part_of_speech: 'navdêr', meaning_tr: 'öğretmen', meaning_en: 'teacher', meaning_ku: 'Kesê ku dersê dide xwendekaran.', example_sentence: 'Mamoste dersa Kurdî dide.' },
-  { id: 'bi-11', word: 'xwendekar', part_of_speech: 'navdêr', meaning_tr: 'öğrenci', meaning_en: 'student', meaning_ku: 'Kesê ku li dibistan an zanîngehê dixwîne.', example_sentence: 'Xwendekar li pirtûkxaneyê ne.' },
-  { id: 'bi-12', word: 'mal', part_of_speech: 'navdêr', meaning_tr: 'ev', meaning_en: 'home, house', meaning_ku: 'Cihê jiyanê yê malbatê.', example_sentence: 'Mala me nêzîkî parkê ye.' },
-  { id: 'bi-13', word: 'malbat', part_of_speech: 'navdêr', meaning_tr: 'aile', meaning_en: 'family', meaning_ku: 'Dayik, bav û zarok bi hev re.', example_sentence: 'Malbata min li Stenbolê dijî.' },
-  { id: 'bi-14', word: 'dayik', part_of_speech: 'navdêr', meaning_tr: 'anne', meaning_en: 'mother', meaning_ku: 'Jina ku zarok aniye dinyayê.', example_sentence: 'Dayika min xwarinên xweş çêdike.' },
-  { id: 'bi-15', word: 'bav', part_of_speech: 'navdêr', meaning_tr: 'baba', meaning_en: 'father', meaning_ku: 'Mêrê ku zarokê wî heye.', example_sentence: 'Bavê min endezyar e.' },
-  { id: 'bi-16', word: 'ziman', part_of_speech: 'navdêr', meaning_tr: 'dil, lisan', meaning_en: 'language, tongue', meaning_ku: 'Amûra axaftin û ragihandinê.', example_sentence: 'Zimanê Kurdî gelekî dewlemend e.' },
-  { id: 'bi-17', word: 'roj', part_of_speech: 'navdêr', meaning_tr: 'güneş, gün', meaning_en: 'sun, day', meaning_ku: 'Stêrka ku ronahiyê dide cîhanê.', example_sentence: 'Îro roj gelekî germ e.' },
-  { id: 'bi-18', word: 'şev', part_of_speech: 'navdêr', meaning_tr: 'gece', meaning_en: 'night', meaning_ku: 'Dema tarî ya piştî rojavabûnê.', example_sentence: 'Şevbaş, xewên xweş.' },
-  { id: 'bi-19', word: 'evîn', part_of_speech: 'navdêr', meaning_tr: 'aşk, sevgi', meaning_en: 'love', meaning_ku: 'Hezkirina kûr.', example_sentence: 'Evîna welat di dilê me de ye.' },
-  { id: 'bi-20', word: 'azadî', part_of_speech: 'navdêr', meaning_tr: 'özgürlük, hürriyet', meaning_en: 'freedom, liberty', meaning_ku: 'Rewşa serbixwebûnê.', example_sentence: 'Azadî mafê her mirovî ye.' }
+  { id: 'bi-1', word: 'heval', part_of_speech: 'navdêr', meaning_tr: 'arkadaş, dost', meaning_en: 'friend', meaning_ku: 'Kesê ku mirov pê re dostanî dike.', example_sentence: 'Ew hevalê min ê herî baş e.', meanings_i18n: { KU: 'Kesê ku mirov pê re dostanî dike.', TR: 'arkadaş, dost', EN: 'friend' }, examples_i18n: { KU: 'Ew hevalê min ê herî baş e.' } },
+  { id: 'bi-2', word: 'bijîşk', part_of_speech: 'navdêr', meaning_tr: 'doktor, hekim', meaning_en: 'doctor', meaning_ku: 'Kesê ku nexweşan derman dike.', example_sentence: 'Bijîşk li nexweşxaneyê dixebite.', meanings_i18n: { KU: 'Kesê ku nexweşan derman dike.', TR: 'doktor, hekim', EN: 'doctor' }, examples_i18n: { KU: 'Bijîşk li nexweşxaneyê dixebite.' } },
+  { id: 'bi-3', word: 'silav', part_of_speech: 'navdêr', meaning_tr: 'selam, merhaba', meaning_en: 'hello, greeting', meaning_ku: 'Peyva pêşwazîkirinê.', example_sentence: 'Silav û rêz ji bo we hemûyan.', meanings_i18n: { KU: 'Peyva pêşwazîkirinê.', TR: 'selam, merhaba', EN: 'hello, greeting' }, examples_i18n: { KU: 'Silav û rêz ji bo we hemûyan.' } },
+  { id: 'bi-4', word: 'rojbaş', part_of_speech: 'baneşan', meaning_tr: 'günaydın, iyi günler', meaning_en: 'good morning, good day', meaning_ku: 'Silava sibeh û nîvro.', example_sentence: 'Rojbaş hevalno, hûn çawa ne?', meanings_i18n: { KU: 'Silava sibeh û nîvro.', TR: 'günaydın, iyi günler', EN: 'good morning, good day' }, examples_i18n: { KU: 'Rojbaş hevalno, hûn çawa ne?' } },
+  { id: 'bi-5', word: 'spas', part_of_speech: 'navdêr', meaning_tr: 'teşekkür', meaning_en: 'thank you, thanks', meaning_ku: 'Peyva rêzdarî û minetdariyê.', example_sentence: 'Gelek spas ji bo alîkariya te.', meanings_i18n: { KU: 'Peyva rêzdarî û minetdariyê.', TR: 'teşekkür', EN: 'thank you, thanks' }, examples_i18n: { KU: 'Gelek spas ji bo alîkariya te.' } },
+  { id: 'bi-6', word: 'av', part_of_speech: 'navdêr', meaning_tr: 'su', meaning_en: 'water', meaning_ku: 'Şileya bingehîn a jiyanê.', example_sentence: 'Av jiyan e.', meanings_i18n: { KU: 'Şileya bingehîn a jiyanê.', TR: 'su', EN: 'water' }, examples_i18n: { KU: 'Av jiyan e.' } },
+  { id: 'bi-7', word: 'nan', part_of_speech: 'navdêr', meaning_tr: 'ekmek', meaning_en: 'bread', meaning_ku: 'Xwarina bingehîn a ji ardê.', example_sentence: 'Nanê germ gelekî xweş e.', meanings_i18n: { KU: 'Xwarina bingehîn a ji ardê.', TR: 'ekmek', EN: 'bread' }, examples_i18n: { KU: 'Nanê germ gelekî xweş e.' } },
+  { id: 'bi-8', word: 'pirtûk', part_of_speech: 'navdêr', meaning_tr: 'kitap', meaning_en: 'book', meaning_ku: 'Berhema nivîskî ya xwendinê.', example_sentence: 'Ez her roj pirtûkekê dixwînim.', meanings_i18n: { KU: 'Berhema nivîskî ya xwendinê.', TR: 'kitap', EN: 'book' }, examples_i18n: { KU: 'Ez her roj pirtûkekê dixwînim.' } },
+  { id: 'bi-9', word: 'dibistan', part_of_speech: 'navdêr', meaning_tr: 'okul', meaning_en: 'school', meaning_ku: 'Saziya perwerdehiyê.', example_sentence: 'Zarok sibehê zû diçin dibistanê.', meanings_i18n: { KU: 'Saziya perwerdehiyê.', TR: 'okul', EN: 'school' }, examples_i18n: { KU: 'Zarok sibehê zû diçin dibistanê.' } },
+  { id: 'bi-10', word: 'mamoste', part_of_speech: 'navdêr', meaning_tr: 'öğretmen', meaning_en: 'teacher', meaning_ku: 'Kesê ku dersê dide xwendekaran.', example_sentence: 'Mamoste dersa Kurdî dide.', meanings_i18n: { KU: 'Kesê ku dersê dide xwendekaran.', TR: 'öğretmen', EN: 'teacher' }, examples_i18n: { KU: 'Mamoste dersa Kurdî dide.' } }
 ];
-
 const DEFAULT_UI = {
   brand_first: 'Kurdi',
   brand_second: 'Klass',
@@ -165,9 +168,9 @@ const DEFAULT_UI = {
   ferheng_search_btn: 'Bigere',
   ferheng_empty_text: 'Peyva ku tu lê digerî nehat dîtin.',
   learn_title: 'Rêwîtiya Fêrbûna Kurmancî',
-  learn_subtitle: 'Beşa lîstikan hatiye sifirkirin. Tu dikarî lîstikên nû zêde bikî.',
+  learn_subtitle: 'Beşa lîstikan amade ye. Tu dikarî lîstikên nû zêde bikî.',
   learn_xp_label: 'Pûan',
-  learn_empty_units: 'Beşa lîstikan sifir bûye; hîn lîstik tune ne.',
+  learn_empty_units: 'Hîn lîstik nehatine zêdekirin.',
   learn_stage_prefix: 'Qonax',
   learn_question_count_suffix: 'lîstik',
   learn_win_title: 'Pîroz be! Te ev qonax bi serkeftî qedand!',
@@ -185,7 +188,6 @@ const DEFAULT_UI = {
   learn_check_btn: 'Kontrol Bike',
   learn_next_btn: 'Berdewam Bike'
 };
-
 const UI_TRANSLATIONS = {
   KU: {},
   ZZA: {
@@ -235,9 +237,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Bigêre',
     ferheng_empty_text: 'Çekuya ke ti gêrenê nêvînîya.',
     learn_title: 'Raywanîya Musayîşê Kurmancî',
-    learn_subtitle: 'Beşê kayan sifir bîyo; ti şênayî kayê neweyî îlawe bikê.',
+    learn_subtitle: 'Beşê kayan amade yo; ti şênayî kayê neweyî îlawe bikê.',
     learn_xp_label: 'Pûan',
-    learn_empty_units: 'Beşê kayan sifir bîyo; hewna kayî çin ê.',
+    learn_empty_units: 'Hewna kayî çin ê.',
     learn_stage_prefix: 'Merhele',
     learn_question_count_suffix: 'kayî',
     learn_win_title: 'Bimbarek bo! To na merhele bi serkewtiş qedênaye!',
@@ -302,9 +304,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'گەڕان',
     ferheng_empty_text: 'ئەو وشەیەی بەدوایدا دەگەڕێیت نەدۆزرایەوە.',
     learn_title: 'گەشتی فێربوونی کورمانجی',
-    learn_subtitle: 'بەشی یارییەکان سفر کراوەتەوە؛ دەتوانیت یاری نوێ زیاد بکەیت.',
+    learn_subtitle: 'بەشی یارییەکان ئامادەیە؛ دەتوانیت یاری نوێ زیاد بکەیت.',
     learn_xp_label: 'خاڵ',
-    learn_empty_units: 'بەشی یارییەکان سفر کراوەتەوە؛ هێشتا یاری نییە.',
+    learn_empty_units: 'هێشتا هیچ یارییەک زیاد نەکراوە.',
     learn_stage_prefix: 'قۆناغ',
     learn_question_count_suffix: 'یاری',
     learn_win_title: 'پیرۆزە! ئەم قۆناغەت بە سەرکەوتوویی تەواو کرد!',
@@ -369,9 +371,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Ara',
     ferheng_empty_text: 'Aradığınız kelime bulunamadı.',
     learn_title: 'Kurmancî Öğrenme Yolculuğu',
-    learn_subtitle: 'Oyun bölümü sıfırlandı; yeni oyunlar ekleyebilirsiniz.',
+    learn_subtitle: 'Oyun bölümü hazır; yeni oyunlar ekleyebilirsiniz.',
     learn_xp_label: 'Puan',
-    learn_empty_units: 'Oyun bölümü sıfırlandı; henüz oyun yok.',
+    learn_empty_units: 'Henüz oyun eklenmemiş.',
     learn_stage_prefix: 'Aşama',
     learn_question_count_suffix: 'oyun',
     learn_win_title: 'Tebrikler! Bu aşamayı başarıyla tamamladın!',
@@ -436,9 +438,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Search',
     ferheng_empty_text: 'The word you are looking for was not found.',
     learn_title: 'Kurmanji Learning Journey',
-    learn_subtitle: 'The game section has been reset; you can add new games.',
+    learn_subtitle: 'The game section is ready; you can add new games.',
     learn_xp_label: 'Points',
-    learn_empty_units: 'The game section has been reset; no games yet.',
+    learn_empty_units: 'No games added yet.',
     learn_stage_prefix: 'Stage',
     learn_question_count_suffix: 'games',
     learn_win_title: 'Congratulations! You completed this stage!',
@@ -503,9 +505,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Suchen',
     ferheng_empty_text: 'Das gesuchte Wort wurde nicht gefunden.',
     learn_title: 'Kurmancî-Lernreise',
-    learn_subtitle: 'Der Spielbereich wurde zurückgesetzt; neue Spiele können hinzugefügt werden.',
+    learn_subtitle: 'Der Spielbereich ist bereit; neue Spiele können hinzugefügt werden.',
     learn_xp_label: 'Punkte',
-    learn_empty_units: 'Der Spielbereich wurde zurückgesetzt; noch keine Spiele.',
+    learn_empty_units: 'Noch keine Spiele hinzugefügt.',
     learn_stage_prefix: 'Stufe',
     learn_question_count_suffix: 'Spiele',
     learn_win_title: 'Glückwunsch! Du hast diese Stufe abgeschlossen!',
@@ -570,9 +572,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Rechercher',
     ferheng_empty_text: 'Le mot recherché est introuvable.',
     learn_title: 'Parcours d’Apprentissage du Kurmanji',
-    learn_subtitle: 'La section jeux a été réinitialisée ; vous pouvez ajouter de nouveaux jeux.',
+    learn_subtitle: 'La section jeux est prête ; vous pouvez ajouter de nouveaux jeux.',
     learn_xp_label: 'Points',
-    learn_empty_units: 'La section jeux a été réinitialisée ; aucun jeu pour le moment.',
+    learn_empty_units: 'Aucun jeu ajouté pour le moment.',
     learn_stage_prefix: 'Étape',
     learn_question_count_suffix: 'jeux',
     learn_win_title: 'Bravo ! Tu as terminé cette étape !',
@@ -637,9 +639,9 @@ const UI_TRANSLATIONS = {
     ferheng_search_btn: 'Cerca',
     ferheng_empty_text: 'La parola cercata non è stata trovata.',
     learn_title: 'Percorso di Apprendimento del Kurmanji',
-    learn_subtitle: 'La sezione giochi è stata azzerata; puoi aggiungere nuovi giochi.',
+    learn_subtitle: 'La sezione giochi è pronta; puoi aggiungere nuovi giochi.',
     learn_xp_label: 'Punti',
-    learn_empty_units: 'La sezione giochi è stata azzerata; nessun gioco al momento.',
+    learn_empty_units: 'Nessun gioco aggiunto finora.',
     learn_stage_prefix: 'Tappa',
     learn_question_count_suffix: 'giochi',
     learn_win_title: 'Complimenti! Hai completato questa tappa!',
@@ -658,18 +660,13 @@ const UI_TRANSLATIONS = {
     learn_next_btn: 'Continua'
   }
 };
-
 const UI_FIELD_LABELS = Object.keys(DEFAULT_UI).map((key) => ({
   key,
   label: key
 }));
-
-const STARTER_GAMES = [];
-
 const fetchFromWiktionary = async (rawWord) => {
   const cleanWord = rawWord.trim().toLowerCase();
   if (!cleanWord || cleanWord.length < 2) return null;
-
   try {
     const res = await fetch(
       `https://en.wiktionary.org/api/rest_v1/page/definition/${encodeURIComponent(cleanWord)}`
@@ -691,7 +688,6 @@ const fetchFromWiktionary = async (rawWord) => {
           .flatMap((e) => (e.definitions || []).map((d) => d.definition.replace(/<[^>]+>/g, '')))
           .filter(Boolean)
           .slice(0, 3);
-
         if (definitions.length > 0) {
           return {
             word: cleanWord,
@@ -699,12 +695,13 @@ const fetchFromWiktionary = async (rawWord) => {
             meaning_tr: '',
             meaning_en: definitions.join('; '),
             meaning_ku: '',
-            example_sentence: ''
+            example_sentence: '',
+            meanings_i18n: { EN: definitions.join('; ') },
+            examples_i18n: {}
           };
         }
       }
     }
-
     const candidates = [cleanWord, cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1)];
     for (const titleCandidate of candidates) {
       const kuRes = await fetch(
@@ -729,7 +726,9 @@ const fetchFromWiktionary = async (rawWord) => {
               meaning_tr: '',
               meaning_en: '',
               meaning_ku: summary.slice(0, 280),
-              example_sentence: ''
+              example_sentence: '',
+              meanings_i18n: { KU: summary.slice(0, 280) },
+              examples_i18n: {}
             };
           }
         }
@@ -747,10 +746,8 @@ export default function App() {
   const langDropdownRef = useRef(null);
   const audioPlayerRef = useRef(null);
   const fetchRequestRef = useRef(0);
-
   const [rawUi, setRawUi] = useState(DEFAULT_UI);
   const ui = { ...rawUi, ...(UI_TRANSLATIONS[selectedLang] || {}) };
-
   const [categories, setCategories] = useState(DEFAULT_CATEGORIES);
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -760,7 +757,9 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLesson, setActiveLesson] = useState(null);
   const [lessonTab, setLessonTab] = useState('content');
-
+  const [brokenThumbs, setBrokenThumbs] = useState({});
+  const [brokenExImages, setBrokenExImages] = useState({});
+  const [mediaLoadError, setMediaLoadError] = useState('');
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem('kk_admin') === 'true');
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
@@ -770,7 +769,6 @@ export default function App() {
   const [catMsg, setCatMsg] = useState('');
   const [newCatName, setNewCatName] = useState('');
   const [settingsMsg, setSettingsMsg] = useState('');
-
   const emptyLessonForm = {
     title: '',
     description: '',
@@ -784,7 +782,6 @@ export default function App() {
     guide_pdf_url: ''
   };
   const [formData, setFormData] = useState(emptyLessonForm);
-
   const [ferhengWords, setFerhengWords] = useState([]);
   const [totalWordCount, setTotalWordCount] = useState(0);
   const [searchingDict, setSearchingDict] = useState(false);
@@ -794,6 +791,7 @@ export default function App() {
   const [editingWordId, setEditingWordId] = useState(null);
   const [wordMsg, setWordMsg] = useState('');
   const [syncingProgress, setSyncingProgress] = useState('');
+  const [uploadingWordAudio, setUploadingWordAudio] = useState(false);
   const [searchHistory, setSearchHistory] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
@@ -813,10 +811,12 @@ export default function App() {
     part_of_speech: 'navdêr',
     meaning_tr: '',
     meaning_ku: '',
-    example_sentence: ''
+    example_sentence: '',
+    audio_url: '',
+    meanings_i18n: {},
+    examples_i18n: {}
   });
-
-  // Oyun bölümü kalıcı sıfırlandı
+  // Oyun ve kalıcı XP / Seri / Tamamlanan Qonaxlar
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -827,20 +827,26 @@ export default function App() {
   const [hearts, setHearts] = useState(5);
   const [comboCount, setComboCount] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [xpPoints, setXpPoints] = useState(0);
-  const [streakDays, setStreakDays] = useState(0);
-  const [completedUnits, setCompletedUnits] = useState([]);
-
+  const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
+  const [streakDays, setStreakDays] = useState(() => Number(localStorage.getItem('kk_streak') || 0));
+  const [completedUnits, setCompletedUnits] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_completed_units') || '[]');
+    } catch {
+      return [];
+    }
+  });
   const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
   const [matchLeftSelected, setMatchLeftSelected] = useState(null);
   const [matchRightSelected, setMatchRightSelected] = useState(null);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [matchWrongFlash, setMatchWrongFlash] = useState(false);
-
   const [editingExId, setEditingExId] = useState(null);
   const [exMsg, setExMsg] = useState('');
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
+  const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
+  const [adminExSearch, setAdminExSearch] = useState('');
   const [exForm, setExForm] = useState({
     unit_title: '',
     exercise_type: 'choice',
@@ -851,13 +857,11 @@ export default function App() {
     image_url: '',
     audio_url: ''
   });
-
   const kurdishAlphabet = [
     'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î',
     'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'Ş', 'T',
     'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
   ];
-
   const dynamicLevels = [ui.level_1, ui.level_2, ui.level_3];
   const dynamicGrades = [ui.grade_1, ui.grade_2, ui.grade_3, ui.grade_4];
   const dynamicMediaTypes = [
@@ -866,30 +870,38 @@ export default function App() {
     { id: 'audio', label: ui.media_audio, icon: Headphones },
     { id: 'interactive', label: ui.media_interactive, icon: BookOpen }
   ];
-
   useEffect(() => {
     fetchCategories();
     fetchSiteSettings();
     fetchLessons();
+    fetchExercises();
     fetchDictionary('', 'all');
   }, []);
-
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
         setLangMenuOpen(false);
       }
     };
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') {
+        setLangMenuOpen(false);
+        setActiveLesson(null);
+        setSelectedWordDetail(null);
+      }
+    };
     document.addEventListener('mousedown', handleOutsideClick);
-    return () => document.removeEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
   }, []);
-
   const handleSelectLanguage = (code) => {
     setSelectedLang(code);
     localStorage.setItem('kk_lang', code);
     setLangMenuOpen(false);
   };
-
   const fetchCategories = async () => {
     const { data, error } = await supabase
       .from('categories')
@@ -897,7 +909,6 @@ export default function App() {
       .order('sort_order', { ascending: true });
     if (!error && data && data.length > 0) setCategories(data);
   };
-
   const fetchSiteSettings = async () => {
     const { data, error } = await supabase.from('site_settings').select('*');
     if (!error && data) {
@@ -906,9 +917,50 @@ export default function App() {
         if (row.key in DEFAULT_UI && row.value) merged[row.key] = row.value;
       });
       setRawUi(merged);
+      const remoteXpRow = data.find((r) => r.key === 'learner_xp_remote');
+      const remoteStreakRow = data.find((r) => r.key === 'learner_streak_remote');
+      const remoteUnitsRow = data.find((r) => r.key === 'learner_units_remote');
+      const localXp = Number(localStorage.getItem('kk_xp') || 0);
+      const remoteXp = Number(remoteXpRow?.value || 0);
+      if (remoteXp > localXp) {
+        setXpPoints(remoteXp);
+        localStorage.setItem('kk_xp', String(remoteXp));
+      }
+      const localStreak = Number(localStorage.getItem('kk_streak') || 0);
+      const remoteStreak = Number(remoteStreakRow?.value || 0);
+      if (remoteStreak > localStreak) {
+        setStreakDays(remoteStreak);
+        localStorage.setItem('kk_streak', String(remoteStreak));
+      }
+      if (remoteUnitsRow?.value) {
+        try {
+          const parsedRemote = JSON.parse(remoteUnitsRow.value);
+          if (Array.isArray(parsedRemote) && parsedRemote.length > 0) {
+            setCompletedUnits((prev) => {
+              const union = [...new Set([...prev, ...parsedRemote])];
+              localStorage.setItem('kk_completed_units', JSON.stringify(union));
+              return union;
+            });
+          }
+        } catch {
+          // geçersiz json yoksayılır
+        }
+      }
     }
   };
-
+  const persistProgressSnapshot = async (nextXp, nextStreak, nextUnits) => {
+    localStorage.setItem('kk_xp', String(nextXp));
+    localStorage.setItem('kk_streak', String(nextStreak));
+    localStorage.setItem('kk_completed_units', JSON.stringify(nextUnits));
+    await supabase.from('site_settings').upsert(
+      [
+        { key: 'learner_xp_remote', value: String(nextXp) },
+        { key: 'learner_streak_remote', value: String(nextStreak) },
+        { key: 'learner_units_remote', value: JSON.stringify(nextUnits) }
+      ],
+      { onConflict: 'key' }
+    );
+  };
   const fetchLessons = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -918,7 +970,13 @@ export default function App() {
     if (!error && data) setLessons(data);
     setLoading(false);
   };
-
+  const fetchExercises = async () => {
+    const { data, error } = await supabase
+      .from('kurmanci_exercises')
+      .select('*')
+      .order('sort_order', { ascending: true });
+    if (!error && data) setExercises(data);
+  };
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (passwordInput === ADMIN_PASS) {
@@ -930,13 +988,11 @@ export default function App() {
       setAuthError('Şîfre çewt e. Ji kerema xwe dîsa biceribîne.');
     }
   };
-
   const handleLogout = () => {
     setIsAdmin(false);
     localStorage.removeItem('kk_admin');
     setViewMode('student');
   };
-
   const handleFileUpload = async (event, field) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -944,7 +1000,6 @@ export default function App() {
     const fileExt = file.name.split('.').pop();
     const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
     const filePath = `${field}/${safeName}`;
-
     const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
     if (uploadError) {
       setStatusMsg({ type: 'error', text: 'Barkirin têk çû: ' + uploadError.message });
@@ -957,12 +1012,10 @@ export default function App() {
     setUploadingField('');
     event.target.value = '';
   };
-
   const resetForm = () => {
     setEditingId(null);
     setFormData(emptyLessonForm);
   };
-
   const startEditing = (lesson) => {
     setActiveLesson(null);
     setViewMode('admin');
@@ -981,16 +1034,13 @@ export default function App() {
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
   const handleSaveLesson = async (e) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
-
     const payload = { ...formData, title: formData.title.trim() };
     const query = editingId
       ? supabase.from('lessons').update(payload).eq('id', editingId)
       : supabase.from('lessons').insert([payload]);
-
     const { error } = await query;
     if (error) {
       setStatusMsg({ type: 'error', text: 'Çewtî: ' + error.message });
@@ -1004,7 +1054,6 @@ export default function App() {
     }
     setTimeout(() => setStatusMsg({ type: '', text: '' }), 4000);
   };
-
   const handleDeleteLesson = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vî materyalî jê bibî?')) return;
     const { error } = await supabase.from('lessons').delete().eq('id', id);
@@ -1018,11 +1067,9 @@ export default function App() {
     }
     setTimeout(() => setStatusMsg({ type: '', text: '' }), 3500);
   };
-
   const handleUpdateCategoryName = (slug, name) => {
     setCategories((prev) => prev.map((c) => (c.slug === slug ? { ...c, name } : c)));
   };
-
   const handleSaveCategories = async () => {
     const rows = categories.map((c, idx) => ({
       slug: c.slug,
@@ -1033,7 +1080,6 @@ export default function App() {
     setCatMsg(error ? 'Çewtî: ' + error.message : 'Navên beşan hatin tomarkirin!');
     setTimeout(() => setCatMsg(''), 3500);
   };
-
   const handleAddCategory = async (e) => {
     e.preventDefault();
     const name = newCatName.trim();
@@ -1051,7 +1097,6 @@ export default function App() {
     }
     setTimeout(() => setCatMsg(''), 3500);
   };
-
   const handleDeleteCategory = async (slug) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê beşê jê bibî?')) return;
     const { error } = await supabase.from('categories').delete().eq('slug', slug);
@@ -1064,7 +1109,6 @@ export default function App() {
     }
     setTimeout(() => setCatMsg(''), 3500);
   };
-
   const handleSaveAllUiTexts = async (e) => {
     e.preventDefault();
     const rows = UI_FIELD_LABELS.map((f) => ({ key: f.key, value: rawUi[f.key] || '' }));
@@ -1072,20 +1116,17 @@ export default function App() {
     setSettingsMsg(error ? 'Çewtî: ' + error.message : 'Hemû nivîsên malperê hatin tomarkirin!');
     setTimeout(() => setSettingsMsg(''), 3500);
   };
-
   const handleResetFilters = () => {
     setSelectedCategory('all');
     setSelectedLevel('all');
     setSelectedMedia('all');
     setSearchQuery('');
   };
-
   const hasActiveFilters =
     selectedCategory !== 'all' ||
     selectedLevel !== 'all' ||
     selectedMedia !== 'all' ||
     searchQuery.trim() !== '';
-
   const recordSearchHistory = (term) => {
     const cleaned = term.trim();
     if (!cleaned) return;
@@ -1095,7 +1136,6 @@ export default function App() {
       return next;
     });
   };
-
   const toggleFavoriteWord = (word) => {
     setFavoriteWords((prev) => {
       const exists = prev.includes(word);
@@ -1104,7 +1144,6 @@ export default function App() {
       return next;
     });
   };
-
   const speakWord = (word) => {
     if (!word || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
     window.speechSynthesis.cancel();
@@ -1112,43 +1151,65 @@ export default function App() {
     utter.lang = 'ku';
     window.speechSynthesis.speak(utter);
   };
-
+  const playDictionaryPronunciation = (item) => {
+    if (!item) return;
+    if (item.audio_url) {
+      if (audioPlayerRef.current) audioPlayerRef.current.pause();
+      const audio = new Audio(item.audio_url);
+      audioPlayerRef.current = audio;
+      audio.play().catch(() => speakWord(item.word));
+      return;
+    }
+    speakWord(item.word);
+  };
+  const handleWordAudioUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadingWordAudio(true);
+    const fileExt = file.name.split('.').pop();
+    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+    const filePath = `dictionary_audio/${safeName}`;
+    const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
+    if (uploadError) {
+      setWordMsg('Barkirin têk çû: ' + uploadError.message);
+    } else {
+      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
+      if (publicData?.publicUrl) {
+        setWordForm((prev) => ({ ...prev, audio_url: publicData.publicUrl }));
+      }
+    }
+    setUploadingWordAudio(false);
+    event.target.value = '';
+  };
   const fetchDictionary = async (searchText = '', letter = 'all') => {
     const requestId = ++fetchRequestRef.current;
     setSearchingDict(true);
-
     try {
       let query = supabase
         .from('dictionary')
         .select('*', { count: 'exact' })
         .order('word', { ascending: true });
-
       const q = sanitizeSearch(searchText);
       if (q) {
         query = query.or(
-          `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%,meaning_en.ilike.%${q}%`
+          `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%,meaning_en.ilike.%${q}%,meanings_i18n::text.ilike.%${q}%,examples_i18n::text.ilike.%${q}%`
         );
       } else if (letter !== 'all') {
         const normLetter = normalizeKurdish(letter);
         query = query.ilike('word', `${normLetter}%`);
       }
-
       const { data, count, error } = await query.limit(100);
       if (requestId !== fetchRequestRef.current) return;
-
       let results = !error && data ? data : [];
-
       if (q && !results.some((r) => normalizeKurdish(r.word) === normalizeKurdish(q))) {
         const liveEntry = await fetchFromWiktionary(q);
         if (requestId !== fetchRequestRef.current) return;
-
         if (liveEntry) {
           const { data: inserted } = await supabase
             .from('dictionary')
             .insert([liveEntry])
             .select();
           if (requestId !== fetchRequestRef.current) return;
-
           if (inserted && inserted.length > 0) {
             results = [inserted[0], ...results];
           } else {
@@ -1156,7 +1217,6 @@ export default function App() {
           }
         }
       }
-
       setFerhengWords(results);
       if (count !== null && !q && letter === 'all') {
         setTotalWordCount(count);
@@ -1167,7 +1227,6 @@ export default function App() {
       }
     }
   };
-
   useEffect(() => {
     if (viewMode !== 'ferheng') return;
     const timer = setTimeout(() => {
@@ -1175,22 +1234,22 @@ export default function App() {
     }, 250);
     return () => clearTimeout(timer);
   }, [ferhengQuery, selectedLetter, viewMode]);
-
   const handleDictionarySearchSubmit = (e) => {
     e.preventDefault();
     if (ferhengQuery.trim()) recordSearchHistory(ferhengQuery);
     fetchDictionary(ferhengQuery, selectedLetter);
   };
-
   const handleBulkImportDictionary = async () => {
     setSyncingProgress('Peyvên bingehîn tên barkirin...');
     const sampleWords = BUILTIN_DICTIONARY.map(
-      ({ word, part_of_speech, meaning_tr, meaning_ku, example_sentence }) => ({
+      ({ word, part_of_speech, meaning_tr, meaning_ku, example_sentence, meanings_i18n, examples_i18n }) => ({
         word,
         part_of_speech,
         meaning_tr,
         meaning_ku,
-        example_sentence
+        example_sentence,
+        meanings_i18n,
+        examples_i18n
       })
     );
     const { error } = await supabase.from('dictionary').insert(sampleWords);
@@ -1202,15 +1261,40 @@ export default function App() {
     }
     setTimeout(() => setSyncingProgress(''), 4000);
   };
-
   const handleSaveWord = async (e) => {
     e.preventDefault();
-    if (!wordForm.word.trim() || !wordForm.meaning_tr.trim()) return;
-
+    const activeMeaning = (
+      wordForm.meanings_i18n?.[selectedLang] ||
+      wordForm.meaning_tr ||
+      wordForm.meaning_ku ||
+      ''
+    ).trim();
+    if (!wordForm.word.trim() || !activeMeaning) return;
+    const mergedMeanings = {
+      ...(wordForm.meanings_i18n || {}),
+      [selectedLang]: activeMeaning,
+      ...(wordForm.meaning_tr ? { TR: wordForm.meaning_tr } : {}),
+      ...(wordForm.meaning_ku ? { KU: wordForm.meaning_ku } : {})
+    };
+    const activeExample = (wordForm.examples_i18n?.[selectedLang] || wordForm.example_sentence || '').trim();
+    const mergedExamples = {
+      ...(wordForm.examples_i18n || {}),
+      ...(activeExample ? { [selectedLang]: activeExample } : {}),
+      ...(wordForm.example_sentence ? { KU: wordForm.example_sentence } : {})
+    };
+    const payload = {
+      word: wordForm.word.trim(),
+      part_of_speech: wordForm.part_of_speech,
+      meaning_tr: wordForm.meaning_tr || (selectedLang === 'TR' ? activeMeaning : ''),
+      meaning_ku: wordForm.meaning_ku || (selectedLang === 'KU' ? activeMeaning : ''),
+      example_sentence: wordForm.example_sentence || activeExample,
+      audio_url: (wordForm.audio_url || '').trim(),
+      meanings_i18n: mergedMeanings,
+      examples_i18n: mergedExamples
+    };
     const query = editingWordId
-      ? supabase.from('dictionary').update(wordForm).eq('id', editingWordId)
-      : supabase.from('dictionary').insert([wordForm]);
-
+      ? supabase.from('dictionary').update(payload).eq('id', editingWordId)
+      : supabase.from('dictionary').insert([payload]);
     const { error } = await query;
     if (error) {
       setWordMsg('Çewtî: ' + error.message);
@@ -1221,7 +1305,6 @@ export default function App() {
     }
     setTimeout(() => setWordMsg(''), 3500);
   };
-
   const startEditingWord = (item) => {
     setEditingWordId(item.id);
     setWordForm({
@@ -1229,10 +1312,12 @@ export default function App() {
       part_of_speech: item.part_of_speech || 'navdêr',
       meaning_tr: item.meaning_tr || '',
       meaning_ku: item.meaning_ku || '',
-      example_sentence: item.example_sentence || ''
+      example_sentence: item.example_sentence || '',
+      audio_url: item.audio_url || '',
+      meanings_i18n: item.meanings_i18n || {},
+      examples_i18n: item.examples_i18n || {}
     });
   };
-
   const resetWordForm = () => {
     setEditingWordId(null);
     setWordForm({
@@ -1240,10 +1325,12 @@ export default function App() {
       part_of_speech: 'navdêr',
       meaning_tr: '',
       meaning_ku: '',
-      example_sentence: ''
+      example_sentence: '',
+      audio_url: '',
+      meanings_i18n: {},
+      examples_i18n: {}
     });
   };
-
   const handleDeleteWord = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê peyvê jê bibî?')) return;
     const { error } = await supabase.from('dictionary').delete().eq('id', id);
@@ -1257,62 +1344,68 @@ export default function App() {
     }
     setTimeout(() => setWordMsg(''), 3500);
   };
-
   const filteredDictionary = (() => {
     const rawQ = ferhengQuery.trim();
     const normQ = normalizeKurdish(rawQ);
     const normLetter = selectedLetter === 'all' ? 'all' : normalizeKurdish(selectedLetter);
-
     const dbList = ferhengWords.map((w) => ({
       ...w,
       sourceType: 'db'
     }));
-
     const seenWords = new Set(dbList.map((w) => normalizeKurdish(w.word)));
-
     const builtinList = BUILTIN_DICTIONARY.filter(
       (b) => !seenWords.has(normalizeKurdish(b.word))
     );
-
     const combined = [...dbList, ...builtinList].filter((item) => {
       if (normLetter === 'all') return true;
       return normalizeKurdish(item.word || '').startsWith(normLetter);
     });
-
     if (!normQ) return combined;
-
     return combined
       .map((item) => {
         const wNorm = normalizeKurdish(item.word || '');
         const trNorm = normalizeKurdish(item.meaning_tr || '');
         const enNorm = normalizeKurdish(item.meaning_en || '');
         const kuNorm = normalizeKurdish(item.meaning_ku || '');
-
+        const activeLangMeaningNorm = normalizeKurdish(getWordMeaningByLang(item, selectedLang));
+        const allI18nValues = Object.values(item.meanings_i18n || {})
+          .map((v) => normalizeKurdish(String(v || '')))
+          .filter(Boolean);
         let score = 0;
         if (wNorm === normQ) score = 100;
+        else if (activeLangMeaningNorm === normQ) score = 96;
         else if (trNorm.split(/[,;/]/).map((s) => s.trim()).includes(normQ)) score = 95;
         else if (enNorm.split(/[,;/]/).map((s) => s.trim()).includes(normQ)) score = 95;
+        else if (allI18nValues.includes(normQ)) score = 92;
         else if (wNorm.startsWith(normQ)) score = 80;
+        else if (activeLangMeaningNorm.startsWith(normQ)) score = 78;
         else if (trNorm.startsWith(normQ) || enNorm.startsWith(normQ)) score = 75;
+        else if (allI18nValues.some((v) => v.startsWith(normQ))) score = 72;
         else if (wNorm.includes(normQ)) score = 60;
+        else if (activeLangMeaningNorm.includes(normQ)) score = 55;
         else if (trNorm.includes(normQ) || enNorm.includes(normQ)) score = 50;
-        else if (kuNorm.includes(normQ)) score = 30;
-
+        else if (allI18nValues.some((v) => v.includes(normQ))) score = 45;
+        else if (kuNorm.includes(normQ)) score = 35;
         return { ...item, _score: score };
       })
       .filter((item) => item._score > 0)
       .sort((a, b) => b._score - a._score || a.word.localeCompare(b.word));
   })();
-
   const handleResetGamesSection = async () => {
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
     localStorage.removeItem('kk_xp');
     localStorage.removeItem('kk_streak');
     localStorage.removeItem('kk_completed_units');
     localStorage.removeItem('kk_last_day');
-
+    await supabase.from('site_settings').upsert(
+      [
+        { key: 'learner_xp_remote', value: '0' },
+        { key: 'learner_streak_remote', value: '0' },
+        { key: 'learner_units_remote', value: '[]' }
+      ],
+      { onConflict: 'key' }
+    );
     const { error } = await supabase.from('kurmanci_exercises').delete().not('id', 'is', null);
-
     setExercises([]);
     setSelectedUnit(null);
     setCurrentExIndex(0);
@@ -1346,14 +1439,11 @@ export default function App() {
   const uploadExFile = async (event, folder, setBusy, field) => {
     const file = event.target.files?.[0];
     if (!file) return;
-
     setBusy(true);
     const fileExt = file.name.split('.').pop();
     const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
     const filePath = `${folder}/${safeName}`;
-
     const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
-
     if (uploadError) {
       setExMsg('Barkirin têk çû: ' + uploadError.message);
       setTimeout(() => setExMsg(''), 4000);
@@ -1361,45 +1451,38 @@ export default function App() {
       const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
       if (publicData?.publicUrl) {
         setExForm((prev) => ({ ...prev, [field]: publicData.publicUrl }));
+        setBrokenExImages((prev) => ({ ...prev, [publicData.publicUrl]: false }));
       }
     }
     setBusy(false);
     event.target.value = '';
   };
-
   const handleExImageUpload = (event) =>
     uploadExFile(event, 'exercises', setUploadingExImg, 'image_url');
-
   const handleExAudioUpload = (event) =>
     uploadExFile(event, 'exercise_audio', setUploadingExAudio, 'audio_url');
-
   const handleSaveExercise = async (e) => {
     e.preventDefault();
     const parsedOptions = exForm.options_raw
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
-
     if (!exForm.question_text.trim() || parsedOptions.length < 2) {
       setExMsg('Ji kerema xwe pirs û herî kêm 2 vebijêrk (bi bêhnokê veqetandî) binivîse.');
       return;
     }
-
     const finalCorrect =
       exForm.exercise_type === 'match'
         ? String(parsedOptions.length)
         : exForm.correct_answer.trim();
-
     if (exForm.exercise_type !== 'match' && !finalCorrect) {
       setExMsg('Ji kerema xwe bersiva rast binivîse.');
       return;
     }
-
     if (exForm.exercise_type === 'image_choice' && !exForm.image_url.trim()) {
       setExMsg('Ji bo vê cureyê lîstikê wêne pêwîst e. Wêneyek bar bike.');
       return;
     }
-
     if (
       exForm.exercise_type !== 'match' &&
       exForm.exercise_type !== 'sentence' &&
@@ -1408,7 +1491,6 @@ export default function App() {
       setExMsg('Bersiva rast divê di nav vebijêrkan de hebe.');
       return;
     }
-
     const payload = {
       unit_title: exForm.unit_title.trim(),
       exercise_type: exForm.exercise_type,
@@ -1419,13 +1501,11 @@ export default function App() {
       image_url: exForm.image_url.trim(),
       audio_url: exForm.audio_url.trim()
     };
-
     if (editingExId) {
       const { error } = await supabase
         .from('kurmanci_exercises')
         .update(payload)
         .eq('id', editingExId);
-
       if (error) {
         setExMsg('Çewtî: ' + error.message);
       } else {
@@ -1445,7 +1525,6 @@ export default function App() {
         .from('kurmanci_exercises')
         .insert([{ ...payload, sort_order: exercises.length + 1 }])
         .select();
-
       if (error) {
         setExercises((prev) => [...prev, newRecord]);
         setExMsg('Lîstik li beşa nû hat zêdekirin.');
@@ -1457,7 +1536,6 @@ export default function App() {
     }
     setTimeout(() => setExMsg(''), 4000);
   };
-
   const startEditingExercise = (ex) => {
     setEditingExId(ex.id);
     setExForm({
@@ -1471,7 +1549,6 @@ export default function App() {
       audio_url: ex.audio_url || ''
     });
   };
-
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
@@ -1485,7 +1562,6 @@ export default function App() {
       audio_url: ''
     });
   };
-
   const handleDeleteExercise = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê lîstikê jê bibî?')) return;
     const { error } = await supabase.from('kurmanci_exercises').delete().eq('id', id);
@@ -1498,29 +1574,35 @@ export default function App() {
     }
     setTimeout(() => setExMsg(''), 3500);
   };
-
   const isZarokUnit = (title = '') => {
     const t = title.toLowerCase().trim();
     return t.startsWith('zarok');
   };
-
   const unitList = [
     ...new Set(
       exercises.filter((ex) => !isZarokUnit(ex.unit_title)).map((ex) => ex.unit_title)
     )
   ];
-
   const zarokUnitList = [
     ...new Set(
       exercises.filter((ex) => isZarokUnit(ex.unit_title)).map((ex) => ex.unit_title)
     )
   ];
-
+  const allExerciseUnits = [...new Set(exercises.map((ex) => ex.unit_title).filter(Boolean))];
+  const filteredAdminExercises = exercises.filter((ex) => {
+    if (adminExUnitFilter !== 'all' && ex.unit_title !== adminExUnitFilter) return false;
+    const q = normalizeKurdish(adminExSearch);
+    if (!q) return true;
+    return (
+      normalizeKurdish(ex.question_text || '').includes(q) ||
+      normalizeKurdish(ex.unit_title || '').includes(q) ||
+      normalizeKurdish(ex.correct_answer || '').includes(q)
+    );
+  });
   const unitExercises = (() => {
     if (!selectedUnit) return [];
     return exercises.filter((ex) => ex.unit_title === selectedUnit);
   })();
-
   const currentEx = unitExercises[currentExIndex];
   const playCurrentAudio = (url) => {
     if (!url) return;
@@ -1536,28 +1618,23 @@ export default function App() {
         startSec = parseFloat(parts[0]) || 0;
         if (parts[1]) endSec = parseFloat(parts[1]);
       }
-
       const audio = new Audio(baseUrl);
       audio.preload = 'auto';
       audioPlayerRef.current = audio;
       setIsPlayingAudio(true);
-
       audio.onloadedmetadata = () => {
         if (startSec > 0) {
           audio.currentTime = startSec;
         }
       };
-
       audio.ontimeupdate = () => {
         if (endSec !== null && audio.currentTime >= endSec) {
           audio.pause();
           setIsPlayingAudio(false);
         }
       };
-
       audio.onended = () => setIsPlayingAudio(false);
       audio.onerror = () => setIsPlayingAudio(false);
-
       audio.play().catch((err) => {
         console.error('Audio play error:', err);
         setIsPlayingAudio(false);
@@ -1566,9 +1643,9 @@ export default function App() {
       setIsPlayingAudio(false);
     }
   };
-
   useEffect(() => {
     setIsPlayingAudio(false);
+    setMediaLoadError('');
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
     }
@@ -1579,13 +1656,11 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [currentEx?.id, viewMode, selectedUnit, unitCompleted]);
-
   useEffect(() => {
     return () => {
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
     };
   }, []);
-
   const parsedMatchPairs = (() => {
     if (!currentEx || currentEx.exercise_type !== 'match') return [];
     return (currentEx.options || [])
@@ -1600,7 +1675,6 @@ export default function App() {
       })
       .filter(Boolean);
   })();
-
   useEffect(() => {
     if (currentEx?.exercise_type === 'match') {
       const pairs = (currentEx.options || [])
@@ -1618,29 +1692,24 @@ export default function App() {
       setMatchWrongFlash(false);
     }
   }, [currentEx?.id]);
-
   const handleMatchSelect = (side, pairId) => {
     if (answerState || matchedPairs.includes(pairId) || hearts === 0) return;
-
     const nextLeft = side === 'left' ? pairId : matchLeftSelected;
     const nextRight = side === 'right' ? pairId : matchRightSelected;
-
     setMatchLeftSelected(nextLeft);
     setMatchRightSelected(nextRight);
-
     if (nextLeft !== null && nextRight !== null) {
       if (nextLeft === nextRight) {
         const updated = [...matchedPairs, nextLeft];
         setMatchedPairs(updated);
         setMatchLeftSelected(null);
         setMatchRightSelected(null);
-
         if (updated.length === parsedMatchPairs.length) {
           setAnswerState('correct');
           const nextXp = xpPoints + 15;
           setXpPoints(nextXp);
           setComboCount((c) => c + 1);
-          localStorage.setItem('kk_xp', String(nextXp));
+          persistProgressSnapshot(nextXp, streakDays, completedUnits);
         }
       } else {
         setMatchWrongFlash(true);
@@ -1654,7 +1723,6 @@ export default function App() {
       }
     }
   };
-
   const startUnit = (unitName) => {
     setSelectedUnit(unitName);
     setCurrentExIndex(0);
@@ -1665,7 +1733,6 @@ export default function App() {
     setHearts(5);
     setUnitCompleted(false);
   };
-
   const closeActiveUnit = () => {
     const wasZarok = selectedUnit?.toUpperCase().startsWith('ZAROK:');
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
@@ -1675,7 +1742,6 @@ export default function App() {
       setSelectedCategory('zarok');
     }
   };
-
   const toggleSentenceWord = (word, idx) => {
     if (answerState) return;
     const existsIndex = builtWords.findIndex((item) => item.idx === idx);
@@ -1685,41 +1751,37 @@ export default function App() {
       setBuiltWords((prev) => [...prev, { word, idx }]);
     }
   };
-
   const checkExerciseAnswer = () => {
     if (!currentEx || currentEx.exercise_type === 'match') return;
     const userAnswer =
       currentEx.exercise_type === 'sentence'
         ? builtWords.map((w) => w.word).join(' ').trim()
         : selectedOption.trim();
-
     if (!userAnswer) return;
-
     if (userAnswer.toLowerCase() === currentEx.correct_answer.trim().toLowerCase()) {
       setAnswerState('correct');
       const bonus = comboCount >= 2 ? 15 : 10;
       const nextXp = xpPoints + bonus;
       setXpPoints(nextXp);
       setComboCount((c) => c + 1);
-      localStorage.setItem('kk_xp', String(nextXp));
+      persistProgressSnapshot(nextXp, streakDays, completedUnits);
     } else {
       setAnswerState('wrong');
       setComboCount(0);
       setHearts((prev) => Math.max(0, prev - 1));
     }
   };
-
   const updateStreak = () => {
     const today = new Date().toISOString().slice(0, 10);
     const last = localStorage.getItem('kk_last_day');
-    if (last === today) return;
+    if (last === today) return streakDays;
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const nextStreak = last === yesterday ? streakDays + 1 : 1;
     setStreakDays(nextStreak);
     localStorage.setItem('kk_streak', String(nextStreak));
     localStorage.setItem('kk_last_day', today);
+    return nextStreak;
   };
-
   const goToNextExercise = () => {
     if (hearts === 0) return;
     if (currentExIndex + 1 < unitExercises.length) {
@@ -1729,15 +1791,15 @@ export default function App() {
       setAnswerState(null);
     } else {
       setUnitCompleted(true);
-      updateStreak();
-      if (selectedUnit && !completedUnits.includes(selectedUnit)) {
-        const updatedUnits = [...completedUnits, selectedUnit];
-        setCompletedUnits(updatedUnits);
-        localStorage.setItem('kk_completed_units', JSON.stringify(updatedUnits));
-      }
+      const nextStreak = updateStreak();
+      const updatedUnits =
+        selectedUnit && !completedUnits.includes(selectedUnit)
+          ? [...completedUnits, selectedUnit]
+          : completedUnits;
+      setCompletedUnits(updatedUnits);
+      persistProgressSnapshot(xpPoints, nextStreak, updatedUnits);
     }
   };
-
   const filteredLessons = lessons.filter((l) => {
     if (selectedCategory !== 'all' && l.category_slug !== selectedCategory) return false;
     if (selectedLevel !== 'all' && l.level !== selectedLevel) return false;
@@ -1749,13 +1811,10 @@ export default function App() {
       normalizeKurdish(l.description || '').includes(q)
     );
   });
-
   const mediaIconFor = (type) =>
     (dynamicMediaTypes.find((m) => m.id === type) || dynamicMediaTypes[0]).icon;
-
   const wrongAnswerLocked = answerState === 'wrong';
   const outOfHearts = hearts === 0 && !unitCompleted;
-
   const renderEmbeddedMedia = (lesson) => {
     const url = (lesson?.media_url || '').trim();
     if (!url) {
@@ -1765,14 +1824,12 @@ export default function App() {
         </p>
       );
     }
-
     const ytEmbed = getYouTubeEmbedUrl(url);
     const isAudio =
       lesson.media_type === 'audio' || /\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url);
     const isPdf =
       lesson.media_type === 'document' || /\.pdf(\?|$)/i.test(url);
     const isVideoFile = /\.(mp4|webm|ogg)(\?|$)/i.test(url);
-
     return (
       <div className="space-y-3">
         {ytEmbed && (
@@ -1787,10 +1844,20 @@ export default function App() {
           </div>
         )}
         {!ytEmbed && isVideoFile && (
-          <video controls src={url} className="w-full rounded-xl border border-slate-200 bg-black" />
+          <video
+            controls
+            src={url}
+            onError={() => setMediaLoadError('Vîdyo nehat barkirin; lînkê vekirî biceribîne.')}
+            className="w-full rounded-xl border border-slate-200 bg-black"
+          />
         )}
         {isAudio && (
-          <audio controls src={url} className="w-full" />
+          <audio
+            controls
+            src={url}
+            onError={() => setMediaLoadError('Pelê dengî nehat barkirin.')}
+            className="w-full"
+          />
         )}
         {isPdf && (
           <iframe
@@ -1798,6 +1865,9 @@ export default function App() {
             title={lesson.title}
             className="w-full h-80 rounded-xl border border-slate-200"
           />
+        )}
+        {mediaLoadError && (
+          <p className="text-xs text-red-700 font-medium">{mediaLoadError}</p>
         )}
         <a
           href={url}
@@ -1811,7 +1881,6 @@ export default function App() {
       </div>
     );
   };
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       {/* ÜST MENÜ */}
@@ -1826,10 +1895,9 @@ export default function App() {
           >
             <span>
               {ui.brand_first}
-              <span className="text-red-600">{ui.brand_second}</span>
+              <span className="text-red-700">{ui.brand_second}</span>
             </span>
           </button>
-
           <nav aria-label="Menuya Sereke" className="flex items-center gap-1 sm:gap-2">
             {[
               { id: 'student', label: ui.nav_site, icon: LayoutDashboard },
@@ -1851,7 +1919,7 @@ export default function App() {
                   }}
                   className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition ${
                     active
-                      ? 'bg-red-50 text-red-700'
+                      ? 'bg-red-50 text-red-700 border border-red-200'
                       : 'text-slate-600 hover:bg-slate-100'
                   }`}
                 >
@@ -1860,14 +1928,13 @@ export default function App() {
                 </button>
               );
             })}
-
             <div className="relative" ref={langDropdownRef}>
               <button
                 type="button"
                 aria-label="Ziman hilbijêre"
                 title="Ziman hilbijêre"
                 onClick={() => setLangMenuOpen((o) => !o)}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-bold text-slate-700 border border-slate-200 hover:bg-slate-100"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-bold text-slate-700 border border-slate-200 hover:border-red-300 hover:bg-red-50/40"
               >
                 <span>{selectedLang}</span>
                 <ChevronDown className="w-4 h-4" />
@@ -1879,12 +1946,12 @@ export default function App() {
                       key={l.code}
                       type="button"
                       onClick={() => handleSelectLanguage(l.code)}
-                      className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center justify-between ${
-                        selectedLang === l.code ? 'font-bold text-red-700' : 'text-slate-700'
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-red-50/50 flex items-center justify-between ${
+                        selectedLang === l.code ? 'font-bold text-red-700 bg-red-50/40' : 'text-slate-700'
                       }`}
                     >
                       <span>{l.nativeName}</span>
-                      {selectedLang === l.code && <Check className="w-4 h-4" />}
+                      {selectedLang === l.code && <Check className="w-4 h-4 text-red-700" />}
                     </button>
                   ))}
                 </div>
@@ -1893,13 +1960,12 @@ export default function App() {
           </nav>
         </div>
       </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ===================== MALPER (ÖĞRENCİ) ===================== */}
         {viewMode === 'student' && (
           <div className="space-y-8">
-            <section className="bg-slate-900 text-white rounded-3xl p-8 md:p-12">
-              <span className="inline-block bg-red-600 text-xs font-bold tracking-wide px-3 py-1 rounded-full mb-4">
+            <section className="bg-slate-900 text-white rounded-3xl p-8 md:p-12 border border-slate-800">
+              <span className="inline-block bg-red-700 text-xs font-bold tracking-wide px-3 py-1 rounded-full mb-4">
                 {ui.hero_badge}
               </span>
               <h1 className="text-3xl md:text-4xl font-extrabold mb-3 max-w-3xl">{ui.hero_title}</h1>
@@ -1911,11 +1977,10 @@ export default function App() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={ui.search_placeholder}
-                  className="w-full rounded-xl pl-12 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="w-full rounded-xl pl-12 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-600"
                 />
               </div>
             </section>
-
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -1923,7 +1988,7 @@ export default function App() {
                 className={`px-4 py-2 rounded-full text-sm font-bold transition ${
                   selectedCategory === 'all'
                     ? 'bg-red-700 text-white'
-                    : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                    : 'bg-white border border-slate-200 text-slate-700 hover:border-red-300 hover:text-red-700'
                 }`}
               >
                 {ui.all_categories_label}
@@ -1936,17 +2001,16 @@ export default function App() {
                   className={`px-4 py-2 rounded-full text-sm font-bold transition ${
                     selectedCategory === c.slug
                       ? 'bg-red-700 text-white'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:border-red-300 hover:text-red-700'
                   }`}
                 >
                   {c.name}
                 </button>
               ))}
             </div>
-
             <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-end gap-4">
               <div className="flex items-center gap-2 font-bold text-slate-700 text-sm">
-                <Filter className="w-4 h-4" />
+                <Filter className="w-4 h-4 text-red-700" />
                 <span>{ui.filter_title}</span>
               </div>
               <div>
@@ -1956,7 +2020,7 @@ export default function App() {
                 <select
                   value={selectedLevel}
                   onChange={(e) => setSelectedLevel(e.target.value)}
-                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-700"
                 >
                   <option value="all">{ui.filter_level_all}</option>
                   {dynamicLevels.map((l) => (
@@ -1971,7 +2035,7 @@ export default function App() {
                 <select
                   value={selectedMedia}
                   onChange={(e) => setSelectedMedia(e.target.value)}
-                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                  className="border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-700"
                 >
                   <option value="all">{ui.filter_media_all}</option>
                   {dynamicMediaTypes.map((m) => (
@@ -1989,11 +2053,10 @@ export default function App() {
                 </button>
               )}
             </div>
-
             {selectedCategory === 'zarok' && zarokUnitList.length > 0 && (
-              <section className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                <h2 className="font-bold text-amber-900 mb-3 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
+              <section className="bg-red-50/60 border border-red-200 rounded-2xl p-5">
+                <h2 className="font-bold text-red-900 mb-3 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-red-700" />
                   <span>Lîstikên Zarokan</span>
                 </h2>
                 <div className="flex flex-wrap gap-3">
@@ -2005,7 +2068,7 @@ export default function App() {
                         startUnit(u);
                         setViewMode('learn');
                       }}
-                      className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition"
+                      className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition"
                     >
                       {u.replace(/^ZAROK:\s*/i, '')}
                     </button>
@@ -2013,14 +2076,12 @@ export default function App() {
                 </div>
               </section>
             )}
-
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-slate-900">{ui.list_all_title}</h2>
               <span className="text-sm text-slate-500">
                 {filteredLessons.length} {ui.list_count_suffix}
               </span>
             </div>
-
             {loading ? (
               <p className="text-center text-slate-500 py-12">{ui.loading_text}</p>
             ) : filteredLessons.length === 0 ? (
@@ -2052,6 +2113,7 @@ export default function App() {
                 {filteredLessons.map((lesson) => {
                   const Icon = mediaIconFor(lesson.media_type);
                   const hasGuide = lesson.teacher_guide || lesson.guide_pdf_url;
+                  const showThumb = lesson.thumbnail_url && !brokenThumbs[lesson.id];
                   return (
                     <button
                       key={lesson.id}
@@ -2060,26 +2122,27 @@ export default function App() {
                         setActiveLesson(lesson);
                         setLessonTab('content');
                       }}
-                      className="text-left bg-white border border-slate-200 rounded-2xl overflow-hidden hover:shadow-md transition"
+                      className="text-left bg-white border border-slate-200 hover:border-red-300 rounded-2xl overflow-hidden hover:shadow-md transition"
                     >
                       <div className="aspect-video bg-slate-100 flex items-center justify-center relative">
-                        {lesson.thumbnail_url ? (
+                        {showThumb ? (
                           <img
                             src={lesson.thumbnail_url}
                             alt=""
+                            onError={() => setBrokenThumbs((prev) => ({ ...prev, [lesson.id]: true }))}
                             className="w-full h-full object-cover"
                           />
                         ) : (
                           <Icon className="w-10 h-10 text-slate-300" />
                         )}
                         {hasGuide && (
-                          <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded">
+                          <span className="absolute top-2 right-2 bg-red-700 text-white text-[10px] font-bold px-2 py-1 rounded">
                             {ui.card_guide_badge}
                           </span>
                         )}
                       </div>
                       <div className="p-4">
-                        <div className="text-xs font-bold text-red-600 mb-1">
+                        <div className="text-xs font-bold text-red-700 mb-1">
                           {categories.find((c) => c.slug === lesson.category_slug)?.name}
                         </div>
                         <h3 className="font-bold text-slate-900 mb-1">{lesson.title}</h3>
@@ -2093,7 +2156,6 @@ export default function App() {
                 })}
               </div>
             )}
-
             {activeLesson && (
               <div
                 className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -2110,7 +2172,7 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => startEditing(activeLesson)}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-bold"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                           <span>Sererast</span>
@@ -2126,7 +2188,6 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-
                   <div className="flex gap-2 mb-4 border-b border-slate-200">
                     {[
                       { id: 'content', label: ui.tab_content },
@@ -2138,7 +2199,7 @@ export default function App() {
                         onClick={() => setLessonTab(t.id)}
                         className={`px-4 py-2 text-sm font-bold border-b-2 -mb-px ${
                           lessonTab === t.id
-                            ? 'border-red-600 text-red-700'
+                            ? 'border-red-700 text-red-700'
                             : 'border-transparent text-slate-500'
                         }`}
                       >
@@ -2146,16 +2207,20 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-
                   {lessonTab === 'content' ? (
                     <div className="space-y-4">
-                      {activeLesson.thumbnail_url && !getYouTubeEmbedUrl(activeLesson.media_url) && (
-                        <img
-                          src={activeLesson.thumbnail_url}
-                          alt=""
-                          className="w-full rounded-xl"
-                        />
-                      )}
+                      {activeLesson.thumbnail_url &&
+                        !brokenThumbs[activeLesson.id] &&
+                        !getYouTubeEmbedUrl(activeLesson.media_url) && (
+                          <img
+                            src={activeLesson.thumbnail_url}
+                            alt=""
+                            onError={() =>
+                              setBrokenThumbs((prev) => ({ ...prev, [activeLesson.id]: true }))
+                            }
+                            className="w-full rounded-xl"
+                          />
+                        )}
                       <p className="text-slate-700 whitespace-pre-line">{activeLesson.description}</p>
                       <div className="text-xs text-slate-500">
                         {ui.meta_level_prefix} {activeLesson.level} • {ui.meta_grade_prefix}{' '}
@@ -2166,7 +2231,7 @@ export default function App() {
                   ) : (
                     <div className="space-y-4">
                       <h4 className="font-bold text-slate-900 flex items-center gap-2">
-                        <ClipboardList className="w-5 h-5 text-amber-600" />
+                        <ClipboardList className="w-5 h-5 text-red-700" />
                         <span>{ui.guide_heading}</span>
                       </h4>
                       {activeLesson.teacher_guide ? (
@@ -2181,7 +2246,7 @@ export default function App() {
                           href={activeLesson.guide_pdf_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 bg-amber-600 hover:bg-amber-700 text-white font-bold px-5 py-2.5 rounded-lg text-sm"
+                          className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-lg text-sm"
                         >
                           <Download className="w-4 h-4" />
                           <span>{ui.guide_download_btn}</span>
@@ -2194,8 +2259,7 @@ export default function App() {
             )}
           </div>
         )}
-
-        {/* ===================== HÎNBÛN / LÎSTIK (SIFIRLANMIŞ) ===================== */}
+        {/* ===================== HÎNBÛN / LÎSTIK ===================== */}
         {viewMode === 'learn' && (
           <div className="max-w-3xl mx-auto">
             {!selectedUnit ? (
@@ -2204,30 +2268,28 @@ export default function App() {
                   <h1 className="text-3xl font-extrabold text-slate-900 mb-2">{ui.learn_title}</h1>
                   <p className="text-slate-500">{ui.learn_subtitle}</p>
                 </div>
-
                 <div className="flex justify-center gap-4 flex-wrap">
                   <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
-                    <Zap className="w-5 h-5 text-amber-500" />
+                    <Zap className="w-5 h-5 text-red-700" />
                     <span>{xpPoints}</span>
                     <span className="text-xs text-slate-500 font-semibold">{ui.learn_xp_label}</span>
                   </div>
                   <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
-                    <Flame className="w-5 h-5 text-orange-500" />
+                    <Flame className="w-5 h-5 text-red-600" />
                     <span>{streakDays}</span>
                   </div>
                   <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
-                    <Award className="w-5 h-5 text-emerald-600" />
-                    <span>0 / {unitList.length} {ui.learn_stage_prefix}</span>
+                    <Award className="w-5 h-5 text-red-700" />
+                    <span>{completedUnits.length} / {unitList.length} {ui.learn_stage_prefix}</span>
                   </div>
                 </div>
-
                 {unitList.length === 0 ? (
                   <div className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8 space-y-4">
                     <p>{ui.learn_empty_units}</p>
                     <button
                       type="button"
                       onClick={() => setViewMode('admin')}
-                      className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition"
+                      className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition"
                     >
                       + Lîstika Nû Zêde Bike
                     </button>
@@ -2242,12 +2304,12 @@ export default function App() {
                           key={unit}
                           type="button"
                           onClick={() => startUnit(unit)}
-                          className="w-full flex items-center justify-between gap-4 bg-white border border-slate-200 hover:border-emerald-400 rounded-2xl p-5 text-left transition"
+                          className="w-full flex items-center justify-between gap-4 bg-white border border-slate-200 hover:border-red-300 rounded-2xl p-5 text-left transition"
                         >
                           <div className="flex items-center gap-4">
                             <div
                               className={`w-12 h-12 rounded-full flex items-center justify-center font-extrabold ${
-                                done ? 'bg-emerald-500 text-white' : 'bg-emerald-100 text-emerald-700'
+                                done ? 'bg-red-700 text-white' : 'bg-red-50 text-red-700'
                               }`}
                             >
                               {done ? <Check className="w-6 h-6" /> : idx + 1}
@@ -2259,7 +2321,7 @@ export default function App() {
                               </div>
                             </div>
                           </div>
-                          {done && <Award className="w-6 h-6 text-amber-500" />}
+                          {done && <Award className="w-6 h-6 text-red-700" />}
                         </button>
                       );
                     })}
@@ -2269,7 +2331,7 @@ export default function App() {
             ) : unitCompleted || outOfHearts ? (
               <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-5">
                 {unitCompleted ? (
-                  <Award className="w-16 h-16 text-amber-500 mx-auto" />
+                  <Award className="w-16 h-16 text-red-700 mx-auto" />
                 ) : (
                   <Heart className="w-16 h-16 text-slate-300 mx-auto" />
                 )}
@@ -2280,7 +2342,7 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => startUnit(selectedUnit)}
-                    className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl"
+                    className="flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-xl"
                   >
                     <RotateCcw className="w-4 h-4" />
                     <span>{ui.learn_replay_btn}</span>
@@ -2318,18 +2380,17 @@ export default function App() {
                   </button>
                   <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-emerald-500 transition-all"
+                      className="h-full bg-red-700 transition-all"
                       style={{ width: `${(currentExIndex / unitExercises.length) * 100}%` }}
                     />
                   </div>
-                  <div className="flex items-center gap-1 font-bold text-red-600">
-                    <Heart className="w-5 h-5 fill-red-500" />
+                  <div className="flex items-center gap-1 font-bold text-red-700">
+                    <Heart className="w-5 h-5 fill-red-700" />
                     <span>{hearts}</span>
                   </div>
                 </div>
-
                 <div className="space-y-3">
-                  <div className="text-xs font-bold text-emerald-700">
+                  <div className="text-xs font-bold text-red-700">
                     {{
                       choice: ui.learn_type_choice,
                       sentence: ui.learn_type_sentence,
@@ -2339,11 +2400,13 @@ export default function App() {
                     }[currentEx.exercise_type] || ''}
                   </div>
                   <h2 className="text-xl font-bold text-slate-900">{currentEx.question_text}</h2>
-
-                  {currentEx.image_url && (
+                  {currentEx.image_url && !brokenExImages[currentEx.id] && (
                     <img
                       src={currentEx.image_url}
                       alt=""
+                      onError={() =>
+                        setBrokenExImages((prev) => ({ ...prev, [currentEx.id]: true }))
+                      }
                       className={`rounded-xl border border-slate-200 mx-auto object-contain ${
                         currentEx.exercise_type === 'image_choice'
                           ? 'max-h-72 w-full bg-slate-50'
@@ -2351,13 +2414,12 @@ export default function App() {
                       }`}
                     />
                   )}
-
                   {currentEx.audio_url && (
                     <button
                       type="button"
                       onClick={() => playCurrentAudio(currentEx.audio_url)}
                       className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white ${
-                        isPlayingAudio ? 'bg-sky-400' : 'bg-sky-600 hover:bg-sky-700'
+                        isPlayingAudio ? 'bg-red-500' : 'bg-red-700 hover:bg-red-800'
                       }`}
                     >
                       <Volume2 className="w-5 h-5" />
@@ -2365,7 +2427,6 @@ export default function App() {
                     </button>
                   )}
                 </div>
-
                 {(currentEx.exercise_type === 'choice' ||
                   currentEx.exercise_type === 'fill_blank' ||
                   currentEx.exercise_type === 'image_choice') && (
@@ -2374,10 +2435,10 @@ export default function App() {
                       const isSel = selectedOption === opt;
                       const isRight =
                         answerState && opt.toLowerCase() === currentEx.correct_answer.trim().toLowerCase();
-                      let cls = 'border-slate-200 hover:border-emerald-400';
-                      if (isSel && !answerState) cls = 'border-emerald-500 bg-emerald-50';
-                      if (answerState && isRight) cls = 'border-emerald-500 bg-emerald-50';
-                      if (answerState === 'wrong' && isSel && !isRight) cls = 'border-red-500 bg-red-50';
+                      let cls = 'border-slate-200 hover:border-red-300';
+                      if (isSel && !answerState) cls = 'border-red-700 bg-red-50';
+                      if (answerState && isRight) cls = 'border-emerald-600 bg-emerald-50';
+                      if (answerState === 'wrong' && isSel && !isRight) cls = 'border-red-600 bg-red-50';
                       return (
                         <button
                           key={opt}
@@ -2392,7 +2453,6 @@ export default function App() {
                     })}
                   </div>
                 )}
-
                 {currentEx.exercise_type === 'sentence' && (
                   <div className="space-y-4">
                     <div className="min-h-[56px] border-2 border-dashed border-slate-300 rounded-xl p-3 flex flex-wrap gap-2">
@@ -2404,7 +2464,7 @@ export default function App() {
                           key={w.idx}
                           type="button"
                           onClick={() => toggleSentenceWord(w.word, w.idx)}
-                          className="bg-emerald-100 text-emerald-800 font-semibold px-3 py-1.5 rounded-lg"
+                          className="bg-red-50 text-red-800 border border-red-200 font-semibold px-3 py-1.5 rounded-lg"
                         >
                           {w.word}
                         </button>
@@ -2420,7 +2480,7 @@ export default function App() {
                             disabled={used}
                             onClick={() => toggleSentenceWord(word, idx)}
                             className={`border-2 border-slate-200 font-semibold px-3 py-1.5 rounded-lg transition ${
-                              used ? 'opacity-30' : 'hover:border-emerald-400'
+                              used ? 'opacity-30' : 'hover:border-red-300'
                             }`}
                           >
                             {word}
@@ -2439,7 +2499,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
                 {currentEx.exercise_type === 'match' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
@@ -2454,12 +2513,12 @@ export default function App() {
                             onClick={() => handleMatchSelect('left', p.id)}
                             className={`w-full border-2 rounded-xl px-3 py-3 font-semibold text-sm transition ${
                               done
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
                                 ? matchWrongFlash
-                                  ? 'border-red-500 bg-red-50'
-                                  : 'border-sky-500 bg-sky-50'
-                                : 'border-slate-200 hover:border-sky-400'
+                                  ? 'border-red-600 bg-red-50'
+                                  : 'border-red-700 bg-red-50'
+                                : 'border-slate-200 hover:border-red-300'
                             }`}
                           >
                             {p.left}
@@ -2479,12 +2538,12 @@ export default function App() {
                             onClick={() => handleMatchSelect('right', p.id)}
                             className={`w-full border-2 rounded-xl px-3 py-3 font-semibold text-sm transition ${
                               done
-                                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
                                 : sel
                                 ? matchWrongFlash
-                                  ? 'border-red-500 bg-red-50'
-                                  : 'border-sky-500 bg-sky-50'
-                                : 'border-slate-200 hover:border-sky-400'
+                                  ? 'border-red-600 bg-red-50'
+                                  : 'border-red-700 bg-red-50'
+                                : 'border-slate-200 hover:border-red-300'
                             }`}
                           >
                             {p.right}
@@ -2494,7 +2553,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
                 {answerState && (
                   <div
                     className={`rounded-xl p-4 text-sm font-medium ${
@@ -2507,7 +2565,7 @@ export default function App() {
                       <div className="flex items-center gap-2">
                         <CheckCircle2 className="w-5 h-5" />
                         <span>{ui.learn_correct_msg}</span>
-                        {comboCount >= 3 && <Flame className="w-4 h-4 text-orange-500" />}
+                        {comboCount >= 3 && <Flame className="w-4 h-4 text-red-700" />}
                       </div>
                     ) : (
                       <div className="flex items-center gap-2">
@@ -2522,7 +2580,6 @@ export default function App() {
                     )}
                   </div>
                 )}
-
                 <div className="flex justify-end">
                   {!answerState && currentEx.exercise_type !== 'match' ? (
                     <button
@@ -2533,7 +2590,7 @@ export default function App() {
                           ? builtWords.length === 0
                           : !selectedOption
                       }
-                      className="bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 text-white font-bold px-8 py-3 rounded-xl"
+                      className="bg-red-700 hover:bg-red-800 disabled:opacity-40 text-white font-bold px-8 py-3 rounded-xl"
                     >
                       {ui.learn_check_btn}
                     </button>
@@ -2543,8 +2600,8 @@ export default function App() {
                       onClick={goToNextExercise}
                       className={`text-white font-bold px-8 py-3 rounded-xl ${
                         wrongAnswerLocked
-                          ? 'bg-red-600 hover:bg-red-700'
-                          : 'bg-emerald-600 hover:bg-emerald-700'
+                          ? 'bg-red-700 hover:bg-red-800'
+                          : 'bg-slate-900 hover:bg-slate-800'
                       }`}
                     >
                       {ui.learn_next_btn}
@@ -2555,13 +2612,12 @@ export default function App() {
             )}
           </div>
         )}
-
         {/* ===================== FERHENG ===================== */}
         {viewMode === 'ferheng' && (
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="text-center">
               <h1 className="text-3xl font-extrabold text-slate-900 mb-2 flex items-center justify-center gap-2">
-                <BookA className="w-8 h-8 text-sky-600" />
+                <BookA className="w-8 h-8 text-red-700" />
                 <span>{ui.nav_ferheng}</span>
               </h1>
               <p className="text-sm text-slate-500">
@@ -2571,7 +2627,6 @@ export default function App() {
                 peyv
               </p>
             </div>
-
             <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -2580,17 +2635,16 @@ export default function App() {
                   value={ferhengQuery}
                   onChange={(e) => setFerhengQuery(e.target.value)}
                   placeholder={ui.ferheng_search_placeholder}
-                  className="w-full border border-slate-300 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-sky-600"
+                  className="w-full border border-slate-300 rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-red-700"
                 />
               </div>
               <button
                 type="submit"
-                className="bg-sky-600 hover:bg-sky-700 text-white font-bold px-6 rounded-xl"
+                className="bg-red-700 hover:bg-red-800 text-white font-bold px-6 rounded-xl"
               >
                 {ui.ferheng_search_btn}
               </button>
             </form>
-
             {(searchHistory.length > 0 || favoriteWords.length > 0) && (
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 {searchHistory.length > 0 && (
@@ -2613,8 +2667,8 @@ export default function App() {
                 )}
                 {favoriteWords.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                    <span className="inline-flex items-center gap-1 text-red-700 font-bold">
+                      <Star className="w-3.5 h-3.5 fill-red-700 text-red-700" />
                       <span>Bijare:</span>
                     </span>
                     {favoriteWords.map((w) => (
@@ -2622,7 +2676,7 @@ export default function App() {
                         key={w}
                         type="button"
                         onClick={() => setFerhengQuery(w)}
-                        className="px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold border border-amber-200"
+                        className="px-2.5 py-1 rounded-full bg-red-50 hover:bg-red-100 text-red-800 font-semibold border border-red-200"
                       >
                         {w}
                       </button>
@@ -2631,14 +2685,13 @@ export default function App() {
                 )}
               </div>
             )}
-
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
                 onClick={() => setSelectedLetter('all')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
                   selectedLetter === 'all'
-                    ? 'bg-sky-600 text-white'
+                    ? 'bg-red-700 text-white'
                     : 'bg-white border border-slate-200 text-slate-700'
                 }`}
               >
@@ -2651,17 +2704,15 @@ export default function App() {
                   onClick={() => setSelectedLetter(l)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-bold ${
                     selectedLetter === l
-                      ? 'bg-sky-600 text-white'
-                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                      ? 'bg-red-700 text-white'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:border-red-300'
                   }`}
                 >
                   {l}
                 </button>
               ))}
             </div>
-
             {searchingDict && <p className="text-xs text-slate-400">...</p>}
-
             {filteredDictionary.length === 0 ? (
               <p className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8">
                 {ui.ferheng_empty_text}
@@ -2670,10 +2721,11 @@ export default function App() {
               <div className="space-y-2">
                 {filteredDictionary.map((item) => {
                   const isFav = favoriteWords.includes(item.word);
+                  const displayMeaning = getWordMeaningByLang(item, selectedLang);
                   return (
                     <div
                       key={item.id}
-                      className="bg-white border border-slate-200 hover:border-sky-400 rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition"
+                      className="bg-white border border-slate-200 hover:border-red-300 rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition"
                     >
                       <button
                         type="button"
@@ -2681,12 +2733,10 @@ export default function App() {
                         className="flex-1 text-left"
                       >
                         <span className="font-extrabold text-slate-900 mr-2">{item.word}</span>
-                        <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
+                        <span className="text-xs bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded">
                           {item.part_of_speech}
                         </span>
-                        <div className="text-sm text-slate-600 mt-0.5">
-                          {item.meaning_tr || item.meaning_en || item.meaning_ku}
-                        </div>
+                        <div className="text-sm text-slate-600 mt-0.5">{displayMeaning}</div>
                       </button>
                       <div className="flex items-center gap-2 shrink-0">
                         <button
@@ -2697,7 +2747,7 @@ export default function App() {
                         >
                           <Star
                             className={`w-4 h-4 ${
-                              isFav ? 'fill-amber-400 text-amber-500' : 'text-slate-300'
+                              isFav ? 'fill-red-700 text-red-700' : 'text-slate-300'
                             }`}
                           />
                         </button>
@@ -2715,7 +2765,6 @@ export default function App() {
                 })}
               </div>
             )}
-
             {selectedWordDetail && (
               <div
                 className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -2730,15 +2779,15 @@ export default function App() {
                       <h3 className="text-2xl font-extrabold text-slate-900">
                         {selectedWordDetail.word}
                       </h3>
-                      <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
+                      <span className="text-xs bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded">
                         {selectedWordDetail.part_of_speech}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        onClick={() => speakWord(selectedWordDetail.word)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 text-xs font-bold"
+                        onClick={() => playDictionaryPronunciation(selectedWordDetail)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-xs font-bold"
                       >
                         <Volume2 className="w-4 h-4" />
                         <span>Bixwîne</span>
@@ -2751,7 +2800,7 @@ export default function App() {
                         <Star
                           className={`w-5 h-5 ${
                             favoriteWords.includes(selectedWordDetail.word)
-                              ? 'fill-amber-400 text-amber-500'
+                              ? 'fill-red-700 text-red-700'
                               : 'text-slate-400'
                           }`}
                         />
@@ -2767,6 +2816,11 @@ export default function App() {
                     </div>
                   </div>
                   <div className="text-sm space-y-2">
+                    {getWordMeaningByLang(selectedWordDetail, selectedLang) && (
+                      <p>
+                        <b>{selectedLang}:</b> {getWordMeaningByLang(selectedWordDetail, selectedLang)}
+                      </p>
+                    )}
                     {selectedWordDetail.meaning_tr && (
                       <p><b>TR:</b> {selectedWordDetail.meaning_tr}</p>
                     )}
@@ -2776,9 +2830,14 @@ export default function App() {
                     {selectedWordDetail.meaning_ku && (
                       <p><b>KU:</b> {selectedWordDetail.meaning_ku}</p>
                     )}
-                    {selectedWordDetail.example_sentence && (
-                      <p className="italic text-slate-600 border-l-4 border-sky-300 pl-3">
-                        {selectedWordDetail.example_sentence}
+                    {Object.entries(selectedWordDetail.meanings_i18n || {})
+                      .filter(([code, val]) => val && !['KU', 'TR', 'EN', selectedLang].includes(code))
+                      .map(([code, val]) => (
+                        <p key={code}><b>{code}:</b> {val}</p>
+                      ))}
+                    {getWordExampleByLang(selectedWordDetail, selectedLang) && (
+                      <p className="italic text-slate-600 border-l-4 border-red-300 pl-3">
+                        {getWordExampleByLang(selectedWordDetail, selectedLang)}
                       </p>
                     )}
                   </div>
@@ -2787,13 +2846,12 @@ export default function App() {
             )}
           </div>
         )}
-
-        {/* ===================== REWEBER (ADMIN) ===================== */}
+        {/* ===================== RÊVEBER (ADMIN) ===================== */}
         {viewMode === 'admin' && (
           <div>
             {!isAdmin ? (
               <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md border border-slate-200 p-8 mt-8">
-                <div className="w-12 h-12 bg-red-100 text-red-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <div className="w-12 h-12 bg-red-50 text-red-700 rounded-xl flex items-center justify-center mx-auto mb-4">
                   <Lock className="w-6 h-6" />
                 </div>
                 <h2 className="text-xl font-bold text-center text-slate-900 mb-1">
@@ -2802,7 +2860,6 @@ export default function App() {
                 <p className="text-sm text-center text-slate-500 mb-6">
                   Ji bo birêvebirina naveroka KurdiKlass şîfreyê binivîse.
                 </p>
-
                 <form onSubmit={handleAdminLogin} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
@@ -2814,14 +2871,12 @@ export default function App() {
                       value={passwordInput}
                       onChange={(e) => setPasswordInput(e.target.value)}
                       placeholder="••••••••••••"
-                      className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
+                      className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                     />
                   </div>
-
                   {authError && (
-                    <p className="text-xs text-red-600 font-medium">{authError}</p>
+                    <p className="text-xs text-red-700 font-medium">{authError}</p>
                   )}
-
                   <button
                     type="submit"
                     className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-lg transition"
@@ -2840,7 +2895,7 @@ export default function App() {
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="bg-red-600 px-4 py-2 rounded-xl text-sm font-bold">
+                    <span className="bg-red-700 px-4 py-2 rounded-xl text-sm font-bold">
                       {lessons.length} materyal
                     </span>
                     <button
@@ -2852,34 +2907,30 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
-                {/* HÎNBÛN / LÎSTİK YÖNETİMİ (KALICI SIFIRLANMIŞ) */}
-                <div className="bg-white rounded-2xl border-2 border-emerald-300 p-6 shadow-sm">
+                {/* HÎNBÛN / LÎSTİK YÖNETİMİ */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-emerald-600" />
+                      <Sparkles className="w-5 h-5 text-red-700" />
                       <span>
                         {editingExId
                           ? 'Lîstika Hînbûnê Sererast Bike'
-                          : `Hînbûn / Lîstik — Sifirkirî (${exercises.length} lîstik)`}
+                          : `Hînbûn / Lîstik (${exercises.length} lîstik)`}
                       </span>
                     </h2>
-
                     <button
                       type="button"
                       onClick={handleResetGamesSection}
-                      className="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
+                      className="bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-xl transition"
                     >
                       Beşa Lîstikan Sifir Bike
                     </button>
                   </div>
-
                   {exMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
+                    <div className="p-3 rounded-xl mb-4 bg-red-50 text-red-800 border border-red-200 text-sm font-medium">
                       {exMsg}
                     </div>
                   )}
-
                   <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
@@ -2891,10 +2942,9 @@ export default function App() {
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
                         placeholder="Navê beşê binivîse..."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Cureyê Lîstikê
@@ -2902,7 +2952,7 @@ export default function App() {
                       <select
                         value={exForm.exercise_type}
                         onChange={(e) => setExForm({ ...exForm, exercise_type: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       >
                         <option value="choice">Vebijêrka Rast</option>
                         <option value="sentence">Hevokê Saz Bike</option>
@@ -2911,7 +2961,6 @@ export default function App() {
                         <option value="image_choice">Wêneyê Bibîne, Peyvê Hilbijêre</option>
                       </select>
                     </div>
-
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Pirs an Rênîşander
@@ -2922,10 +2971,9 @@ export default function App() {
                         value={exForm.question_text}
                         onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
                         placeholder="Pirsê binivîse..."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Dengê Lîstikê (Vebijarkî)
@@ -2938,7 +2986,7 @@ export default function App() {
                           placeholder="https://... an jî deng bar bike ->"
                           className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
                         />
-                        <label className="cursor-pointer bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                        <label className="cursor-pointer bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
                           <Volume2 className="w-4 h-4" />
                           <span>{uploadingExAudio ? 'Tê barkirin...' : 'Deng Bar Bike'}</span>
                           <input
@@ -2950,7 +2998,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Wêneyê Lîstikê (Vebijarkî)
@@ -2963,7 +3010,7 @@ export default function App() {
                           placeholder="https://... an jî wêne bar bike ->"
                           className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
                         />
-                        <label className="cursor-pointer bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                        <label className="cursor-pointer bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
                           <ImageIcon className="w-4 h-4" />
                           <span>{uploadingExImg ? 'Tê barkirin...' : 'Wêne Bar Bike'}</span>
                           <input
@@ -2975,7 +3022,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
@@ -2993,7 +3039,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
-
                     {exForm.exercise_type !== 'match' && (
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">
@@ -3009,7 +3054,6 @@ export default function App() {
                         />
                       </div>
                     )}
-
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Ravekirin (Vebijarkî)
@@ -3022,11 +3066,10 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
-
                     <div className="md:col-span-2 flex items-center gap-3">
                       <button
                         type="submit"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
+                        className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
                       >
                         {editingExId ? 'Guhertina Lîstikê Tomar Bike' : '+ Lîstika Nû Zêde Bike'}
                       </button>
@@ -3041,25 +3084,46 @@ export default function App() {
                       )}
                     </div>
                   </form>
-
-                  <div className="space-y-2 max-h-64 overflow-y-auto border-t border-slate-100 pt-4">
-                    {exercises.map((ex) => (
+                  <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 mb-3">
+                    <select
+                      value={adminExUnitFilter}
+                      onChange={(e) => setAdminExUnitFilter(e.target.value)}
+                      className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-red-700"
+                    >
+                      <option value="all">Hemû Beş / Qonax ({exercises.length})</option>
+                      {allExerciseUnits.map((u) => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={adminExSearch}
+                      onChange={(e) => setAdminExSearch(e.target.value)}
+                      placeholder="Di lîstikan de bigere..."
+                      className="flex-1 min-w-[180px] border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-red-700"
+                    />
+                  </div>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {filteredAdminExercises.map((ex) => (
                       <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
                         <div className="flex items-center gap-2.5 flex-1 min-w-0">
                           {ex.audio_url && (
-                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-sky-100 text-sky-700 shrink-0">
+                            <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-red-50 text-red-700 shrink-0">
                               <Volume2 className="w-4 h-4" />
                             </span>
                           )}
-                          {ex.image_url && (
+                          {ex.image_url && !brokenExImages[ex.id] && (
                             <img
                               src={ex.image_url}
                               alt=""
+                              onError={() =>
+                                setBrokenExImages((prev) => ({ ...prev, [ex.id]: true }))
+                              }
                               className="w-9 h-9 rounded object-cover shrink-0 border border-slate-200"
                             />
                           )}
                           <div className="truncate">
-                            <span className="text-xs font-bold text-emerald-700 mr-2">[{ex.unit_title}]</span>
+                            <span className="text-xs font-bold text-red-700 mr-2">[{ex.unit_title}]</span>
                             <span className="font-medium text-slate-800">{ex.question_text}</span>
                           </div>
                         </div>
@@ -3067,7 +3131,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => startEditingExercise(ex)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-medium"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-xs font-medium"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                             <span>Sererast</span>
@@ -3075,7 +3139,7 @@ export default function App() {
                           <button
                             type="button"
                             onClick={() => handleDeleteExercise(ex.id)}
-                            className="text-red-600 hover:text-red-800 p-1"
+                            className="text-red-700 hover:text-red-900 p-1"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -3084,20 +3148,18 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-
                 {/* DERS EKLEME FORMU */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Plus className="w-5 h-5 text-red-600" />
+                    <Plus className="w-5 h-5 text-red-700" />
                     <span>{editingId ? 'Dersê Sererast Bike' : 'Materyala Nû Zêde Bike'}</span>
                   </h2>
-
                   {statusMsg.text && (
                     <div
                       className={`p-3.5 rounded-xl mb-4 flex items-center gap-2 text-sm font-medium ${
                         statusMsg.type === 'error'
-                          ? 'bg-red-50 text-red-700 border border-red-200'
-                          : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          ? 'bg-red-50 text-red-800 border border-red-200'
+                          : 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                       }`}
                     >
                       {statusMsg.type === 'error' ? (
@@ -3108,7 +3170,6 @@ export default function App() {
                       <span>{statusMsg.text}</span>
                     </div>
                   )}
-
                   <form onSubmit={handleSaveLesson} className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
@@ -3120,10 +3181,9 @@ export default function App() {
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         placeholder="Mînak: Pergala Rojê û Gerstêrk"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Beş (Kategori)
@@ -3131,14 +3191,13 @@ export default function App() {
                       <select
                         value={formData.category_slug}
                         onChange={(e) => setFormData({ ...formData, category_slug: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       >
                         {categories.map((c) => (
                           <option key={c.slug} value={c.slug}>{c.name}</option>
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Cureyê Materyalê
@@ -3146,14 +3205,13 @@ export default function App() {
                       <select
                         value={formData.media_type}
                         onChange={(e) => setFormData({ ...formData, media_type: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       >
                         {dynamicMediaTypes.map((m) => (
                           <option key={m.id} value={m.id}>{m.label}</option>
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Lînka Materyalê an Pel Bar Bike
@@ -3164,7 +3222,7 @@ export default function App() {
                           value={formData.media_url}
                           onChange={(e) => setFormData({ ...formData, media_url: e.target.value })}
                           placeholder="https://... an jî pel bar bike ->"
-                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-600"
+                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-700"
                         />
                         <label className="cursor-pointer bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
                           <Upload className="w-4 h-4" />
@@ -3177,7 +3235,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Wêneyê Bergê
@@ -3188,7 +3245,7 @@ export default function App() {
                           value={formData.thumbnail_url}
                           onChange={(e) => setFormData({ ...formData, thumbnail_url: e.target.value })}
                           placeholder="https://... an jî wêne bar bike ->"
-                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-600"
+                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-red-700"
                         />
                         <label className="cursor-pointer bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
                           <Upload className="w-4 h-4" />
@@ -3202,7 +3259,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Ast
@@ -3210,14 +3266,13 @@ export default function App() {
                       <select
                         value={formData.level}
                         onChange={(e) => setFormData({ ...formData, level: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       >
                         {dynamicLevels.map((l) => (
                           <option key={l} value={l}>{l}</option>
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Pola Perwerdehiyê
@@ -3225,14 +3280,13 @@ export default function App() {
                       <select
                         value={formData.grade_level}
                         onChange={(e) => setFormData({ ...formData, grade_level: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       >
                         {dynamicGrades.map((g) => (
                           <option key={g} value={g}>{g}</option>
                         ))}
                       </select>
                     </div>
-
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Daxuyanî û Naveroka Dersê
@@ -3242,18 +3296,16 @@ export default function App() {
                         value={formData.description}
                         onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         placeholder="Derbarê vê dersê de agahî binivîse..."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-600"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       />
                     </div>
-
-                    <div className="md:col-span-2 bg-amber-50/60 border border-amber-200 rounded-xl p-4 space-y-3">
+                    <div className="md:col-span-2 bg-red-50/40 border border-red-200 rounded-xl p-4 space-y-3">
                       <div className="flex items-center justify-between flex-wrap gap-2">
-                        <label className="text-xs font-extrabold uppercase text-amber-900 flex items-center gap-1.5">
-                          <ClipboardList className="w-4 h-4 text-amber-700" />
+                        <label className="text-xs font-extrabold uppercase text-red-900 flex items-center gap-1.5">
+                          <ClipboardList className="w-4 h-4 text-red-700" />
                           <span>Rêbera Mamosteyan</span>
                         </label>
-
-                        <label className="cursor-pointer bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                        <label className="cursor-pointer bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5">
                           <Upload className="w-3.5 h-3.5" />
                           <span>
                             {uploadingField === 'guide_pdf_url'
@@ -3270,16 +3322,14 @@ export default function App() {
                           />
                         </label>
                       </div>
-
                       <textarea
                         rows="3"
                         value={formData.teacher_guide}
                         onChange={(e) => setFormData({ ...formData, teacher_guide: e.target.value })}
                         placeholder="Armancên dersê, çalakiyên polê û notên ji bo mamosteyan..."
-                        className="w-full border border-amber-300 bg-white rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-amber-600"
+                        className="w-full border border-red-200 bg-white rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div className="md:col-span-2 flex items-center gap-3">
                       <button
                         type="submit"
@@ -3299,19 +3349,17 @@ export default function App() {
                     </div>
                   </form>
                 </div>
-
-                {/* FERHENG YÖNETİMİ */}
-                <div className="bg-white rounded-2xl border border-sky-300 p-6 shadow-sm">
+                {/* FERHENG YÖNETİMİ (ÇOK DİLLİ + SES) */}
+                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                      <BookA className="w-5 h-5 text-sky-600" />
+                      <BookA className="w-5 h-5 text-red-700" />
                       <span>
                         {editingWordId
                           ? 'Peyva Ferhengê Sererast Bike'
                           : `Ferheng — Peyvên Nû Zêde Bike (${Math.max(totalWordCount, filteredDictionary.length)} tomarkirî)`}
                       </span>
                     </h2>
-
                     <button
                       type="button"
                       onClick={handleBulkImportDictionary}
@@ -3321,19 +3369,16 @@ export default function App() {
                       + Peyvên Bingehîn Tomar Bike
                     </button>
                   </div>
-
                   {syncingProgress && (
-                    <div className="p-3 rounded-xl mb-4 bg-sky-50 text-sky-900 border border-sky-200 text-xs font-bold">
+                    <div className="p-3 rounded-xl mb-4 bg-red-50 text-red-900 border border-red-200 text-xs font-bold">
                       {syncingProgress}
                     </div>
                   )}
-
                   {wordMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-sky-50 text-sky-900 border border-sky-200 text-sm font-medium">
+                    <div className="p-3 rounded-xl mb-4 bg-red-50 text-red-900 border border-red-200 text-sm font-medium">
                       {wordMsg}
                     </div>
                   )}
-
                   <form onSubmit={handleSaveWord} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
@@ -3345,10 +3390,9 @@ export default function App() {
                         value={wordForm.word}
                         onChange={(e) => setWordForm({ ...wordForm, word: e.target.value })}
                         placeholder="Mînak: heval"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Cureyê Peyvê
@@ -3356,7 +3400,7 @@ export default function App() {
                       <select
                         value={wordForm.part_of_speech}
                         onChange={(e) => setWordForm({ ...wordForm, part_of_speech: e.target.value })}
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       >
                         <option value="navdêr">navdêr</option>
                         <option value="lêker">lêker</option>
@@ -3367,51 +3411,91 @@ export default function App() {
                         <option value="baneşan">baneşan</option>
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Wateya Peyvê *
+                        Wateya Peyvê ({selectedLang}) *
                       </label>
                       <input
                         type="text"
                         required
-                        value={wordForm.meaning_tr}
-                        onChange={(e) => setWordForm({ ...wordForm, meaning_tr: e.target.value })}
-                        placeholder="arkadaş"
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        value={wordForm.meanings_i18n?.[selectedLang] ?? wordForm.meaning_tr}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setWordForm((prev) => ({
+                            ...prev,
+                            meaning_tr: selectedLang === 'TR' ? val : prev.meaning_tr,
+                            meanings_i18n: {
+                              ...(prev.meanings_i18n || {}),
+                              [selectedLang]: val
+                            }
+                          }));
+                        }}
+                        placeholder="Wateya peyvê binivîse..."
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Ravekirina bi Kurmancî
+                        Ravekirina bi Kurmancî (KU)
                       </label>
                       <input
                         type="text"
                         value={wordForm.meaning_ku}
                         onChange={(e) => setWordForm({ ...wordForm, meaning_ku: e.target.value })}
                         placeholder="Kesê ku mirov pê re dostanî dike."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
-                    <div className="md:col-span-2">
+                    <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
-                        Hevoka Mînak
+                        Hevoka Mînak ({selectedLang})
                       </label>
                       <input
                         type="text"
-                        value={wordForm.example_sentence}
-                        onChange={(e) => setWordForm({ ...wordForm, example_sentence: e.target.value })}
+                        value={wordForm.examples_i18n?.[selectedLang] ?? wordForm.example_sentence}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setWordForm((prev) => ({
+                            ...prev,
+                            example_sentence: val,
+                            examples_i18n: {
+                              ...(prev.examples_i18n || {}),
+                              [selectedLang]: val
+                            }
+                          }));
+                        }}
                         placeholder="Ew hevalê min ê herî baş e."
-                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
+                        className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
+                    <div>
+                      <label className="block text-xs font-bold text-slate-600 mb-1">
+                        Dengê Telaffuzê (Vebijarkî)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={wordForm.audio_url}
+                          onChange={(e) => setWordForm({ ...wordForm, audio_url: e.target.value })}
+                          placeholder="https://... an jî deng bar bike ->"
+                          className="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm"
+                        />
+                        <label className="cursor-pointer bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-3.5 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+                          <Volume2 className="w-4 h-4" />
+                          <span>{uploadingWordAudio ? 'Tê barkirin...' : 'Deng Bar Bike'}</span>
+                          <input
+                            type="file"
+                            accept="audio/*"
+                            className="hidden"
+                            onChange={handleWordAudioUpload}
+                          />
+                        </label>
+                      </div>
+                    </div>
                     <div className="md:col-span-2 flex items-center gap-3">
                       <button
                         type="submit"
-                        className="bg-sky-600 hover:bg-sky-700 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
+                        className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2 rounded-lg text-sm transition"
                       >
                         {editingWordId ? 'Guhertina Peyvê Tomar Bike' : '+ Peyva Nû Zêde Bike'}
                       </button>
@@ -3426,16 +3510,15 @@ export default function App() {
                       )}
                     </div>
                   </form>
-
                   <div className="space-y-2 max-h-60 overflow-y-auto border-t border-slate-100 pt-4">
                     {filteredDictionary.slice(0, 100).map((item) => (
                       <div key={item.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
                         <div className="truncate">
                           <span className="font-bold text-slate-900 mr-2">{item.word}</span>
-                          <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded mr-2">
+                          <span className="text-xs bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded mr-2">
                             {item.part_of_speech}
                           </span>
-                          <span className="text-slate-600">— {item.meaning_tr || item.meaning_en || item.meaning_ku}</span>
+                          <span className="text-slate-600">— {getWordMeaningByLang(item, selectedLang)}</span>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
                           {item.sourceType === 'db' && (
@@ -3443,7 +3526,7 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => startEditingWord(item)}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-800 hover:bg-amber-100 text-xs font-medium"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-red-50 text-red-700 hover:bg-red-100 text-xs font-medium"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                                 <span>Sererast</span>
@@ -3451,7 +3534,7 @@ export default function App() {
                               <button
                                 type="button"
                                 onClick={() => handleDeleteWord(item.id)}
-                                className="text-red-600 hover:text-red-800 p-1"
+                                className="text-red-700 hover:text-red-900 p-1"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
@@ -3462,13 +3545,11 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-
                 {/* KAYITLI MATERYALLER */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">
                     Materyalên Tomarkirî ({lessons.length})
                   </h2>
-
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
@@ -3485,21 +3566,21 @@ export default function App() {
                             <td className="py-3 px-4 font-semibold text-slate-900">
                               {lesson.title}
                             </td>
-                            <td className="py-3 px-4 text-red-600 font-medium">
+                            <td className="py-3 px-4 text-red-700 font-medium">
                               {categories.find((c) => c.slug === lesson.category_slug)?.name}
                             </td>
                             <td className="py-3 px-4 text-slate-600">{lesson.level}</td>
                             <td className="py-3 px-4 text-right space-x-2">
                               <button
                                 onClick={() => startEditing(lesson)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 font-medium"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-red-50 text-red-700 hover:bg-red-100 font-medium"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                                 <span>Sererast</span>
                               </button>
                               <button
                                 onClick={() => handleDeleteLesson(lesson.id)}
-                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-red-50 text-red-700 hover:bg-red-100 font-medium"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-red-50 text-red-800 hover:bg-red-100 font-medium"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span>Jê Bibe</span>
@@ -3511,20 +3592,17 @@ export default function App() {
                     </table>
                   </div>
                 </div>
-
                 {/* KATEGORİ YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <FolderEdit className="w-5 h-5 text-red-600" />
+                    <FolderEdit className="w-5 h-5 text-red-700" />
                     <span>Beş û Sernavên Sereke Biguherîne</span>
                   </h2>
-
                   {catMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
+                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm font-medium">
                       {catMsg}
                     </div>
                   )}
-
                   <div className="space-y-3 mb-6">
                     {categories.map((cat) => (
                       <div key={cat.slug} className="flex items-center gap-3">
@@ -3532,7 +3610,7 @@ export default function App() {
                           type="text"
                           value={cat.name}
                           onChange={(e) => handleUpdateCategoryName(cat.slug, e.target.value)}
-                          className="flex-1 border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-semibold focus:outline-none focus:border-red-600"
+                          className="flex-1 border border-slate-300 rounded-lg px-3.5 py-2 text-sm font-semibold focus:outline-none focus:border-red-700"
                         />
                         <button
                           type="button"
@@ -3544,7 +3622,6 @@ export default function App() {
                         </button>
                       </div>
                     ))}
-
                     <button
                       type="button"
                       onClick={handleSaveCategories}
@@ -3553,14 +3630,13 @@ export default function App() {
                       Navên Beşan Tomar Bike
                     </button>
                   </div>
-
                   <form onSubmit={handleAddCategory} className="pt-4 border-t border-slate-200 flex flex-wrap gap-3">
                     <input
                       type="text"
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
                       placeholder="Navê Beşa Nû"
-                      className="flex-1 min-w-[220px] border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                      className="flex-1 min-w-[220px] border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                     />
                     <button
                       type="submit"
@@ -3570,20 +3646,17 @@ export default function App() {
                     </button>
                   </form>
                 </div>
-
                 {/* TÜM SİTE YAZILARI */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-red-600" />
+                    <Settings className="w-5 h-5 text-red-700" />
                     <span>Hemû Nivîsên Malperê Biguherîne</span>
                   </h2>
-
                   {settingsMsg && (
-                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-700 border border-emerald-200 text-sm font-medium">
+                    <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm font-medium">
                       {settingsMsg}
                     </div>
                   )}
-
                   <form onSubmit={handleSaveAllUiTexts} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {UI_FIELD_LABELS.map((field) => (
                       <div key={field.key}>
@@ -3594,11 +3667,10 @@ export default function App() {
                           type="text"
                           value={ui[field.key] || ''}
                           onChange={(e) => setRawUi({ ...rawUi, [field.key]: e.target.value })}
-                          className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-600"
+                          className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                         />
                       </div>
                     ))}
-
                     <div className="md:col-span-2 pt-2">
                       <button
                         type="submit"
@@ -3614,7 +3686,6 @@ export default function App() {
           </div>
         )}
       </main>
-
       <footer className="bg-slate-900 text-slate-400 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
           <div className="font-bold text-white text-base">
