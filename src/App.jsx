@@ -64,7 +64,42 @@ const LANGUAGE_OPTIONS = [
   { code: 'FR', nativeName: 'Français' },
   { code: 'IT', nativeName: 'Italiano' }
 ];
-const ALFABE_ITEMS = [
+const ALFABE_BASE_URL = '';
+const ALFABE_DEFAULT_EXT = 'png';
+const ALFABE_IMAGE_URLS = {
+  Agir: '',
+  Bilbil: '',
+  Cemed: '',
+  Çay: '',
+  Dar: '',
+  Endezyar: '',
+  Êlek: '',
+  Ferheng: '',
+  Gore: '',
+  Hesp: '',
+  Tivir: '',
+  Îsot: '',
+  Jûjî: '',
+  Ker: '',
+  Lembe: '',
+  Masî: '',
+  Nan: '',
+  Roj: '',
+  Pisîk: '',
+  Qaz: '',
+  Rovî: '',
+  Stêrk: '',
+  Şêr: '',
+  Telefon: '',
+  Guh: '',
+  Gûz: '',
+  Nivîn: '',
+  Werdek: '',
+  Xiyar: '',
+  Heyv: '',
+  Zebeş: ''
+};
+const RAW_ALFABE_ITEMS = [
   { letter: 'A', word: 'Agir', image: '' },
   { letter: 'B', word: 'Bilbil', image: '' },
   { letter: 'C', word: 'Cemed', image: '' },
@@ -97,6 +132,23 @@ const ALFABE_ITEMS = [
   { letter: 'Y', word: 'Heyv', image: '' },
   { letter: 'Z', word: 'Zebeş', image: '' }
 ];
+const ALFABE_ITEMS = RAW_ALFABE_ITEMS.map((item) => {
+  const customUrl = (ALFABE_IMAGE_URLS[item.word] || '').trim();
+  const baseUrl = ALFABE_BASE_URL.trim().replace(/\/+$/, '');
+  const slug = item.word
+    .toLocaleLowerCase('tr')
+    .replace(/ê/g, 'e')
+    .replace(/î/g, 'i')
+    .replace(/û/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ç/g, 'c')
+    .replace(/\s+/g, '-');
+  const resolvedImage =
+    (item.image || '').trim() ||
+    customUrl ||
+    (baseUrl ? `${baseUrl}/${slug}.${ALFABE_DEFAULT_EXT}` : '');
+  return { ...item, image: resolvedImage };
+});
 const ALFABE_WORD_IMAGE_MAP = ALFABE_ITEMS.reduce((acc, item) => {
   acc[item.word.toLocaleLowerCase('tr')] = item.image || '';
   acc[item.letter.toLocaleLowerCase('tr')] = item.image || '';
@@ -881,7 +933,6 @@ export default function App() {
     meanings_i18n: {},
     examples_i18n: {}
   });
-  // Oyun ve kalıcı XP / Seri / Tamamlanan Qonaxlar
   const [exercises, setExercises] = useState([]);
   const [alfabeReset, setAlfabeReset] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
@@ -3072,7 +3123,6 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-                {/* HÎNBÛN / LÎSTİK YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -3320,7 +3370,6 @@ export default function App() {
                     })}
                   </div>
                 </div>
-                {/* DERS EKLEME FORMU */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-red-700" />
@@ -3521,7 +3570,6 @@ export default function App() {
                     </div>
                   </form>
                 </div>
-                {/* FERHENG YÖNETİMİ (ÇOK DİLLİ + SES) */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -3717,7 +3765,6 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-                {/* KAYITLI MATERYALLER */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">
                     Materyalên Tomarkirî ({lessons.length})
@@ -3764,7 +3811,6 @@ export default function App() {
                     </table>
                   </div>
                 </div>
-                {/* KATEGORİ YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <FolderEdit className="w-5 h-5 text-red-700" />
@@ -3818,7 +3864,6 @@ export default function App() {
                     </button>
                   </form>
                 </div>
-                {/* TÜM SİTE YAZILARI */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-red-700" />
