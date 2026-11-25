@@ -774,284 +774,57 @@ const BUILTIN_DICTIONARY = [
     }
   }
 ];
-const ALFABE_IMAGE_URLS = {
-  a: '',
-  b: '',
-  c: '',
-  ç: '',
-  d: '',
-  e: '',
-  ê: '',
-  f: '',
-  g: '',
-  h: '',
-  i: '',
-  î: '',
-  j: '',
-  k: '',
-  l: '',
-  m: '',
-  n: '',
-  o: '',
-  p: '',
-  q: '',
-  r: '',
-  s: '',
-  ş: '',
-  t: '',
-  u: '',
-  û: '',
-  v: '',
-  w: '',
-  x: '',
-  y: '',
-  z: ''
-};
-const ALFABE_CELL_META_MAP = {
-  agir: { row: 0, col: 0 },
-  a: { row: 0, col: 0 },
-  bilbil: { row: 0, col: 1 },
-  b: { row: 0, col: 1 },
-  cotkar: { row: 0, col: 2 },
-  c: { row: 0, col: 2 },
-  çay: { row: 0, col: 3 },
-  ç: { row: 0, col: 3 },
-  dar: { row: 0, col: 4 },
-  d: { row: 0, col: 4 },
-  ewr: { row: 0, col: 5 },
-  e: { row: 0, col: 5 },
-  êvar: { row: 1, col: 0 },
-  ê: { row: 1, col: 0 },
-  firok: { row: 1, col: 1 },
-  f: { row: 1, col: 1 },
-  gul: { row: 1, col: 2 },
-  g: { row: 1, col: 2 },
-  hêvî: { row: 1, col: 3 },
-  h: { row: 1, col: 3 },
-  îşev: { row: 1, col: 4 },
-  î: { row: 1, col: 4 },
-  jîr: { row: 1, col: 5 },
-  j: { row: 1, col: 5 },
-  karton: { row: 2, col: 0 },
-  k: { row: 2, col: 0 },
-  lîmon: { row: 2, col: 1 },
-  l: { row: 2, col: 1 },
-  masî: { row: 2, col: 2 },
-  m: { row: 2, col: 2 },
-  nan: { row: 2, col: 3 },
-  n: { row: 2, col: 3 },
-  otobûs: { row: 2, col: 4 },
-  o: { row: 2, col: 4 },
-  pirtûk: { row: 2, col: 5 },
-  p: { row: 2, col: 5 },
-  qelem: { row: 3, col: 0 },
-  q: { row: 3, col: 0 },
-  roj: { row: 3, col: 1 },
-  r: { row: 3, col: 1 },
-  stêrk: { row: 3, col: 2 },
-  s: { row: 3, col: 2 },
-  şev: { row: 3, col: 3 },
-  ş: { row: 3, col: 3 },
-  top: { row: 3, col: 4 },
-  t: { row: 3, col: 4 },
-  uf: { row: 3, col: 5 },
-  u: { row: 3, col: 5 },
-  ûd: { row: 4, col: 0 },
-  û: { row: 4, col: 0 },
-  valîz: { row: 4, col: 1 },
-  v: { row: 4, col: 1 },
-  wêne: { row: 4, col: 2 },
-  w: { row: 4, col: 2 },
-  xew: { row: 4, col: 3 },
-  x: { row: 4, col: 3 },
-  yoyo: { row: 4, col: 4 },
-  y: { row: 4, col: 4 },
-  zebeş: { row: 4, col: 5 },
-  z: { row: 4, col: 5 }
-};
-const ALFABE_WORD_IMAGE_MAP = {
-  agir: ALFABE_IMAGE_URLS.a,
-  a: ALFABE_IMAGE_URLS.a,
-  bilbil: ALFABE_IMAGE_URLS.b,
-  b: ALFABE_IMAGE_URLS.b,
-  cotkar: ALFABE_IMAGE_URLS.c,
-  c: ALFABE_IMAGE_URLS.c,
-  çay: ALFABE_IMAGE_URLS.ç,
-  ç: ALFABE_IMAGE_URLS.ç,
-  dar: ALFABE_IMAGE_URLS.d,
-  d: ALFABE_IMAGE_URLS.d,
-  ewr: ALFABE_IMAGE_URLS.e,
-  e: ALFABE_IMAGE_URLS.e,
-  êvar: ALFABE_IMAGE_URLS.ê,
-  ê: ALFABE_IMAGE_URLS.ê,
-  firok: ALFABE_IMAGE_URLS.f,
-  f: ALFABE_IMAGE_URLS.f,
-  gul: ALFABE_IMAGE_URLS.g,
-  g: ALFABE_IMAGE_URLS.g,
-  hêvî: ALFABE_IMAGE_URLS.h,
-  h: ALFABE_IMAGE_URLS.h,
-  îşev: ALFABE_IMAGE_URLS.î,
-  î: ALFABE_IMAGE_URLS.î,
-  jîr: ALFABE_IMAGE_URLS.j,
-  j: ALFABE_IMAGE_URLS.j,
-  karton: ALFABE_IMAGE_URLS.k,
-  k: ALFABE_IMAGE_URLS.k,
-  lîmon: ALFABE_IMAGE_URLS.l,
-  l: ALFABE_IMAGE_URLS.l,
-  masî: ALFABE_IMAGE_URLS.m,
-  m: ALFABE_IMAGE_URLS.m,
-  nan: ALFABE_IMAGE_URLS.n,
-  n: ALFABE_IMAGE_URLS.n,
-  otobûs: ALFABE_IMAGE_URLS.o,
-  o: ALFABE_IMAGE_URLS.o,
-  pirtûk: ALFABE_IMAGE_URLS.p,
-  p: ALFABE_IMAGE_URLS.p,
-  qelem: ALFABE_IMAGE_URLS.q,
-  q: ALFABE_IMAGE_URLS.q,
-  roj: ALFABE_IMAGE_URLS.r,
-  r: ALFABE_IMAGE_URLS.r,
-  stêrk: ALFABE_IMAGE_URLS.s,
-  s: ALFABE_IMAGE_URLS.s,
-  şev: ALFABE_IMAGE_URLS.ş,
-  ş: ALFABE_IMAGE_URLS.ş,
-  top: ALFABE_IMAGE_URLS.t,
-  t: ALFABE_IMAGE_URLS.t,
-  uf: ALFABE_IMAGE_URLS.u,
-  u: ALFABE_IMAGE_URLS.u,
-  ûd: ALFABE_IMAGE_URLS.û,
-  û: ALFABE_IMAGE_URLS.û,
-  valîz: ALFABE_IMAGE_URLS.v,
-  v: ALFABE_IMAGE_URLS.v,
-  wêne: ALFABE_IMAGE_URLS.w,
-  w: ALFABE_IMAGE_URLS.w,
-  xew: ALFABE_IMAGE_URLS.x,
-  x: ALFABE_IMAGE_URLS.x,
-  yoyo: ALFABE_IMAGE_URLS.y,
-  y: ALFABE_IMAGE_URLS.y,
-  zebeş: ALFABE_IMAGE_URLS.z,
-  z: ALFABE_IMAGE_URLS.z
-};
-const cropAlfabeCellFromSheet = async (cellMeta) => {
-  if (!cellMeta || typeof document === 'undefined') return '';
-  const sheetUrl =
-    (typeof ALFABE_SHEET_IMAGE_URL !== 'undefined' && ALFABE_SHEET_IMAGE_URL) ||
-    ALFABE_IMAGE_URLS.a ||
-    '';
-  if (!sheetUrl) return '';
-  try {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    await new Promise((resolve, reject) => {
-      img.onload = resolve;
-      img.onerror = reject;
-      img.src = sheetUrl;
-    });
-    const cols = 6;
-    const rows = 5;
-    const cellW = img.naturalWidth / cols;
-    const cellH = img.naturalHeight / rows;
-    const sx = cellMeta.col * cellW + cellW * 0.06;
-    const sy = cellMeta.row * cellH + cellH * 0.24;
-    const sw = cellW * 0.88;
-    const sh = cellH * 0.56;
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(sw));
-    canvas.height = Math.max(1, Math.round(sh));
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return '';
-    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL('image/png');
-  } catch {
-    return '';
-  }
-};
-const BUILTIN_EXERCISES = [
-  {
-    id: 'alfabe-match-1',
-    unit_title: 'ALFABE',
-    exercise_type: 'match',
-    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (1/5)',
-    options: [
-      'A — Agir=agir',
-      'B — Bilbil=bilbil',
-      'C — Cotkar=cotkar',
-      'Ç — Çay=çay',
-      'D — Dar=dar',
-      'E — Ewr=ewr'
-    ],
-    correct_answer: '6',
-    explanation: 'A: Agir, B: Bilbil, C: Cotkar, Ç: Çay, D: Dar, E: Ewr',
-    sort_order: 1
-  },
-  {
-    id: 'alfabe-match-2',
-    unit_title: 'ALFABE',
-    exercise_type: 'match',
-    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (2/5)',
-    options: [
-      'Ê — Êvar=êvar',
-      'F — Firok=firok',
-      'G — Gul=gul',
-      'H — Hêvî=hêvî',
-      'Î — Îşev=îşev',
-      'J — Jîr=jîr'
-    ],
-    correct_answer: '6',
-    explanation: 'Ê: Êvar, F: Firok, G: Gul, H: Hêvî, Î: Îşev, J: Jîr',
-    sort_order: 2
-  },
-  {
-    id: 'alfabe-match-3',
-    unit_title: 'ALFABE',
-    exercise_type: 'match',
-    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (3/5)',
-    options: [
-      'K — Karton=karton',
-      'L — Lîmon=lîmon',
-      'M — Masî=masî',
-      'N — Nan=nan',
-      'O — Otobûs=otobûs',
-      'P — Pirtûk=pirtûk'
-    ],
-    correct_answer: '6',
-    explanation: 'K: Karton, L: Lîmon, M: Masî, N: Nan, O: Otobûs, P: Pirtûk',
-    sort_order: 3
-  },
-  {
-    id: 'alfabe-match-4',
-    unit_title: 'ALFABE',
-    exercise_type: 'match',
-    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (4/5)',
-    options: [
-      'Q — Qelem=qelem',
-      'R — Roj=roj',
-      'S — Stêrk=stêrk',
-      'Ş — Şev=şev',
-      'T — Top=top',
-      'U — Uf=uf'
-    ],
-    correct_answer: '6',
-    explanation: 'Q: Qelem, R: Roj, S: Stêrk, Ş: Şev, T: Top, U: Uf',
-    sort_order: 4
-  },
-  {
-    id: 'alfabe-match-5',
-    unit_title: 'ALFABE',
-    exercise_type: 'match',
-    question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (5/5)',
-    options: [
-      'Û — Ûd=ûd',
-      'V — Valîz=valîz',
-      'W — Wêne=wêne',
-      'X — Xew=xew',
-      'Y — Yoyo=yoyo',
-      'Z — Zebeş=zebeş'
-    ],
-    correct_answer: '6',
-    explanation: 'Û: Ûd, V: Valîz, W: Wêne, X: Xew, Y: Yoyo, Z: Zebeş',
-    sort_order: 5
-  }
+const REQUESTED_GAME_WORDS = [
+  'Agir',
+  'Bilbil',
+  'Cemed',
+  'Çay',
+  'Dar',
+  'Endezyar',
+  'Êlek',
+  'Ferheng',
+  'Gore',
+  'Guh',
+  'Gûz',
+  'Hesp',
+  'Heyv',
+  'Îsot',
+  'Jûjî',
+  'Ker',
+  'Lembe',
+  'Masî',
+  'Nan',
+  'Nivîn',
+  'Pisîk',
+  'Qaz',
+  'Roj',
+  'Rovî',
+  'Stêrk',
+  'Şêr',
+  'Telefon',
+  'Tivir',
+  'Werdek',
+  'Xiyar',
+  'Zebeş'
 ];
+const buildFourWordGameStages = (words = REQUESTED_GAME_WORDS) => {
+  const chunks = [];
+  for (let i = 0; i < words.length; i += 4) {
+    chunks.push(words.slice(i, i + 4));
+  }
+  const totalStages = chunks.length;
+  return chunks.map((group, idx) => ({
+    id: `peyvk-stage-${idx + 1}`,
+    unit_title: `PEYVK ${idx + 1}/${totalStages}`,
+    exercise_type: 'match',
+    question_text: `Her peyvê bi wêneyê wê/wî re bighîne hev (${idx + 1}/${totalStages})`,
+    options: group.map((w) => `${w}=${w.toLocaleLowerCase('tr')}`),
+    correct_answer: String(group.length),
+    explanation: group.join(', '),
+    sort_order: idx + 1
+  }));
+};
+const BUILTIN_EXERCISES = buildFourWordGameStages(REQUESTED_GAME_WORDS);
 const defaultCategories = [
   { slug: 'zarok', name: 'Zarok' },
   { slug: 'ders', name: 'Ders' },
@@ -1358,7 +1131,6 @@ export default function App() {
   const [lessonTab, setLessonTab] = useState('content');
   const [brokenThumbs, setBrokenThumbs] = useState({});
   const [brokenExImages, setBrokenExImages] = useState({});
-  const [croppedAlfabeImages, setCroppedAlfabeImages] = useState({});
   const [mediaLoadError, setMediaLoadError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [uploadingField, setUploadingField] = useState(null);
@@ -1408,7 +1180,7 @@ export default function App() {
   const inlinePhotoInputRef = useRef(null);
   const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
   const [adminExSearch, setAdminExSearch] = useState('');
-  const [alfabeReset, setAlfabeReset] = useState(false);
+  const [gamesReset, setGamesReset] = useState(false);
   const [exMsg, setExMsg] = useState('');
   const [exForm, setExForm] = useState({
     unit_title: '',
@@ -2160,13 +1932,7 @@ export default function App() {
     }
   };
   const effectiveExercises = (() => {
-    const hasCustomAlfabe = exercises.some(
-      (ex) => (ex.unit_title || '').trim().toUpperCase() === 'ALFABE'
-    );
-    const base =
-      alfabeReset || hasCustomAlfabe
-        ? exercises
-        : [...BUILTIN_EXERCISES, ...exercises];
+    const base = gamesReset ? exercises : [...BUILTIN_EXERCISES, ...exercises];
     return [...base].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
   })();
   const combinedDictionary = (() => {
@@ -2288,7 +2054,7 @@ export default function App() {
     );
     const { error } = await supabase.from('kurmanci_exercises').delete().not('id', 'is', null);
     setExercises([]);
-    setAlfabeReset(true);
+    setGamesReset(false);
     setSelectedUnit(null);
     setCurrentExIndex(0);
     setSelectedOption('');
@@ -2377,43 +2143,30 @@ export default function App() {
         exercises.find((item) => item.id === target.exerciseId) ||
         effectiveExercises.find((item) => item.id === target.exerciseId);
       if (!sourceEx) return;
-      const isBuiltinAlfabe = String(sourceEx.id || '').startsWith('alfabe-match-');
-      const hasCustomAlfabeNow = exercises.some(
-        (item) => (item.unit_title || '').trim().toUpperCase() === 'ALFABE'
-      );
+      const isBuiltinStage = String(sourceEx.id || '').startsWith('peyvk-stage-');
       let basePool = sourceEx;
-      if (isBuiltinAlfabe && !hasCustomAlfabeNow) {
-        const siblingBuiltins = BUILTIN_EXERCISES.filter(
-          (b) => (b.unit_title || '').trim().toUpperCase() === 'ALFABE'
-        );
-        const insertedSiblings = [];
-        for (const b of siblingBuiltins) {
-          const bPayload = {
-            unit_title: b.unit_title,
-            exercise_type: b.exercise_type,
-            question_text: b.question_text,
-            options: [...(b.options || [])],
-            correct_answer: b.correct_answer,
-            explanation: b.explanation || '',
-            image_url: b.image_url || '',
-            audio_url: b.audio_url || '',
-            sort_order: b.sort_order ?? 1
-          };
-          const { data: insRows, error: insErr } = await supabase
-            .from('kurmanci_exercises')
-            .insert([bPayload])
-            .select();
-          const savedRow =
-            !insErr && insRows && insRows[0]
-              ? insRows[0]
-              : { id: `local-${b.id}-${Date.now()}`, ...bPayload };
-          insertedSiblings.push(savedRow);
-          if (b.id === sourceEx.id) {
-            basePool = savedRow;
-          }
-        }
-        setExercises((prev) => [...prev, ...insertedSiblings]);
-        setAlfabeReset(false);
+      if (isBuiltinStage) {
+        const bPayload = {
+          unit_title: sourceEx.unit_title,
+          exercise_type: sourceEx.exercise_type,
+          question_text: sourceEx.question_text,
+          options: [...(sourceEx.options || [])],
+          correct_answer: sourceEx.correct_answer,
+          explanation: sourceEx.explanation || '',
+          image_url: sourceEx.image_url || '',
+          audio_url: sourceEx.audio_url || '',
+          sort_order: sourceEx.sort_order ?? 1
+        };
+        const { data: insRows, error: insErr } = await supabase
+          .from('kurmanci_exercises')
+          .insert([bPayload])
+          .select();
+        const savedRow =
+          !insErr && insRows && insRows[0]
+            ? insRows[0]
+            : { id: `local-${sourceEx.id}-${Date.now()}`, ...bPayload };
+        setExercises((prev) => [...prev, savedRow]);
+        basePool = savedRow;
       }
       const targetId = basePool.id;
       let updatedPayload = {
@@ -2539,9 +2292,6 @@ export default function App() {
       } else {
         setExercises((prev) => [...prev, ...(inserted && inserted.length ? inserted : [newRecord])]);
         setExMsg('Lîstika nû hat zêdekirin!');
-      }
-      if (payload.unit_title.toUpperCase() === 'ALFABE') {
-        setAlfabeReset(false);
       }
       resetExForm();
     }
@@ -2687,23 +2437,11 @@ export default function App() {
     const leftParts = (leftText || '').split('—');
     const letter = leftParts.length > 1 ? leftParts[0].trim() : '';
     const wordFromLeft = leftParts.length > 1 ? leftParts.slice(1).join('—').trim() : wordCandidate;
-    const cellMeta =
-      ALFABE_CELL_META_MAP[wordCandidate.toLocaleLowerCase('tr')] ||
-      ALFABE_CELL_META_MAP[wordFromLeft.toLocaleLowerCase('tr')] ||
-      ALFABE_CELL_META_MAP[letter.toLocaleLowerCase('tr')] ||
-      null;
-    const mappedImage =
-      (isUrl ? cleanedRight : '') ||
-      ALFABE_WORD_IMAGE_MAP[wordCandidate.toLocaleLowerCase('tr')] ||
-      ALFABE_WORD_IMAGE_MAP[wordFromLeft.toLocaleLowerCase('tr')] ||
-      ALFABE_WORD_IMAGE_MAP[letter.toLocaleLowerCase('tr')] ||
-      '';
     return {
       right: cleanedRight,
-      image: mappedImage,
-      word: wordFromLeft || wordCandidate,
-      letter,
-      cellMeta
+      image: isUrl ? cleanedRight : '',
+      word: wordFromLeft || wordCandidate || leftText,
+      letter
     };
   };
   const parsedMatchPairs = (() => {
@@ -2717,8 +2455,7 @@ export default function App() {
           right: mp.right || resolved.right,
           image: mp.image || resolved.image,
           word: mp.word || resolved.word,
-          letter: mp.letter || resolved.letter,
-          cellMeta: mp.cellMeta || resolved.cellMeta
+          letter: mp.letter || resolved.letter
         };
       });
     }
@@ -2744,8 +2481,7 @@ export default function App() {
         right: p.right,
         image: p.image || '',
         word: p.word || '',
-        letter: p.letter || '',
-        cellMeta: p.cellMeta || null
+        letter: p.letter || ''
       }));
       const shuffled = [...rightItems].sort(() => Math.random() - 0.5);
       setShuffledRightOptions(shuffled);
@@ -2754,23 +2490,6 @@ export default function App() {
       setMatchedPairs([]);
       setMatchWrongFlash(false);
     }
-  }, [currentEx?.id]);
-  useEffect(() => {
-    if (currentEx?.exercise_type !== 'match' || parsedMatchPairs.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      for (const p of parsedMatchPairs) {
-        const key = (p.word || p.right || String(p.id)).toLocaleLowerCase('tr');
-        if (p.image || croppedAlfabeImages[key] || !p.cellMeta) continue;
-        const cropped = await cropAlfabeCellFromSheet(p.cellMeta);
-        if (!cancelled && cropped) {
-          setCroppedAlfabeImages((prev) => ({ ...prev, [key]: cropped }));
-        }
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
   }, [currentEx?.id]);
   const handleMatchSelect = (side, pairId) => {
     if (answerState || matchedPairs.includes(pairId) || hearts === 0) return;
@@ -3653,9 +3372,7 @@ export default function App() {
                       {shuffledRightOptions.map((p) => {
                         const done = matchedPairs.includes(p.id);
                         const sel = matchRightSelected === p.id;
-                        const cropKey = (p.word || p.right || String(p.id)).toLocaleLowerCase('tr');
-                        const resolvedSrc = p.image || croppedAlfabeImages[cropKey] || '';
-                        const hasRealImage = Boolean(resolvedSrc) && !brokenExImages[`match-${p.id}`];
+                        const hasRealImage = Boolean(p.image) && !brokenExImages[`match-${p.id}`];
                         const isThisUploading =
                           inlinePhotoSaving &&
                           inlinePhotoTarget?.mode === 'match_pair' &&
@@ -3679,7 +3396,7 @@ export default function App() {
                             >
                               {hasRealImage ? (
                                 <img
-                                  src={resolvedSrc}
+                                  src={p.image}
                                   alt={p.word || p.right || ''}
                                   onError={() =>
                                     setBrokenExImages((prev) => ({
@@ -4114,7 +3831,7 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Mînak: ALFABE"
+                        placeholder="Mînak: PEYVK 1/8"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
@@ -4198,7 +3915,7 @@ export default function App() {
                     <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
-                          ? 'Cotên Peyv û Wêneyan (Mînak: A — Agir=https://.../agir.png, B — Bilbil=https://.../bilbil.png)'
+                          ? 'Cotên Peyv û Wêneyan (Mînak: Agir=https://.../agir.png, Bilbil=https://.../bilbil.png)'
                           : exForm.exercise_type === 'image_choice'
                           ? 'Vebijêrk (bi bêhnokê veqetandî) — wêne li jor bar bike'
                           : 'Vebijêrk an Peyv (bi bêhnokê veqetandî)'}
@@ -4208,7 +3925,7 @@ export default function App() {
                         required
                         value={exForm.options_raw}
                         onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
-                        placeholder="A — Agir=https://.../agir.png, B — Bilbil=https://.../bilbil.png"
+                        placeholder="Agir=https://.../agir.png, Bilbil=https://.../bilbil.png"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -4278,7 +3995,7 @@ export default function App() {
                   </div>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {filteredAdminExercises.map((ex) => {
-                      const isBuiltinAlfabe = String(ex.id || '').startsWith('alfabe-match-');
+                      const isBuiltinStage = String(ex.id || '').startsWith('peyvk-stage-');
                       return (
                         <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
                           <div className="flex items-center gap-2.5 flex-1 min-w-0">
@@ -4303,7 +4020,7 @@ export default function App() {
                             </div>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            {!isBuiltinAlfabe && (
+                            {!isBuiltinStage && (
                               <>
                                 <button
                                   type="button"
