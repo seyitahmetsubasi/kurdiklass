@@ -33,7 +33,9 @@ import {
   Image as ImageIcon,
   Eye,
   LayoutDashboard,
-  Volume2
+  Volume2,
+  Star,
+  History
 } from 'lucide-react';
 
 // =========================================================================
@@ -43,6 +45,8 @@ const SUPABASE_URL = 'https://mzsxryxuvyllljvbrzul.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_a_Ujek9gxuIV9vESF2xl4A_ibpGwUV_';
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Not: İstemci tarafı ADMIN_PASS yalnızca arayüz kilidi içindir;
+// üretim güvenliği için Supabase RLS politikaları ve Auth oturumu ile desteklenmelidir.
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'kurdiklass2026';
 
 const DEFAULT_CATEGORIES = [
@@ -81,6 +85,13 @@ const slugify = (str = '') =>
   normalizeKurdish(str)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '') || `beş-${Date.now()}`;
+
+const getYouTubeEmbedUrl = (url = '') => {
+  const match = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/
+  );
+  return match ? `https://www.youtube.com/embed/${match[1]}` : '';
+};
 
 const BUILTIN_DICTIONARY = [
   { id: 'bi-1', word: 'heval', part_of_speech: 'navdêr', meaning_tr: 'arkadaş, dost', meaning_en: 'friend', meaning_ku: 'Kesê ku mirov pê re dostanî dike.', example_sentence: 'Ew hevalê min ê herî baş e.' },
@@ -648,25 +659,11 @@ const UI_TRANSLATIONS = {
   }
 };
 
-const UI_FIELD_LABELS = [
-  { key: 'brand_first', label: 'Navê Malperê (Beşa 1)' },
-  { key: 'brand_second', label: 'Navê Malperê (Beşa 2)' },
-  { key: 'nav_site', label: 'Bişkojka Malperê' },
-  { key: 'nav_learn', label: 'Bişkojka Hînbûn / Lîstik' },
-  { key: 'nav_ferheng', label: 'Bişkojka Ferhengê' },
-  { key: 'nav_admin', label: 'Bişkojka Rêveber' },
-  { key: 'all_categories_label', label: 'Bişkojka Hemû Beş' },
-  { key: 'hero_badge', label: 'Nîşana Jorîn (Hero Badge)' },
-  { key: 'hero_title', label: 'Sernavê Sereke (Hero Title)' },
-  { key: 'hero_subtitle', label: 'Binnivîsa Sereke (Hero Subtitle)' },
-  { key: 'search_placeholder', label: 'Nivîsa Qutiya Lêgerînê' },
-  { key: 'reset_filters_btn', label: 'Bişkojka Paqijkirina Parzûnan' },
-  { key: 'learn_title', label: 'Sernavê Hînbûn / Lîstik' },
-  { key: 'learn_subtitle', label: 'Binnivîsa Hînbûn / Lîstik' },
-  { key: 'footer_text', label: 'Nivîsa Jêrîn (Footer)' }
-];
+const UI_FIELD_LABELS = Object.keys(DEFAULT_UI).map((key) => ({
+  key,
+  label: key
+}));
 
-// Oyun bölümü sıfırlandı; yeni oyun eklenene kadar boş başlatılır.
 const STARTER_GAMES = [];
 
 const fetchFromWiktionary = async (rawWord) => {
@@ -797,6 +794,20 @@ export default function App() {
   const [editingWordId, setEditingWordId] = useState(null);
   const [wordMsg, setWordMsg] = useState('');
   const [syncingProgress, setSyncingProgress] = useState('');
+  const [searchHistory, setSearchHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [favoriteWords, setFavoriteWords] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_fav_words') || '[]');
+    } catch {
+      return [];
+    }
+  });
   const [wordForm, setWordForm] = useState({
     word: '',
     part_of_speech: 'navdêr',
@@ -805,7 +816,7 @@ export default function App() {
     example_sentence: ''
   });
 
-  // Oyun bölümü sıfırlandı
+  // Oyun bölümü kalıcı sıfırlandı
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -953,6 +964,8 @@ export default function App() {
   };
 
   const startEditing = (lesson) => {
+    setActiveLesson(null);
+    setViewMode('admin');
     setEditingId(lesson.id);
     setFormData({
       title: lesson.title || '',
@@ -1073,6 +1086,33 @@ export default function App() {
     selectedMedia !== 'all' ||
     searchQuery.trim() !== '';
 
+  const recordSearchHistory = (term) => {
+    const cleaned = term.trim();
+    if (!cleaned) return;
+    setSearchHistory((prev) => {
+      const next = [cleaned, ...prev.filter((t) => t !== cleaned)].slice(0, 6);
+      localStorage.setItem('kk_search_history', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const toggleFavoriteWord = (word) => {
+    setFavoriteWords((prev) => {
+      const exists = prev.includes(word);
+      const next = exists ? prev.filter((w) => w !== word) : [word, ...prev];
+      localStorage.setItem('kk_fav_words', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const speakWord = (word) => {
+    if (!word || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(word);
+    utter.lang = 'ku';
+    window.speechSynthesis.speak(utter);
+  };
+
   const fetchDictionary = async (searchText = '', letter = 'all') => {
     const requestId = ++fetchRequestRef.current;
     setSearchingDict(true);
@@ -1138,6 +1178,7 @@ export default function App() {
 
   const handleDictionarySearchSubmit = (e) => {
     e.preventDefault();
+    if (ferhengQuery.trim()) recordSearchHistory(ferhengQuery);
     fetchDictionary(ferhengQuery, selectedLetter);
   };
 
@@ -1263,8 +1304,15 @@ export default function App() {
       .sort((a, b) => b._score - a._score || a.word.localeCompare(b.word));
   })();
 
-  const handleResetGamesSection = () => {
+  const handleResetGamesSection = async () => {
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
+    localStorage.removeItem('kk_xp');
+    localStorage.removeItem('kk_streak');
+    localStorage.removeItem('kk_completed_units');
+    localStorage.removeItem('kk_last_day');
+
+    const { error } = await supabase.from('kurmanci_exercises').delete().not('id', 'is', null);
+
     setExercises([]);
     setSelectedUnit(null);
     setCurrentExIndex(0);
@@ -1288,8 +1336,12 @@ export default function App() {
       image_url: '',
       audio_url: ''
     });
-    setExMsg('Beşa lîstikan bi temamî hat sifirkirin.');
-    setTimeout(() => setExMsg(''), 3500);
+    setExMsg(
+      error
+        ? 'State û depoya herêmî hat sifirkirin; DB jêbirin: ' + error.message
+        : 'Beşa lîstikan li ser arayû, localStorage û DB bi temamî hat sifirkirin.'
+    );
+    setTimeout(() => setExMsg(''), 4000);
   };
   const uploadExFile = async (event, folder, setBusy, field) => {
     const file = event.target.files?.[0];
@@ -1588,6 +1640,7 @@ export default function App() {
           const nextXp = xpPoints + 15;
           setXpPoints(nextXp);
           setComboCount((c) => c + 1);
+          localStorage.setItem('kk_xp', String(nextXp));
         }
       } else {
         setMatchWrongFlash(true);
@@ -1648,6 +1701,7 @@ export default function App() {
       const nextXp = xpPoints + bonus;
       setXpPoints(nextXp);
       setComboCount((c) => c + 1);
+      localStorage.setItem('kk_xp', String(nextXp));
     } else {
       setAnswerState('wrong');
       setComboCount(0);
@@ -1656,7 +1710,14 @@ export default function App() {
   };
 
   const updateStreak = () => {
-    setStreakDays((prev) => (prev > 0 ? prev + 1 : 1));
+    const today = new Date().toISOString().slice(0, 10);
+    const last = localStorage.getItem('kk_last_day');
+    if (last === today) return;
+    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const nextStreak = last === yesterday ? streakDays + 1 : 1;
+    setStreakDays(nextStreak);
+    localStorage.setItem('kk_streak', String(nextStreak));
+    localStorage.setItem('kk_last_day', today);
   };
 
   const goToNextExercise = () => {
@@ -1670,7 +1731,9 @@ export default function App() {
       setUnitCompleted(true);
       updateStreak();
       if (selectedUnit && !completedUnits.includes(selectedUnit)) {
-        setCompletedUnits((prev) => [...prev, selectedUnit]);
+        const updatedUnits = [...completedUnits, selectedUnit];
+        setCompletedUnits(updatedUnits);
+        localStorage.setItem('kk_completed_units', JSON.stringify(updatedUnits));
       }
     }
   };
@@ -1693,6 +1756,62 @@ export default function App() {
   const wrongAnswerLocked = answerState === 'wrong';
   const outOfHearts = hearts === 0 && !unitCompleted;
 
+  const renderEmbeddedMedia = (lesson) => {
+    const url = (lesson?.media_url || '').trim();
+    if (!url) {
+      return (
+        <p className="text-xs text-slate-400">
+          Lînka materyalê ya derveyî nehatiye zêdekirin.
+        </p>
+      );
+    }
+
+    const ytEmbed = getYouTubeEmbedUrl(url);
+    const isAudio =
+      lesson.media_type === 'audio' || /\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url);
+    const isPdf =
+      lesson.media_type === 'document' || /\.pdf(\?|$)/i.test(url);
+    const isVideoFile = /\.(mp4|webm|ogg)(\?|$)/i.test(url);
+
+    return (
+      <div className="space-y-3">
+        {ytEmbed && (
+          <div className="aspect-video w-full rounded-xl overflow-hidden border border-slate-200 bg-black">
+            <iframe
+              src={ytEmbed}
+              title={lesson.title}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        )}
+        {!ytEmbed && isVideoFile && (
+          <video controls src={url} className="w-full rounded-xl border border-slate-200 bg-black" />
+        )}
+        {isAudio && (
+          <audio controls src={url} className="w-full" />
+        )}
+        {isPdf && (
+          <iframe
+            src={url}
+            title={lesson.title}
+            className="w-full h-80 rounded-xl border border-slate-200"
+          />
+        )}
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-lg text-sm"
+        >
+          <ExternalLink className="w-4 h-4" />
+          <span>{ui.btn_open_material}</span>
+        </a>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       {/* ÜST MENÜ */}
@@ -1700,6 +1819,8 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
           <button
             type="button"
+            aria-label={ui.brand_first + ui.brand_second}
+            title={ui.brand_first + ui.brand_second}
             onClick={() => setViewMode('student')}
             className="flex items-center gap-2.5 font-extrabold text-xl text-slate-900"
           >
@@ -1709,7 +1830,7 @@ export default function App() {
             </span>
           </button>
 
-          <nav className="flex items-center gap-1 sm:gap-2">
+          <nav aria-label="Menuya Sereke" className="flex items-center gap-1 sm:gap-2">
             {[
               { id: 'student', label: ui.nav_site, icon: LayoutDashboard },
               { id: 'learn', label: ui.nav_learn, icon: Sparkles },
@@ -1722,6 +1843,8 @@ export default function App() {
                 <button
                   key={item.id}
                   type="button"
+                  aria-label={item.label}
+                  title={item.label}
                   onClick={() => {
                     setViewMode(item.id);
                     if (item.id === 'learn') setSelectedUnit(null);
@@ -1741,6 +1864,8 @@ export default function App() {
             <div className="relative" ref={langDropdownRef}>
               <button
                 type="button"
+                aria-label="Ziman hilbijêre"
+                title="Ziman hilbijêre"
                 onClick={() => setLangMenuOpen((o) => !o)}
                 className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-bold text-slate-700 border border-slate-200 hover:bg-slate-100"
               >
@@ -1980,13 +2105,26 @@ export default function App() {
                 >
                   <div className="flex items-start justify-between gap-3 mb-4">
                     <h3 className="text-xl font-bold text-slate-900">{activeLesson.title}</h3>
-                    <button
-                      type="button"
-                      onClick={() => setActiveLesson(null)}
-                      className="p-1 rounded hover:bg-slate-100"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-2">
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => startEditing(activeLesson)}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-bold"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Sererast</span>
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        aria-label="Bigire"
+                        onClick={() => setActiveLesson(null)}
+                        className="p-1 rounded hover:bg-slate-100"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex gap-2 mb-4 border-b border-slate-200">
@@ -2011,7 +2149,7 @@ export default function App() {
 
                   {lessonTab === 'content' ? (
                     <div className="space-y-4">
-                      {activeLesson.thumbnail_url && (
+                      {activeLesson.thumbnail_url && !getYouTubeEmbedUrl(activeLesson.media_url) && (
                         <img
                           src={activeLesson.thumbnail_url}
                           alt=""
@@ -2023,21 +2161,7 @@ export default function App() {
                         {ui.meta_level_prefix} {activeLesson.level} • {ui.meta_grade_prefix}{' '}
                         {activeLesson.grade_level}
                       </div>
-                      {activeLesson.media_url ? (
-                        <a
-                          href={activeLesson.media_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-lg text-sm"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          <span>{ui.btn_open_material}</span>
-                        </a>
-                      ) : (
-                        <p className="text-xs text-slate-400">
-                          Lînka materyalê ya derveyî nehatiye zêdekirin.
-                        </p>
-                      )}
+                      {renderEmbeddedMedia(activeLesson)}
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -2186,9 +2310,9 @@ export default function App() {
                 <div className="flex items-center gap-4">
                   <button
                     type="button"
+                    aria-label="Derkeve"
                     onClick={closeActiveUnit}
                     className="p-1.5 rounded-lg hover:bg-slate-100"
-                    aria-label="Derkeve"
                   >
                     <X className="w-5 h-5 text-slate-500" />
                   </button>
@@ -2443,7 +2567,7 @@ export default function App() {
               <p className="text-sm text-slate-500">
                 {ferhengQuery.trim() || selectedLetter !== 'all'
                   ? filteredDictionary.length
-                  : totalWordCount || filteredDictionary.length}{' '}
+                  : Math.max(totalWordCount, filteredDictionary.length)}{' '}
                 peyv
               </p>
             </div>
@@ -2466,6 +2590,47 @@ export default function App() {
                 {ui.ferheng_search_btn}
               </button>
             </form>
+
+            {(searchHistory.length > 0 || favoriteWords.length > 0) && (
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                {searchHistory.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-slate-500 font-bold">
+                      <History className="w-3.5 h-3.5" />
+                      <span>Dîrok:</span>
+                    </span>
+                    {searchHistory.map((term) => (
+                      <button
+                        key={term}
+                        type="button"
+                        onClick={() => setFerhengQuery(term)}
+                        className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold"
+                      >
+                        {term}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {favoriteWords.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-500" />
+                      <span>Bijare:</span>
+                    </span>
+                    {favoriteWords.map((w) => (
+                      <button
+                        key={w}
+                        type="button"
+                        onClick={() => setFerhengQuery(w)}
+                        className="px-2.5 py-1 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-800 font-semibold border border-amber-200"
+                      >
+                        {w}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="flex flex-wrap gap-1.5">
               <button
@@ -2503,25 +2668,51 @@ export default function App() {
               </p>
             ) : (
               <div className="space-y-2">
-                {filteredDictionary.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setSelectedWordDetail(item)}
-                    className="w-full text-left bg-white border border-slate-200 hover:border-sky-400 rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition"
-                  >
-                    <div>
-                      <span className="font-extrabold text-slate-900 mr-2">{item.word}</span>
-                      <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
-                        {item.part_of_speech}
-                      </span>
-                      <div className="text-sm text-slate-600 mt-0.5">
-                        {item.meaning_tr || item.meaning_en || item.meaning_ku}
+                {filteredDictionary.map((item) => {
+                  const isFav = favoriteWords.includes(item.word);
+                  return (
+                    <div
+                      key={item.id}
+                      className="bg-white border border-slate-200 hover:border-sky-400 rounded-xl px-4 py-3 flex items-center justify-between gap-3 transition"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setSelectedWordDetail(item)}
+                        className="flex-1 text-left"
+                      >
+                        <span className="font-extrabold text-slate-900 mr-2">{item.word}</span>
+                        <span className="text-xs bg-sky-100 text-sky-800 px-2 py-0.5 rounded">
+                          {item.part_of_speech}
+                        </span>
+                        <div className="text-sm text-slate-600 mt-0.5">
+                          {item.meaning_tr || item.meaning_en || item.meaning_ku}
+                        </div>
+                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          type="button"
+                          aria-label="Bijare"
+                          onClick={() => toggleFavoriteWord(item.word)}
+                          className="p-1.5 rounded-lg hover:bg-slate-100"
+                        >
+                          <Star
+                            className={`w-4 h-4 ${
+                              isFav ? 'fill-amber-400 text-amber-500' : 'text-slate-300'
+                            }`}
+                          />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Hûrgulî"
+                          onClick={() => setSelectedWordDetail(item)}
+                          className="p-1.5 rounded-lg hover:bg-slate-100"
+                        >
+                          <Eye className="w-4 h-4 text-slate-400" />
+                        </button>
                       </div>
                     </div>
-                    <Eye className="w-4 h-4 text-slate-300 shrink-0" />
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             )}
 
@@ -2534,7 +2725,7 @@ export default function App() {
                   className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-3"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="text-2xl font-extrabold text-slate-900">
                         {selectedWordDetail.word}
@@ -2543,13 +2734,37 @@ export default function App() {
                         {selectedWordDetail.part_of_speech}
                       </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setSelectedWordDetail(null)}
-                      className="p-1 rounded hover:bg-slate-100"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => speakWord(selectedWordDetail.word)}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 text-xs font-bold"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                        <span>Bixwîne</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => toggleFavoriteWord(selectedWordDetail.word)}
+                        className="p-1.5 rounded-lg hover:bg-slate-100"
+                      >
+                        <Star
+                          className={`w-5 h-5 ${
+                            favoriteWords.includes(selectedWordDetail.word)
+                              ? 'fill-amber-400 text-amber-500'
+                              : 'text-slate-400'
+                          }`}
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Bigire"
+                        onClick={() => setSelectedWordDetail(null)}
+                        className="p-1.5 rounded-lg hover:bg-slate-100"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                   <div className="text-sm space-y-2">
                     {selectedWordDetail.meaning_tr && (
@@ -2638,7 +2853,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* HÎNBÛN / LÎSTİK YÖNETİMİ (SIFIRLANMIŞ) */}
+                {/* HÎNBÛN / LÎSTİK YÖNETİMİ (KALICI SIFIRLANMIŞ) */}
                 <div className="bg-white rounded-2xl border-2 border-emerald-300 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -3093,7 +3308,7 @@ export default function App() {
                       <span>
                         {editingWordId
                           ? 'Peyva Ferhengê Sererast Bike'
-                          : `Ferheng — Peyvên Nû Zêde Bike (${totalWordCount || ferhengWords.length} tomarkirî)`}
+                          : `Ferheng — Peyvên Nû Zêde Bike (${Math.max(totalWordCount, filteredDictionary.length)} tomarkirî)`}
                       </span>
                     </h2>
 
@@ -3213,7 +3428,7 @@ export default function App() {
                   </form>
 
                   <div className="space-y-2 max-h-60 overflow-y-auto border-t border-slate-100 pt-4">
-                    {ferhengWords.slice(0, 100).map((item) => (
+                    {filteredDictionary.slice(0, 100).map((item) => (
                       <div key={item.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
                         <div className="truncate">
                           <span className="font-bold text-slate-900 mr-2">{item.word}</span>
@@ -3223,21 +3438,25 @@ export default function App() {
                           <span className="text-slate-600">— {item.meaning_tr || item.meaning_en || item.meaning_ku}</span>
                         </div>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => startEditingWord(item)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-800 hover:bg-amber-100 text-xs font-medium"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                            <span>Sererast</span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeleteWord(item.id)}
-                            className="text-red-600 hover:text-red-800 p-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {item.sourceType === 'db' && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => startEditingWord(item)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-amber-50 text-amber-800 hover:bg-amber-100 text-xs font-medium"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Sererast</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteWord(item.id)}
+                                className="text-red-600 hover:text-red-800 p-1"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}
