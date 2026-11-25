@@ -628,7 +628,7 @@ const UI_TRANSLATIONS = {
     learn_replay_btn: 'Gioca ancora',
     learn_back_units_btn: 'Torna alle tappe',
     learn_type_choice: 'Scelta corretta',
-    learn_type_sentence: 'Componi la phrase',
+    learn_type_sentence: 'Componi la frase',
     learn_type_match: 'Abbina le parole',
     learn_type_fill: 'Riempi lo spazio',
     learn_type_image: 'Trova l’immagine, scegli la parola',
@@ -699,30 +699,33 @@ const fetchFromWiktionary = async (rawWord) => {
       }
     }
 
-    const kuRes = await fetch(
-      `https://ku.wiktionary.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(
-        cleanWord
-      )}&format=json&origin=*`
-    );
-    if (kuRes.ok) {
-      const kuData = await kuRes.json();
-      const pages = kuData?.query?.pages || {};
-      const page = Object.values(pages)[0];
-      if (page && !page.missing && page.extract) {
-        const lines = page.extract
-          .split('\n')
-          .map((l) => l.trim())
-          .filter((l) => l && !l.startsWith('=='));
-        const summary = lines.slice(1, 3).join(' ') || lines[0] || '';
-        if (summary) {
-          return {
-            word: cleanWord,
-            part_of_speech: 'navdêr',
-            meaning_tr: '',
-            meaning_en: '',
-            meaning_ku: summary.slice(0, 280),
-            example_sentence: ''
-          };
+    const candidates = [cleanWord, cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1)];
+    for (const titleCandidate of candidates) {
+      const kuRes = await fetch(
+        `https://ku.wiktionary.org/w/api.php?action=query&prop=extracts&exintro=1&explaintext=1&titles=${encodeURIComponent(
+          titleCandidate
+        )}&format=json&origin=*`
+      );
+      if (kuRes.ok) {
+        const kuData = await kuRes.json();
+        const pages = kuData?.query?.pages || {};
+        const page = Object.values(pages)[0];
+        if (page && !page.missing && page.extract) {
+          const lines = page.extract
+            .split('\n')
+            .map((l) => l.trim())
+            .filter((l) => l && !l.startsWith('=='));
+          const summary = lines.slice(1, 3).join(' ') || lines[0] || '';
+          if (summary) {
+            return {
+              word: cleanWord,
+              part_of_speech: 'navdêr',
+              meaning_tr: '',
+              meaning_en: '',
+              meaning_ku: summary.slice(0, 280),
+              example_sentence: ''
+            };
+          }
         }
       }
     }
@@ -737,6 +740,7 @@ export default function App() {
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langDropdownRef = useRef(null);
   const audioPlayerRef = useRef(null);
+  const fetchRequestRef = useRef(0);
 
   const [rawUi, setRawUi] = useState(DEFAULT_UI);
   const ui = { ...rawUi, ...(UI_TRANSLATIONS[selectedLang] || {}) };
@@ -1051,42 +1055,58 @@ export default function App() {
   };
 
   const fetchDictionary = async (searchText = '', letter = 'all') => {
+    const requestId = ++fetchRequestRef.current;
     setSearchingDict(true);
-    let query = supabase
-      .from('dictionary')
-      .select('*', { count: 'exact' })
-      .order('word', { ascending: true });
 
-    const q = sanitizeSearch(searchText);
-    if (q) {
-      query = query.or(
-        `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%,meaning_en.ilike.%${q}%`
-      );
-    } else if (letter !== 'all') {
-      query = query.ilike('word', `${letter}%`);
-    }
+    try {
+      let query = supabase
+        .from('dictionary')
+        .select('*', { count: 'exact' })
+        .order('word', { ascending: true });
 
-    const { data, count, error } = await query.limit(100);
-    let results = !error && data ? data : [];
+      const q = sanitizeSearch(searchText);
+      if (q) {
+        query = query.or(
+          `word.ilike.%${q}%,meaning_tr.ilike.%${q}%,meaning_ku.ilike.%${q}%,meaning_en.ilike.%${q}%`
+        );
+      } else if (letter !== 'all') {
+        const normLetter = normalizeKurdish(letter);
+        query = query.ilike('word', `${normLetter}%`);
+      }
 
-    if (q && !results.some((r) => normalizeKurdish(r.word) === normalizeKurdish(q))) {
-      const liveEntry = await fetchFromWiktionary(q);
-      if (liveEntry) {
-        const { data: inserted } = await supabase
-          .from('dictionary')
-          .insert([liveEntry])
-          .select();
-        if (inserted && inserted.length > 0) {
-          results = [inserted[0], ...results];
-        } else {
-          results = [{ id: `live-${Date.now()}`, ...liveEntry }, ...results];
+      const { data, count, error } = await query.limit(100);
+      if (requestId !== fetchRequestRef.current) return;
+
+      let results = !error && data ? data : [];
+
+      if (q && !results.some((r) => normalizeKurdish(r.word) === normalizeKurdish(q))) {
+        const liveEntry = await fetchFromWiktionary(q);
+        if (requestId !== fetchRequestRef.current) return;
+
+        if (liveEntry) {
+          const { data: inserted } = await supabase
+            .from('dictionary')
+            .insert([liveEntry])
+            .select();
+          if (requestId !== fetchRequestRef.current) return;
+
+          if (inserted && inserted.length > 0) {
+            results = [inserted[0], ...results];
+          } else {
+            results = [{ id: `live-${Date.now()}`, ...liveEntry }, ...results];
+          }
         }
       }
-    }
 
-    setFerhengWords(results);
-    if (count !== null) setTotalWordCount(count);
-    setSearchingDict(false);
+      setFerhengWords(results);
+      if (count !== null && !q && letter === 'all') {
+        setTotalWordCount(count);
+      }
+    } finally {
+      if (requestId === fetchRequestRef.current) {
+        setSearchingDict(false);
+      }
+    }
   };
 
   useEffect(() => {
@@ -1176,6 +1196,7 @@ export default function App() {
   const filteredDictionary = (() => {
     const rawQ = ferhengQuery.trim();
     const normQ = normalizeKurdish(rawQ);
+    const normLetter = selectedLetter === 'all' ? 'all' : normalizeKurdish(selectedLetter);
 
     const dbList = ferhengWords.map((w) => ({
       ...w,
@@ -1189,8 +1210,8 @@ export default function App() {
     );
 
     const combined = [...dbList, ...builtinList].filter((item) => {
-      if (selectedLetter === 'all') return true;
-      return (item.word || '').toUpperCase().startsWith(selectedLetter);
+      if (normLetter === 'all') return true;
+      return normalizeKurdish(item.word || '').startsWith(normLetter);
     });
 
     if (!normQ) return combined;
@@ -1217,7 +1238,6 @@ export default function App() {
       .filter((item) => item._score > 0)
       .sort((a, b) => b._score - a._score);
   })();
-
   const fetchExercises = async () => {
     const { data, error } = await supabase
       .from('kurmanci_exercises')
@@ -2341,6 +2361,7 @@ export default function App() {
             )}
           </div>
         )}
+
         {/* ===================== FERHENG ===================== */}
         {viewMode === 'ferheng' && (
           <div className="max-w-4xl mx-auto space-y-6">
@@ -2350,7 +2371,10 @@ export default function App() {
                 <span>{ui.nav_ferheng}</span>
               </h1>
               <p className="text-sm text-slate-500">
-                {totalWordCount || filteredDictionary.length} peyv
+                {ferhengQuery.trim() || selectedLetter !== 'all'
+                  ? filteredDictionary.length
+                  : totalWordCount || filteredDictionary.length}{' '}
+                peyv
               </p>
             </div>
 
