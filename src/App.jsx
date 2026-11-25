@@ -37,9 +37,7 @@ import {
   Eye,
   Zap
 } from 'lucide-react';
-
 const ADMIN_PASSCODE = import.meta.env.VITE_ADMIN_PASSCODE || 'kurdiklass2025';
-
 const LANGUAGE_OPTIONS = [
   { code: 'KU', name: 'Kurmancî', nativeName: 'Kurmancî' },
   { code: 'ZZA', name: 'Zazakî / Kirmanckî', nativeName: 'Zazakî' },
@@ -50,145 +48,895 @@ const LANGUAGE_OPTIONS = [
   { code: 'FR', name: 'French', nativeName: 'Français' },
   { code: 'IT', name: 'Italian', nativeName: 'Italiano' }
 ];
-
 const kurdishAlphabet = [
   'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î', 'J', 'K', 'L',
   'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'Ş', 'T', 'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
 ];
-
 const BUILTIN_DICTIONARY = [
-  { id: 'builtin-1', word: 'heval', part_of_speech: 'navdêr', meaning_tr: 'arkadaş, dost', meaning_en: 'friend', meaning_ku: 'kesê ku mirov pê re dostanî û hevaltî dike', example_sentence: 'Ew hevalê min ê herî baş e.',
-    meanings_i18n: { KU: 'kesê ku mirov pê re dostanî û hevaltî dike', ZZA: 'embaz, dost', CKB: 'هاوڕێ، دۆست', TR: 'arkadaş, dost', EN: 'friend', DE: 'Freund, Freundin', FR: 'ami, amie', IT: 'amico, amica' },
-    examples_i18n: { KU: 'Ew hevalê min ê herî baş e.', TR: 'O benim en iyi arkadaşım.', EN: 'He/She is my best friend.' } },
-  { id: 'builtin-2', word: 'dibistan', part_of_speech: 'navdêr', meaning_tr: 'okul', meaning_en: 'school', meaning_ku: 'cîhê perwerde û hînbûnê', example_sentence: 'Zarok her sibeh diçin dibistanê.',
-    meanings_i18n: { KU: 'cîhê perwerde û hînbûnê', ZZA: 'mekteb, wendegeh', CKB: 'قوتابخانە', TR: 'okul', EN: 'school', DE: 'Schule', FR: 'école', IT: 'scuola' },
-    examples_i18n: { KU: 'Zarok her sibeh diçin dibistanê.', TR: 'Çocuklar her sabah okula gidiyor.', EN: 'Children go to school every morning.' } },
-  { id: 'builtin-3', word: 'pirtûk', part_of_speech: 'navdêr', meaning_tr: 'kitap', meaning_en: 'book', meaning_ku: 'berhema nivîskî ya xwendinê', example_sentence: 'Ez îşev pirtûkekê dixwînim.',
-    meanings_i18n: { KU: 'berhema nivîskî ya xwendinê', ZZA: 'kîtab', CKB: 'کتێب', TR: 'kitap', EN: 'book', DE: 'Buch', FR: 'livre', IT: 'libro' },
-    examples_i18n: { KU: 'Ez îşev pirtûkekê dixwînim.', TR: 'Bu akşam bir kitap okuyorum.', EN: 'I am reading a book tonight.' } },
-  { id: 'builtin-4', word: 'av', part_of_speech: 'navdêr', meaning_tr: 'su', meaning_en: 'water', meaning_ku: 'şileya jiyanê ya bêreng û bêbêhn', example_sentence: 'Ava kaniyê pir sar û zelal e.',
-    meanings_i18n: { KU: 'şileya jiyanê ya bêreng û bêbêhn', ZZA: 'awe', CKB: 'ئاو', TR: 'su', EN: 'water', DE: 'Wasser', FR: 'eau', IT: 'acqua' },
-    examples_i18n: { KU: 'Ava kaniyê pir sar û zelal e.', TR: 'Pınarın suyu çok soğuk ve berrak.', EN: 'The spring water is very cold and clear.' } },
-  { id: 'builtin-5', word: 'mamoste', part_of_speech: 'navdêr', meaning_tr: 'öğretmen', meaning_en: 'teacher', meaning_ku: 'kesê ku ders dide û fêr dike', example_sentence: 'Mamoste bi sebir dersê şirove dike.',
-    meanings_i18n: { KU: 'kesê ku ders dide û fêr dike', ZZA: 'malim, mamoste', CKB: 'مامۆستا', TR: 'öğretmen', EN: 'teacher', DE: 'Lehrer, Lehrerin', FR: 'enseignant, professeur', IT: 'insegnante, maestro' },
-    examples_i18n: { KU: 'Mamoste bi sebir dersê şirove dike.', TR: 'Öğretmen sabırla dersi açıklıyor.', EN: 'The teacher explains the lesson patiently.' } },
-  { id: 'builtin-6', word: 'xwendin', part_of_speech: 'lêker', meaning_tr: 'okumak, öğrenmek', meaning_en: 'to read, to study', meaning_ku: 'bi çav an bi dengekî bilind nivîsekê şopandin', example_sentence: 'Em bi hev re kurdî dixwînin.',
-    meanings_i18n: { KU: 'bi çav an bi dengekî bilind nivîsekê şopandin', ZZA: 'wendiş', CKB: 'خوێندنەوە', TR: 'okumak, öğrenmek', EN: 'to read, to study', DE: 'lesen, lernen', FR: 'lire, étudier', IT: 'leggere, studiare' },
-    examples_i18n: { KU: 'Em bi hev re kurdî dixwînin.', TR: 'Birlikte Kürtçe okuyoruz.', EN: 'We study Kurdish together.' } },
-  { id: 'builtin-7', word: 'nivîsandin', part_of_speech: 'lêker', meaning_tr: 'yazmak', meaning_en: 'to write', meaning_ku: 'bi tîp û peyvan ramanan tomar kirin', example_sentence: 'Ew her roj çîrokekê dinivîse.',
-    meanings_i18n: { KU: 'bi tîp û peyvan ramanan tomar kirin', ZZA: 'nuştiş', CKB: 'نووسین', TR: 'yazmak', EN: 'to write', DE: 'schreiben', FR: 'écrire', IT: 'scrivere' },
-    examples_i18n: { KU: 'Ew her roj çîrokekê dinivîse.', TR: 'O her gün bir hikâye yazıyor.', EN: 'He/She writes a story every day.' } },
-  { id: 'builtin-8', word: 'roj', part_of_speech: 'navdêr', meaning_tr: 'gün, güneş', meaning_en: 'day, sun', meaning_ku: 'demjimêrên ronahiyê an yekeya demê ya 24 saetan', example_sentence: 'Îro rojeke gelekî xweş e.',
-    meanings_i18n: { KU: 'demjimêrên ronahiyê an yekeya demê ya 24 saetan', ZZA: 'roc, tîje', CKB: 'ڕۆژ، خۆر', TR: 'gün, güneş', EN: 'day, sun', DE: 'Tag, Sonne', FR: 'jour, soleil', IT: 'giorno, sole' },
-    examples_i18n: { KU: 'Îro rojeke gelekî xweş e.', TR: 'Bugün çok güzel bir gün.', EN: 'Today is a very nice day.' } },
-  { id: 'builtin-9', word: 'şev', part_of_speech: 'navdêr', meaning_tr: 'gece', meaning_en: 'night', meaning_ku: 'dema tarîtiyê ya piştî rojavabûnê', example_sentence: 'Şev bêdeng û stêrkbar bû.',
-    meanings_i18n: { KU: 'dema tarîtiyê ya piştî rojavabûnê', ZZA: 'şew', CKB: 'شەو', TR: 'gece', EN: 'night', DE: 'Nacht', FR: 'nuit', IT: 'notte' },
-    examples_i18n: { KU: 'Şev bêdeng û stêrkbar bû.', TR: 'Gece sessiz ve yıldızlıydı.', EN: 'The night was quiet and starry.' } },
-  { id: 'builtin-10', word: 'mal', part_of_speech: 'navdêr', meaning_tr: 'ev, yuva', meaning_en: 'home, house', meaning_ku: 'cîhê jiyan û rûniştinê yê malbatê', example_sentence: 'Em êvarê vedigerin malê.',
-    meanings_i18n: { KU: 'cîhê jiyan û rûniştinê yê malbatê', ZZA: 'key, çê', CKB: 'ماڵ', TR: 'ev, yuva', EN: 'home, house', DE: 'Haus, Zuhause', FR: 'maison, foyer', IT: 'casa' },
-    examples_i18n: { KU: 'Em êvarê vedigerin malê.', TR: 'Akşam eve dönüyoruz.', EN: 'We are returning home in the evening.' } },
-  { id: 'builtin-11', word: 'zarok', part_of_speech: 'navdêr', meaning_tr: 'çocuk', meaning_en: 'child', meaning_ku: 'mirovê biçûk di temenê zarokatiyê de', example_sentence: 'Zarok li baxçe dilîzin.',
-    meanings_i18n: { KU: 'mirovê biçûk di temenê zarokatiyê de', ZZA: 'qij, doman', CKB: 'منداڵ', TR: 'çocuk', EN: 'child', DE: 'Kind', FR: 'enfant', IT: 'bambino, bambina' },
-    examples_i18n: { KU: 'Zarok li baxçe dilîzin.', TR: 'Çocuklar bahçede oynuyor.', EN: 'Children are playing in the yard.' } },
-  { id: 'builtin-12', word: 'ziman', part_of_speech: 'navdêr', meaning_tr: 'dil', meaning_en: 'language, tongue', meaning_ku: 'sîstema deng û peyvan a têkiliya mirovan', example_sentence: 'Zimanê kurdî pir dewlemend e.',
-    meanings_i18n: { KU: 'sîstema deng û peyvan a têkiliya mirovan', ZZA: 'ziwan', CKB: 'زمان', TR: 'dil', EN: 'language, tongue', DE: 'Sprache, Zunge', FR: 'langue, langage', IT: 'lingua' },
-    examples_i18n: { KU: 'Zimanê kurdî pir dewlemend e.', TR: 'Kürtçe çok zengin bir dil.', EN: 'The Kurdish language is very rich.' } },
-  { id: 'builtin-13', word: 'hêvî', part_of_speech: 'navdêr', meaning_tr: 'umut', meaning_en: 'hope', meaning_ku: 'bawerî û hêviya tiştên baş ên pêşerojê', example_sentence: 'Hêvî her tim ronahiyê dide.',
-    meanings_i18n: { KU: 'bawerî û hêviya tiştên baş ên pêşerojê', ZZA: 'umîd, hêvî', CKB: 'هیوا، ئومێد', TR: 'umut', EN: 'hope', DE: 'Hoffnung', FR: 'espoir', IT: 'speranza' },
-    examples_i18n: { KU: 'Hêvî her tim ronahiyê dide.', TR: 'Umut her zaman ışık verir.', EN: 'Hope always gives light.' } },
-  { id: 'builtin-14', word: 'aşîtî', part_of_speech: 'navdêr', meaning_tr: 'barış', meaning_en: 'peace', meaning_ku: 'rewşa aramî, lihevkirin û bêşeriyê', example_sentence: 'Em ji bo aştiyê dixebitin.',
-    meanings_i18n: { KU: 'rewşa aramî, lihevkirin û bêşeriyê', ZZA: 'haştî, aştî', CKB: 'ئاشتی', TR: 'barış', EN: 'peace', DE: 'Frieden', FR: 'paix', IT: 'pace' },
-    examples_i18n: { KU: 'Em ji bo aştiyê dixebitin.', TR: 'Barış için çalışıyoruz.', EN: 'We work for peace.' } },
-  { id: 'builtin-15', word: 'şîn', part_of_speech: 'rengdêr', meaning_tr: 'mavi, yeşil', meaning_en: 'blue, green', meaning_ku: 'rengê esmanî an rengê giha û pelên şîn', example_sentence: 'Esman îro şîn û vekirî ye.',
-    meanings_i18n: { KU: 'rengê esmanî an rengê giha û pelên şîn', ZZA: 'kewe, keske', CKB: 'شین', TR: 'mavi, yeşil', EN: 'blue, green', DE: 'blau, grün', FR: 'bleu, vert', IT: 'blu, verde' },
-    examples_i18n: { KU: 'Esman îro şîn û vekirî ye.', TR: 'Gökyüzü bugün mavi ve açık.', EN: 'The sky is blue and clear today.' } },
-  { id: 'builtin-16', word: 'sor', part_of_speech: 'rengdêr', meaning_tr: 'kırmızı', meaning_en: 'red', meaning_ku: 'rengê agir û gulên sor', example_sentence: 'Guleke sor li ser maseyê ye.',
-    meanings_i18n: { KU: 'rengê agir û gulên sor', ZZA: 'sûr', CKB: 'سوور', TR: 'kırmızı', EN: 'red', DE: 'rot', FR: 'rouge', IT: 'rosso' },
-    examples_i18n: { KU: 'Guleke sor li ser maseyê ye.', TR: 'Masanın üzerinde kırmızı bir gül var.', EN: 'There is a red rose on the table.' } },
-  { id: 'builtin-17', word: 'spî', part_of_speech: 'rengdêr', meaning_tr: 'beyaz', meaning_en: 'white', meaning_ku: 'rengê berf û şîrî', example_sentence: 'Berfa spî hemû çiya girtiye.',
-    meanings_i18n: { KU: 'rengê berf û şîrî', ZZA: 'sipî', CKB: 'سپی', TR: 'beyaz', EN: 'white', DE: 'weiß', FR: 'blanc', IT: 'bianco' },
-    examples_i18n: { KU: 'Berfa spî hemû çiya girtiye.', TR: 'Beyaz kar bütün dağları kaplamış.', EN: 'White snow has covered all the mountains.' } },
-  { id: 'builtin-18', word: 'baş', part_of_speech: 'rengdêr', meaning_tr: 'iyi, güzel', meaning_en: 'good, well', meaning_ku: 'tiştê kêrhatî, qenc û erênî', example_sentence: 'Sibeha we bi xêr û baş be.',
-    meanings_i18n: { KU: 'tiştê kêrhatî, qenc û erênî', ZZA: 'rınd, baş', CKB: 'باش', TR: 'iyi, güzel', EN: 'good, well', DE: 'gut', FR: 'bon, bien', IT: 'buono, bene' },
-    examples_i18n: { KU: 'Sibeha we bi xêr û baş be.', TR: 'Sabahınız hayırlı ve iyi olsun.', EN: 'Good morning to you.' } },
-  { id: 'builtin-19', word: 'hatin', part_of_speech: 'lêker', meaning_tr: 'gelmek', meaning_en: 'to come', meaning_ku: 'ber bi cîhekî an kesekî ve çûn', example_sentence: 'Mêvanên me îro tên.',
-    meanings_i18n: { KU: 'ber bi cîhekî an kesekî ve çûn', ZZA: 'ameyîş', CKB: 'هاتن', TR: 'gelmek', EN: 'to come', DE: 'kommen', FR: 'venir', IT: 'venire' },
-    examples_i18n: { KU: 'Mêvanên me îro tên.', TR: 'Misafirlerimiz bugün geliyor.', EN: 'Our guests are coming today.' } },
-  { id: 'builtin-20', word: 'çûn', part_of_speech: 'lêker', meaning_tr: 'gitmek', meaning_en: 'to go', meaning_ku: 'ji cîhekî dûr ketin an ber bi cihekî din ve rê ketin', example_sentence: 'Em sibehê zû diçin rêwîtiyê.',
-    meanings_i18n: { KU: 'ji cîhekî dûr ketin an ber bi cihekî din ve rê ketin', ZZA: 'şîyayîş', CKB: 'چوون', TR: 'gitmek', EN: 'to go', DE: 'gehen, fahren', FR: 'aller, partir', IT: 'andare' },
-    examples_i18n: { KU: 'Em sibehê zû diçin rêwîtiyê.', TR: 'Yarın sabah erken yolculuğa çıkıyoruz.', EN: 'We are going on a trip early tomorrow.' } },
-  { id: 'builtin-21', word: 'dîtin', part_of_speech: 'lêker', meaning_tr: 'görmek', meaning_en: 'to see', meaning_ku: 'bi çavan ferq kirin an hev dîtin', example_sentence: 'Min hevalê xwe li kolanê dît.',
-    meanings_i18n: { KU: 'bi çavan ferq kirin an hev dîtin', ZZA: 'vînayîş', CKB: 'بینین', TR: 'görmek', EN: 'to see', DE: 'sehen', FR: 'voir', IT: 'vedere' },
-    examples_i18n: { KU: 'Min hevalê xwe li kolanê dît.', TR: 'Arkadaşımı sokakta gördüm.', EN: 'I saw my friend on the street.' } },
-  { id: 'builtin-22', word: 'bihîstin', part_of_speech: 'lêker', meaning_tr: 'duymak, işitmek', meaning_en: 'to hear', meaning_ku: 'bi guhan deng fêm kirin', example_sentence: 'Min dengê stranê baş bihîst.',
-    meanings_i18n: { KU: 'bi guhan deng fêm kirin', ZZA: 'hesayîş', CKB: 'بیستن', TR: 'duymak, işitmek', EN: 'to hear', DE: 'hören', FR: 'entendre', IT: 'sentire' },
-    examples_i18n: { KU: 'Min dengê stranê baş bihîst.', TR: 'Şarkının sesini iyi duydum.', EN: 'I heard the sound of the song well.' } },
-  { id: 'builtin-23', word: 'axaftin', part_of_speech: 'lêker', meaning_tr: 'konuşmak', meaning_en: 'to speak, to talk', meaning_ku: 'bi zimên raman û hestan vegotin', example_sentence: 'Ew bi kurdî û tirkî diaxive.',
-    meanings_i18n: { KU: 'bi zimên raman û hestan vegotin', ZZA: 'qiseykerdiş', CKB: 'قسەکردن', TR: 'konuşmak', EN: 'to speak, to talk', DE: 'sprechen', FR: 'parler', IT: 'parlare' },
-    examples_i18n: { KU: 'Ew bi kurdî û tirkî diaxive.', TR: 'O Kürtçe ve Türkçe konuşuyor.', EN: 'He/She speaks Kurdish and Turkish.' } },
-  { id: 'builtin-24', word: 'xwaringeh', part_of_speech: 'navdêr', meaning_tr: 'lokanta, restoran', meaning_en: 'restaurant', meaning_ku: 'cîhê ku xwarin tê çêkirin û xwarin', example_sentence: 'Em ê nîvro li xwaringehê bixwin.',
-    meanings_i18n: { KU: 'cîhê ku xwarin tê çêkirin û xwarin', ZZA: 'lokanta', CKB: 'چێشتخانە', TR: 'lokanta, restoran', EN: 'restaurant', DE: 'Restaurant', FR: 'restaurant', IT: 'ristorante' },
-    examples_i18n: { KU: 'Em ê nîvro li xwaringehê bixwin.', TR: 'Öğlen lokantada yiyeceğiz.', EN: 'We will eat at the restaurant at noon.' } },
-  { id: 'builtin-25', word: 'nexweşxane', part_of_speech: 'navdêr', meaning_tr: 'hastane', meaning_en: 'hospital', meaning_ku: 'navenda tenduristiyê ya dermankirina nexweşan', example_sentence: 'Nexweşxane nêzîkî navenda bajêr e.',
-    meanings_i18n: { KU: 'navenda tenduristiyê ya dermankirina nexweşan', ZZA: 'nêweşxane', CKB: 'نەخۆشخانە', TR: 'hastane', EN: 'hospital', DE: 'Krankenhaus', FR: 'hôpital', IT: 'ospedale' },
-    examples_i18n: { KU: 'Nexweşxane nêzîkî navenda bajêr e.', TR: 'Hastane şehir merkezine yakın.', EN: 'The hospital is near the city center.' } },
-  { id: 'builtin-26', word: 'bijîşk', part_of_speech: 'navdêr', meaning_tr: 'doktor, hekim', meaning_en: 'doctor, physician', meaning_ku: 'pisporê bijîşkî û dermankirinê', example_sentence: 'Bijîşk şîretên baş dide nexweşan.',
-    meanings_i18n: { KU: 'pisporê bijîşkî û dermankirinê', ZZA: 'doktor, hekîm', CKB: 'پزیشک، دکتۆر', TR: 'doktor, hekim', EN: 'doctor, physician', DE: 'Arzt, Ärztin', FR: 'médecin', IT: 'medico, dottore' },
-    examples_i18n: { KU: 'Bijîşk şîretên baş dide nexweşan.', TR: 'Doktor hastalara iyi tavsiyeler veriyor.', EN: 'The doctor gives good advice to patients.' } },
-  { id: 'builtin-27', word: 'welat', part_of_speech: 'navdêr', meaning_tr: 'ülke, vatan', meaning_en: 'country, homeland', meaning_ku: 'ax û erdnîgariya ku gelek lê dijî', example_sentence: 'Her welat xwedî çandeke taybet e.',
-    meanings_i18n: { KU: 'ax û erdnîgariya ku gelek lê dijî', ZZA: 'welat', CKB: 'وڵات', TR: 'ülke, vatan', EN: 'country, homeland', DE: 'Land, Heimat', FR: 'pays', IT: 'paese' },
-    examples_i18n: { KU: 'Her welat xwedî çandeke taybet e.', TR: 'Her ülkenin kendine özgü bir kültürü var.', EN: 'Every country has a special culture.' } },
-  { id: 'builtin-28', word: 'bajêr', part_of_speech: 'navdêr', meaning_tr: 'şehir', meaning_en: 'city', meaning_ku: 'navenda niştecihbûnê ya mezin', example_sentence: 'Ev bajêr pir qerebalix û zindî ye.',
-    meanings_i18n: { KU: 'navenda niştecihbûnê ya mezin', ZZA: 'şar', CKB: 'شار', TR: 'şehir', EN: 'city', DE: 'Stadt', FR: 'ville', IT: 'città' },
-    examples_i18n: { KU: 'Ev bajêr pir qerebalix û zindî ye.', TR: 'Bu şehir çok kalabalık ve canlı.', EN: 'This city is very crowded and lively.' } },
-  { id: 'builtin-29', word: 'gund', part_of_speech: 'navdêr', meaning_tr: 'köy', meaning_en: 'village', meaning_ku: 'cîhê niştecihbûnê yê biçûk di nav xwezayê de', example_sentence: 'Gundê me di nav daristanê de ye.',
-    meanings_i18n: { KU: 'cîhê niştecihbûnê yê biçûk di nav xwezayê de', ZZA: 'dew', CKB: 'گوند', TR: 'köy', EN: 'village', DE: 'Dorf', FR: 'village', IT: 'villaggio' },
-    examples_i18n: { KU: 'Gundê me di nav daristanê de ye.', TR: 'Köyümüz ormanın içinde.', EN: 'Our village is in the forest.' } },
-  { id: 'builtin-30', word: 'çiya', part_of_speech: 'navdêr', meaning_tr: 'dağ', meaning_en: 'mountain', meaning_ku: 'bilindahiya mezin û kevirîn a ser rûyê erdê', example_sentence: 'Serê çiyê hîn jî bi berfê ye.',
-    meanings_i18n: { KU: 'bilindahiya mezin û kevirîn a ser rûyê erdê', ZZA: 'ko', CKB: 'چیا، شاخ', TR: 'dağ', EN: 'mountain', DE: 'Berg', FR: 'montagne', IT: 'montagna' },
-    examples_i18n: { KU: 'Serê çiyê hîn jî bi berfê ye.', TR: 'Dağın zirvesi hâlâ karlı.', EN: 'The mountain peak is still covered with snow.' } }
+  {
+    id: 'builtin-1',
+    word: 'heval',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'arkadaş, dost',
+    meaning_en: 'friend',
+    meaning_ku: 'kesê ku mirov pê re dostanî û hevaltî dike',
+    example_sentence: 'Ew hevalê min ê herî baş e.',
+    meanings_i18n: {
+      KU: 'kesê ku mirov pê re dostanî û hevaltî dike',
+      ZZA: 'embaz, dost',
+      CKB: 'هاوڕێ، دۆست',
+      TR: 'arkadaş, dost',
+      EN: 'friend',
+      DE: 'Freund, Freundin',
+      FR: 'ami, amie',
+      IT: 'amico, amica'
+    },
+    examples_i18n: {
+      KU: 'Ew hevalê min ê herî baş e.',
+      TR: 'O benim en iyi arkadaşım.',
+      EN: 'He/She is my best friend.'
+    }
+  },
+  {
+    id: 'builtin-2',
+    word: 'dibistan',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'okul',
+    meaning_en: 'school',
+    meaning_ku: 'cîhê perwerde û hînbûnê',
+    example_sentence: 'Zarok her sibeh diçin dibistanê.',
+    meanings_i18n: {
+      KU: 'cîhê perwerde û hînbûnê',
+      ZZA: 'mekteb, wendegeh',
+      CKB: 'قوتابخانە',
+      TR: 'okul',
+      EN: 'school',
+      DE: 'Schule',
+      FR: 'école',
+      IT: 'scuola'
+    },
+    examples_i18n: {
+      KU: 'Zarok her sibeh diçin dibistanê.',
+      TR: 'Çocuklar her sabah okula gidiyor.',
+      EN: 'Children go to school every morning.'
+    }
+  },
+  {
+    id: 'builtin-3',
+    word: 'pirtûk',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'kitap',
+    meaning_en: 'book',
+    meaning_ku: 'berhema nivîskî ya xwendinê',
+    example_sentence: 'Ez îşev pirtûkekê dixwînim.',
+    meanings_i18n: {
+      KU: 'berhema nivîskî ya xwendinê',
+      ZZA: 'kîtab',
+      CKB: 'کتێب',
+      TR: 'kitap',
+      EN: 'book',
+      DE: 'Buch',
+      FR: 'livre',
+      IT: 'libro'
+    },
+    examples_i18n: {
+      KU: 'Ez îşev pirtûkekê dixwînim.',
+      TR: 'Bu akşam bir kitap okuyorum.',
+      EN: 'I am reading a book tonight.'
+    }
+  },
+  {
+    id: 'builtin-4',
+    word: 'av',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'su',
+    meaning_en: 'water',
+    meaning_ku: 'şileya jiyanê ya bêreng û bêbêhn',
+    example_sentence: 'Ava kaniyê pir sar û zelal e.',
+    meanings_i18n: {
+      KU: 'şileya jiyanê ya bêreng û bêbêhn',
+      ZZA: 'awe',
+      CKB: 'ئاو',
+      TR: 'su',
+      EN: 'water',
+      DE: 'Wasser',
+      FR: 'eau',
+      IT: 'acqua'
+    },
+    examples_i18n: {
+      KU: 'Ava kaniyê pir sar û zelal e.',
+      TR: 'Pınarın suyu çok soğuk ve berrak.',
+      EN: 'The spring water is very cold and clear.'
+    }
+  },
+  {
+    id: 'builtin-5',
+    word: 'mamoste',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'öğretmen',
+    meaning_en: 'teacher',
+    meaning_ku: 'kesê ku ders dide û fêr dike',
+    example_sentence: 'Mamoste bi sebir dersê şirove dike.',
+    meanings_i18n: {
+      KU: 'kesê ku ders dide û fêr dike',
+      ZZA: 'malim, mamoste',
+      CKB: 'مامۆستا',
+      TR: 'öğretmen',
+      EN: 'teacher',
+      DE: 'Lehrer, Lehrerin',
+      FR: 'enseignant, professeur',
+      IT: 'insegnante, maestro'
+    },
+    examples_i18n: {
+      KU: 'Mamoste bi sebir dersê şirove dike.',
+      TR: 'Öğretmen sabırla dersi açıklıyor.',
+      EN: 'The teacher explains the lesson patiently.'
+    }
+  },
+  {
+    id: 'builtin-6',
+    word: 'xwendin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'okumak, öğrenmek',
+    meaning_en: 'to read, to study',
+    meaning_ku: 'bi çav an bi dengekî bilind nivîsekê şopandin',
+    example_sentence: 'Em bi hev re kurdî dixwînin.',
+    meanings_i18n: {
+      KU: 'bi çav an bi dengekî bilind nivîsekê şopandin',
+      ZZA: 'wendiş',
+      CKB: 'خوێندنەوە',
+      TR: 'okumak, öğrenmek',
+      EN: 'to read, to study',
+      DE: 'lesen, lernen',
+      FR: 'lire, étudier',
+      IT: 'leggere, studiare'
+    },
+    examples_i18n: {
+      KU: 'Em bi hev re kurdî dixwînin.',
+      TR: 'Birlikte Kürtçe okuyoruz.',
+      EN: 'We study Kurdish together.'
+    }
+  },
+  {
+    id: 'builtin-7',
+    word: 'nivîsandin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'yazmak',
+    meaning_en: 'to write',
+    meaning_ku: 'bi tîp û peyvan ramanan tomar kirin',
+    example_sentence: 'Ew her roj çîrokekê dinivîse.',
+    meanings_i18n: {
+      KU: 'bi tîp û peyvan ramanan tomar kirin',
+      ZZA: 'nuştiş',
+      CKB: 'نووسین',
+      TR: 'yazmak',
+      EN: 'to write',
+      DE: 'schreiben',
+      FR: 'écrire',
+      IT: 'scrivere'
+    },
+    examples_i18n: {
+      KU: 'Ew her roj çîrokekê dinivîse.',
+      TR: 'O her gün bir hikâye yazıyor.',
+      EN: 'He/She writes a story every day.'
+    }
+  },
+  {
+    id: 'builtin-8',
+    word: 'roj',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'gün, güneş',
+    meaning_en: 'day, sun',
+    meaning_ku: 'demjimêrên ronahiyê an yekeya demê ya 24 saetan',
+    example_sentence: 'Îro rojeke gelekî xweş e.',
+    meanings_i18n: {
+      KU: 'demjimêrên ronahiyê an yekeya demê ya 24 saetan',
+      ZZA: 'roc, tîje',
+      CKB: 'ڕۆژ، خۆر',
+      TR: 'gün, güneş',
+      EN: 'day, sun',
+      DE: 'Tag, Sonne',
+      FR: 'jour, soleil',
+      IT: 'giorno, sole'
+    },
+    examples_i18n: {
+      KU: 'Îro rojeke gelekî xweş e.',
+      TR: 'Bugün çok güzel bir gün.',
+      EN: 'Today is a very nice day.'
+    }
+  },
+  {
+    id: 'builtin-9',
+    word: 'şev',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'gece',
+    meaning_en: 'night',
+    meaning_ku: 'dema tarîtiyê ya piştî rojavabûnê',
+    example_sentence: 'Şev bêdeng û stêrkbar bû.',
+    meanings_i18n: {
+      KU: 'dema tarîtiyê ya piştî rojavabûnê',
+      ZZA: 'şew',
+      CKB: 'شەو',
+      TR: 'gece',
+      EN: 'night',
+      DE: 'Nacht',
+      FR: 'nuit',
+      IT: 'notte'
+    },
+    examples_i18n: {
+      KU: 'Şev bêdeng û stêrkbar bû.',
+      TR: 'Gece sessiz ve yıldızlıydı.',
+      EN: 'The night was quiet and starry.'
+    }
+  },
+  {
+    id: 'builtin-10',
+    word: 'mal',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'ev, yuva',
+    meaning_en: 'home, house',
+    meaning_ku: 'cîhê jiyan û rûniştinê yê malbatê',
+    example_sentence: 'Em êvarê vedigerin malê.',
+    meanings_i18n: {
+      KU: 'cîhê jiyan û rûniştinê yê malbatê',
+      ZZA: 'key, çê',
+      CKB: 'ماڵ',
+      TR: 'ev, yuva',
+      EN: 'home, house',
+      DE: 'Haus, Zuhause',
+      FR: 'maison, foyer',
+      IT: 'casa'
+    },
+    examples_i18n: {
+      KU: 'Em êvarê vedigerin malê.',
+      TR: 'Akşam eve dönüyoruz.',
+      EN: 'We are returning home in the evening.'
+    }
+  },
+  {
+    id: 'builtin-11',
+    word: 'zarok',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'çocuk',
+    meaning_en: 'child',
+    meaning_ku: 'mirovê biçûk di temenê zarokatiyê de',
+    example_sentence: 'Zarok li baxçe dilîzin.',
+    meanings_i18n: {
+      KU: 'mirovê biçûk di temenê zarokatiyê de',
+      ZZA: 'qij, doman',
+      CKB: 'منداڵ',
+      TR: 'çocuk',
+      EN: 'child',
+      DE: 'Kind',
+      FR: 'enfant',
+      IT: 'bambino, bambina'
+    },
+    examples_i18n: {
+      KU: 'Zarok li baxçe dilîzin.',
+      TR: 'Çocuklar bahçede oynuyor.',
+      EN: 'Children are playing in the yard.'
+    }
+  },
+  {
+    id: 'builtin-12',
+    word: 'ziman',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'dil',
+    meaning_en: 'language, tongue',
+    meaning_ku: 'sîstema deng û peyvan a têkiliya mirovan',
+    example_sentence: 'Zimanê kurdî pir dewlemend e.',
+    meanings_i18n: {
+      KU: 'sîstema deng û peyvan a têkiliya mirovan',
+      ZZA: 'ziwan',
+      CKB: 'زمان',
+      TR: 'dil',
+      EN: 'language, tongue',
+      DE: 'Sprache, Zunge',
+      FR: 'langue, langage',
+      IT: 'lingua'
+    },
+    examples_i18n: {
+      KU: 'Zimanê kurdî pir dewlemend e.',
+      TR: 'Kürtçe çok zengin bir dil.',
+      EN: 'The Kurdish language is very rich.'
+    }
+  },
+  {
+    id: 'builtin-13',
+    word: 'hêvî',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'umut',
+    meaning_en: 'hope',
+    meaning_ku: 'bawerî û hêviya tiştên baş ên pêşerojê',
+    example_sentence: 'Hêvî her tim ronahiyê dide.',
+    meanings_i18n: {
+      KU: 'bawerî û hêviya tiştên baş ên pêşerojê',
+      ZZA: 'umîd, hêvî',
+      CKB: 'هیوا، ئومێد',
+      TR: 'umut',
+      EN: 'hope',
+      DE: 'Hoffnung',
+      FR: 'espoir',
+      IT: 'speranza'
+    },
+    examples_i18n: {
+      KU: 'Hêvî her tim ronahiyê dide.',
+      TR: 'Umut her zaman ışık verir.',
+      EN: 'Hope always gives light.'
+    }
+  },
+  {
+    id: 'builtin-14',
+    word: 'aşîtî',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'barış',
+    meaning_en: 'peace',
+    meaning_ku: 'rewşa aramî, lihevkirin û bêşeriyê',
+    example_sentence: 'Em ji bo aştiyê dixebitin.',
+    meanings_i18n: {
+      KU: 'rewşa aramî, lihevkirin û bêşeriyê',
+      ZZA: 'haştî, aştî',
+      CKB: 'ئاشتی',
+      TR: 'barış',
+      EN: 'peace',
+      DE: 'Frieden',
+      FR: 'paix',
+      IT: 'pace'
+    },
+    examples_i18n: {
+      KU: 'Em ji bo aştiyê dixebitin.',
+      TR: 'Barış için çalışıyoruz.',
+      EN: 'We work for peace.'
+    }
+  },
+  {
+    id: 'builtin-15',
+    word: 'şîn',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'mavi, yeşil',
+    meaning_en: 'blue, green',
+    meaning_ku: 'rengê esmanî an rengê giha û pelên şîn',
+    example_sentence: 'Esman îro şîn û vekirî ye.',
+    meanings_i18n: {
+      KU: 'rengê esmanî an rengê giha û pelên şîn',
+      ZZA: 'kewe, keske',
+      CKB: 'شین',
+      TR: 'mavi, yeşil',
+      EN: 'blue, green',
+      DE: 'blau, grün',
+      FR: 'bleu, vert',
+      IT: 'blu, verde'
+    },
+    examples_i18n: {
+      KU: 'Esman îro şîn û vekirî ye.',
+      TR: 'Gökyüzü bugün mavi ve açık.',
+      EN: 'The sky is blue and clear today.'
+    }
+  },
+  {
+    id: 'builtin-16',
+    word: 'sor',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'kırmızı',
+    meaning_en: 'red',
+    meaning_ku: 'rengê agir û gulên sor',
+    example_sentence: 'Guleke sor li ser maseyê ye.',
+    meanings_i18n: {
+      KU: 'rengê agir û gulên sor',
+      ZZA: 'sûr',
+      CKB: 'سوور',
+      TR: 'kırmızı',
+      EN: 'red',
+      DE: 'rot',
+      FR: 'rouge',
+      IT: 'rosso'
+    },
+    examples_i18n: {
+      KU: 'Guleke sor li ser maseyê ye.',
+      TR: 'Masanın üzerinde kırmızı bir gül var.',
+      EN: 'There is a red rose on the table.'
+    }
+  },
+  {
+    id: 'builtin-17',
+    word: 'spî',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'beyaz',
+    meaning_en: 'white',
+    meaning_ku: 'rengê berf û şîrî',
+    example_sentence: 'Berfa spî hemû çiya girtiye.',
+    meanings_i18n: {
+      KU: 'rengê berf û şîrî',
+      ZZA: 'sipî',
+      CKB: 'سپی',
+      TR: 'beyaz',
+      EN: 'white',
+      DE: 'weiß',
+      FR: 'blanc',
+      IT: 'bianco'
+    },
+    examples_i18n: {
+      KU: 'Berfa spî hemû çiya girtiye.',
+      TR: 'Beyaz kar bütün dağları kaplamış.',
+      EN: 'White snow has covered all the mountains.'
+    }
+  },
+  {
+    id: 'builtin-18',
+    word: 'baş',
+    part_of_speech: 'rengdêr',
+    meaning_tr: 'iyi, güzel',
+    meaning_en: 'good, well',
+    meaning_ku: 'tiştê kêrhatî, qenc û erênî',
+    example_sentence: 'Sibeha we bi xêr û baş be.',
+    meanings_i18n: {
+      KU: 'tiştê kêrhatî, qenc û erênî',
+      ZZA: 'rınd, baş',
+      CKB: 'باش',
+      TR: 'iyi, güzel',
+      EN: 'good, well',
+      DE: 'gut',
+      FR: 'bon, bien',
+      IT: 'buono, bene'
+    },
+    examples_i18n: {
+      KU: 'Sibeha we bi xêr û baş be.',
+      TR: 'Sabahınız hayırlı ve iyi olsun.',
+      EN: 'Good morning to you.'
+    }
+  },
+  {
+    id: 'builtin-19',
+    word: 'hatin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'gelmek',
+    meaning_en: 'to come',
+    meaning_ku: 'ber bi cîhekî an kesekî ve çûn',
+    example_sentence: 'Mêvanên me îro tên.',
+    meanings_i18n: {
+      KU: 'ber bi cîhekî an kesekî ve çûn',
+      ZZA: 'ameyîş',
+      CKB: 'هاتن',
+      TR: 'gelmek',
+      EN: 'to come',
+      DE: 'kommen',
+      FR: 'venir',
+      IT: 'venire'
+    },
+    examples_i18n: {
+      KU: 'Mêvanên me îro tên.',
+      TR: 'Misafirlerimiz bugün geliyor.',
+      EN: 'Our guests are coming today.'
+    }
+  },
+  {
+    id: 'builtin-20',
+    word: 'çûn',
+    part_of_speech: 'lêker',
+    meaning_tr: 'gitmek',
+    meaning_en: 'to go',
+    meaning_ku: 'ji cîhekî dûr ketin an ber bi cihekî din ve rê ketin',
+    example_sentence: 'Em sibehê zû diçin rêwîtiyê.',
+    meanings_i18n: {
+      KU: 'ji cîhekî dûr ketin an ber bi cihekî din ve rê ketin',
+      ZZA: 'şîyayîş',
+      CKB: 'چوون',
+      TR: 'gitmek',
+      EN: 'to go',
+      DE: 'gehen, fahren',
+      FR: 'aller, partir',
+      IT: 'andare'
+    },
+    examples_i18n: {
+      KU: 'Em sibehê zû diçin rêwîtiyê.',
+      TR: 'Yarın sabah erken yolculuğa çıkıyoruz.',
+      EN: 'We are going on a trip early tomorrow.'
+    }
+  },
+  {
+    id: 'builtin-21',
+    word: 'dîtin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'görmek',
+    meaning_en: 'to see',
+    meaning_ku: 'bi çavan ferq kirin an hev dîtin',
+    example_sentence: 'Min hevalê xwe li kolanê dît.',
+    meanings_i18n: {
+      KU: 'bi çavan ferq kirin an hev dîtin',
+      ZZA: 'vînayîş',
+      CKB: 'بینین',
+      TR: 'görmek',
+      EN: 'to see',
+      DE: 'sehen',
+      FR: 'voir',
+      IT: 'vedere'
+    },
+    examples_i18n: {
+      KU: 'Min hevalê xwe li kolanê dît.',
+      TR: 'Arkadaşımı sokakta gördüm.',
+      EN: 'I saw my friend on the street.'
+    }
+  },
+  {
+    id: 'builtin-22',
+    word: 'bihîstin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'duymak, işitmek',
+    meaning_en: 'to hear',
+    meaning_ku: 'bi guhan deng fêm kirin',
+    example_sentence: 'Min dengê stranê baş bihîst.',
+    meanings_i18n: {
+      KU: 'bi guhan deng fêm kirin',
+      ZZA: 'hesayîş',
+      CKB: 'بیستن',
+      TR: 'duymak, işitmek',
+      EN: 'to hear',
+      DE: 'hören',
+      FR: 'entendre',
+      IT: 'sentire'
+    },
+    examples_i18n: {
+      KU: 'Min dengê stranê baş bihîst.',
+      TR: 'Şarkının sesini iyi duydum.',
+      EN: 'I heard the sound of the song well.'
+    }
+  },
+  {
+    id: 'builtin-23',
+    word: 'axaftin',
+    part_of_speech: 'lêker',
+    meaning_tr: 'konuşmak',
+    meaning_en: 'to speak, to talk',
+    meaning_ku: 'bi zimên raman û hestan vegotin',
+    example_sentence: 'Ew bi kurdî û tirkî diaxive.',
+    meanings_i18n: {
+      KU: 'bi zimên raman û hestan vegotin',
+      ZZA: 'qiseykerdiş',
+      CKB: 'قسەکردن',
+      TR: 'konuşmak',
+      EN: 'to speak, to talk',
+      DE: 'sprechen',
+      FR: 'parler',
+      IT: 'parlare'
+    },
+    examples_i18n: {
+      KU: 'Ew bi kurdî û tirkî diaxive.',
+      TR: 'O Kürtçe ve Türkçe konuşuyor.',
+      EN: 'He/She speaks Kurdish and Turkish.'
+    }
+  },
+  {
+    id: 'builtin-24',
+    word: 'xwaringeh',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'lokanta, restoran',
+    meaning_en: 'restaurant',
+    meaning_ku: 'cîhê ku xwarin tê çêkirin û xwarin',
+    example_sentence: 'Em ê nîvro li xwaringehê bixwin.',
+    meanings_i18n: {
+      KU: 'cîhê ku xwarin tê çêkirin û xwarin',
+      ZZA: 'lokanta',
+      CKB: 'چێشتخانە',
+      TR: 'lokanta, restoran',
+      EN: 'restaurant',
+      DE: 'Restaurant',
+      FR: 'restaurant',
+      IT: 'ristorante'
+    },
+    examples_i18n: {
+      KU: 'Em ê nîvro li xwaringehê bixwin.',
+      TR: 'Öğlen lokantada yiyeceğiz.',
+      EN: 'We will eat at the restaurant at noon.'
+    }
+  },
+  {
+    id: 'builtin-25',
+    word: 'nexweşxane',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'hastane',
+    meaning_en: 'hospital',
+    meaning_ku: 'navenda tenduristiyê ya dermankirina nexweşan',
+    example_sentence: 'Nexweşxane nêzîkî navenda bajêr e.',
+    meanings_i18n: {
+      KU: 'navenda tenduristiyê ya dermankirina nexweşan',
+      ZZA: 'nêweşxane',
+      CKB: 'نەخۆشخانە',
+      TR: 'hastane',
+      EN: 'hospital',
+      DE: 'Krankenhaus',
+      FR: 'hôpital',
+      IT: 'ospedale'
+    },
+    examples_i18n: {
+      KU: 'Nexweşxane nêzîkî navenda bajêr e.',
+      TR: 'Hastane şehir merkezine yakın.',
+      EN: 'The hospital is near the city center.'
+    }
+  },
+  {
+    id: 'builtin-26',
+    word: 'bijîşk',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'doktor, hekim',
+    meaning_en: 'doctor, physician',
+    meaning_ku: 'pisporê bijîşkî û dermankirinê',
+    example_sentence: 'Bijîşk şîretên baş dide nexweşan.',
+    meanings_i18n: {
+      KU: 'pisporê bijîşkî û dermankirinê',
+      ZZA: 'doktor, hekîm',
+      CKB: 'پزیشک، دکتۆر',
+      TR: 'doktor, hekim',
+      EN: 'doctor, physician',
+      DE: 'Arzt, Ärztin',
+      FR: 'médecin',
+      IT: 'medico, dottore'
+    },
+    examples_i18n: {
+      KU: 'Bijîşk şîretên baş dide nexweşan.',
+      TR: 'Doktor hastalara iyi tavsiyeler veriyor.',
+      EN: 'The doctor gives good advice to patients.'
+    }
+  },
+  {
+    id: 'builtin-27',
+    word: 'welat',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'ülke, vatan',
+    meaning_en: 'country, homeland',
+    meaning_ku: 'ax û erdnîgariya ku gelek lê dijî',
+    example_sentence: 'Her welat xwedî çandeke taybet e.',
+    meanings_i18n: {
+      KU: 'ax û erdnîgariya ku gelek lê dijî',
+      ZZA: 'welat',
+      CKB: 'وڵات',
+      TR: 'ülke, vatan',
+      EN: 'country, homeland',
+      DE: 'Land, Heimat',
+      FR: 'pays',
+      IT: 'paese'
+    },
+    examples_i18n: {
+      KU: 'Her welat xwedî çandeke taybet e.',
+      TR: 'Her ülkenin kendine özgü bir kültürü var.',
+      EN: 'Every country has a special culture.'
+    }
+  },
+  {
+    id: 'builtin-28',
+    word: 'bajêr',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'şehir',
+    meaning_en: 'city',
+    meaning_ku: 'navenda niştecihbûnê ya mezin',
+    example_sentence: 'Ev bajêr pir qerebalix û zindî ye.',
+    meanings_i18n: {
+      KU: 'navenda niştecihbûnê ya mezin',
+      ZZA: 'şar',
+      CKB: 'شار',
+      TR: 'şehir',
+      EN: 'city',
+      DE: 'Stadt',
+      FR: 'ville',
+      IT: 'città'
+    },
+    examples_i18n: {
+      KU: 'Ev bajêr pir qerebalix û zindî ye.',
+      TR: 'Bu şehir çok kalabalık ve canlı.',
+      EN: 'This city is very crowded and lively.'
+    }
+  },
+  {
+    id: 'builtin-29',
+    word: 'gund',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'köy',
+    meaning_en: 'village',
+    meaning_ku: 'cîhê niştecihbûnê yê biçûk di nav xwezayê de',
+    example_sentence: 'Gundê me di nav daristanê de ye.',
+    meanings_i18n: {
+      KU: 'cîhê niştecihbûnê yê biçûk di nav xwezayê de',
+      ZZA: 'dew',
+      CKB: 'گوند',
+      TR: 'köy',
+      EN: 'village',
+      DE: 'Dorf',
+      FR: 'village',
+      IT: 'villaggio'
+    },
+    examples_i18n: {
+      KU: 'Gundê me di nav daristanê de ye.',
+      TR: 'Köyümüz ormanın içinde.',
+      EN: 'Our village is in the forest.'
+    }
+  },
+  {
+    id: 'builtin-30',
+    word: 'çiya',
+    part_of_speech: 'navdêr',
+    meaning_tr: 'dağ',
+    meaning_en: 'mountain',
+    meaning_ku: 'bilindahiya mezin û kevirîn a ser rûyê erdê',
+    example_sentence: 'Serê çiyê hîn jî bi berfê ye.',
+    meanings_i18n: {
+      KU: 'bilindahiya mezin û kevirîn a ser rûyê erdê',
+      ZZA: 'ko',
+      CKB: 'چیا، شاخ',
+      TR: 'dağ',
+      EN: 'mountain',
+      DE: 'Berg',
+      FR: 'montagne',
+      IT: 'montagna'
+    },
+    examples_i18n: {
+      KU: 'Serê çiyê hîn jî bi berfê ye.',
+      TR: 'Dağın zirvesi hâlâ karlı.',
+      EN: 'The mountain peak is still covered with snow.'
+    }
+  }
 ];
-
-// Alfabe tablo resmi (6 sütun x 5 satır)
-const ALFABE_SHEET_IMAGE_URL =
-  'https://mzsxryxuvyllljvbrzul.supabase.co/storage/v1/object/public/materyal/Alfabe/gist.png';
-
 const ALFABE_IMAGE_URLS = {
-  a: '', b: '', c: '', ç: '', d: '', e: '', ê: '', f: '', g: '', h: '', i: '', î: '',
-  j: '', k: '', l: '', m: '', n: '', o: '', p: '', q: '', r: '', s: '', ş: '', t: '',
-  u: '', û: '', v: '', w: '', x: '', y: '', z: ''
+  a: '',
+  b: '',
+  c: '',
+  ç: '',
+  d: '',
+  e: '',
+  ê: '',
+  f: '',
+  g: '',
+  h: '',
+  i: '',
+  î: '',
+  j: '',
+  k: '',
+  l: '',
+  m: '',
+  n: '',
+  o: '',
+  p: '',
+  q: '',
+  r: '',
+  s: '',
+  ş: '',
+  t: '',
+  u: '',
+  û: '',
+  v: '',
+  w: '',
+  x: '',
+  y: '',
+  z: ''
 };
-
-// Harf, örnek kelime, tablodaki satır/sütun
-const ALFABE_LETTER_DEFS = [
-  ['a', 'agir', 0, 0], ['b', 'bilbil', 0, 1], ['c', 'cotkar', 0, 2], ['ç', 'çay', 0, 3], ['d', 'dar', 0, 4], ['e', 'ewr', 0, 5],
-  ['ê', 'êvar', 1, 0], ['f', 'firok', 1, 1], ['g', 'gul', 1, 2], ['h', 'hêvî', 1, 3], ['î', 'îşev', 1, 4], ['j', 'jîr', 1, 5],
-  ['k', 'karton', 2, 0], ['l', 'lîmon', 2, 1], ['m', 'masî', 2, 2], ['n', 'nan', 2, 3], ['o', 'otobûs', 2, 4], ['p', 'pirtûk', 2, 5],
-  ['q', 'qelem', 3, 0], ['r', 'roj', 3, 1], ['s', 'stêrk', 3, 2], ['ş', 'şev', 3, 3], ['t', 'top', 3, 4], ['u', 'uf', 3, 5],
-  ['û', 'ûd', 4, 0], ['v', 'valîz', 4, 1], ['w', 'wêne', 4, 2], ['x', 'xew', 4, 3], ['y', 'yoyo', 4, 4], ['z', 'zebeş', 4, 5]
-];
-
-const ALFABE_CELL_META_MAP = {};
-const ALFABE_WORD_IMAGE_MAP = {};
-ALFABE_LETTER_DEFS.forEach(([letter, word, row, col]) => {
-  ALFABE_CELL_META_MAP[word] = { row, col };
-  ALFABE_CELL_META_MAP[letter] = { row, col };
-  ALFABE_WORD_IMAGE_MAP[word] = ALFABE_IMAGE_URLS[letter];
-  ALFABE_WORD_IMAGE_MAP[letter] = ALFABE_IMAGE_URLS[letter];
-});
-
-// Resim bulunamazsa eşleştirme kutusunda gösterilecek emoji
-const ALFABE_EMOJI = {
-  agir: '🔥', bilbil: '🐦', cotkar: '🧑‍🌾', çay: '🍵', dar: '🌳', ewr: '☁️',
-  êvar: '🌇', firok: '✈️', gul: '🌹', hêvî: '🌅', îşev: '🌙', jîr: '🧠',
-  karton: '📦', lîmon: '🍋', masî: '🐟', nan: '🍞', otobûs: '🚌', pirtûk: '📖',
-  qelem: '✏️', roj: '☀️', stêrk: '⭐', şev: '🌌', top: '⚽', uf: '😮‍💨',
-  ûd: '🪕', valîz: '🧳', wêne: '🖼️', xew: '😴', yoyo: '🪀', zebeş: '🍉'
+const ALFABE_CELL_META_MAP = {
+  agir: { row: 0, col: 0 },
+  a: { row: 0, col: 0 },
+  bilbil: { row: 0, col: 1 },
+  b: { row: 0, col: 1 },
+  cotkar: { row: 0, col: 2 },
+  c: { row: 0, col: 2 },
+  çay: { row: 0, col: 3 },
+  ç: { row: 0, col: 3 },
+  dar: { row: 0, col: 4 },
+  d: { row: 0, col: 4 },
+  ewr: { row: 0, col: 5 },
+  e: { row: 0, col: 5 },
+  êvar: { row: 1, col: 0 },
+  ê: { row: 1, col: 0 },
+  firok: { row: 1, col: 1 },
+  f: { row: 1, col: 1 },
+  gul: { row: 1, col: 2 },
+  g: { row: 1, col: 2 },
+  hêvî: { row: 1, col: 3 },
+  h: { row: 1, col: 3 },
+  îşev: { row: 1, col: 4 },
+  î: { row: 1, col: 4 },
+  jîr: { row: 1, col: 5 },
+  j: { row: 1, col: 5 },
+  karton: { row: 2, col: 0 },
+  k: { row: 2, col: 0 },
+  lîmon: { row: 2, col: 1 },
+  l: { row: 2, col: 1 },
+  masî: { row: 2, col: 2 },
+  m: { row: 2, col: 2 },
+  nan: { row: 2, col: 3 },
+  n: { row: 2, col: 3 },
+  otobûs: { row: 2, col: 4 },
+  o: { row: 2, col: 4 },
+  pirtûk: { row: 2, col: 5 },
+  p: { row: 2, col: 5 },
+  qelem: { row: 3, col: 0 },
+  q: { row: 3, col: 0 },
+  roj: { row: 3, col: 1 },
+  r: { row: 3, col: 1 },
+  stêrk: { row: 3, col: 2 },
+  s: { row: 3, col: 2 },
+  şev: { row: 3, col: 3 },
+  ş: { row: 3, col: 3 },
+  top: { row: 3, col: 4 },
+  t: { row: 3, col: 4 },
+  uf: { row: 3, col: 5 },
+  u: { row: 3, col: 5 },
+  ûd: { row: 4, col: 0 },
+  û: { row: 4, col: 0 },
+  valîz: { row: 4, col: 1 },
+  v: { row: 4, col: 1 },
+  wêne: { row: 4, col: 2 },
+  w: { row: 4, col: 2 },
+  xew: { row: 4, col: 3 },
+  x: { row: 4, col: 3 },
+  yoyo: { row: 4, col: 4 },
+  y: { row: 4, col: 4 },
+  zebeş: { row: 4, col: 5 },
+  z: { row: 4, col: 5 }
 };
-
+const ALFABE_WORD_IMAGE_MAP = {
+  agir: ALFABE_IMAGE_URLS.a,
+  a: ALFABE_IMAGE_URLS.a,
+  bilbil: ALFABE_IMAGE_URLS.b,
+  b: ALFABE_IMAGE_URLS.b,
+  cotkar: ALFABE_IMAGE_URLS.c,
+  c: ALFABE_IMAGE_URLS.c,
+  çay: ALFABE_IMAGE_URLS.ç,
+  ç: ALFABE_IMAGE_URLS.ç,
+  dar: ALFABE_IMAGE_URLS.d,
+  d: ALFABE_IMAGE_URLS.d,
+  ewr: ALFABE_IMAGE_URLS.e,
+  e: ALFABE_IMAGE_URLS.e,
+  êvar: ALFABE_IMAGE_URLS.ê,
+  ê: ALFABE_IMAGE_URLS.ê,
+  firok: ALFABE_IMAGE_URLS.f,
+  f: ALFABE_IMAGE_URLS.f,
+  gul: ALFABE_IMAGE_URLS.g,
+  g: ALFABE_IMAGE_URLS.g,
+  hêvî: ALFABE_IMAGE_URLS.h,
+  h: ALFABE_IMAGE_URLS.h,
+  îşev: ALFABE_IMAGE_URLS.î,
+  î: ALFABE_IMAGE_URLS.î,
+  jîr: ALFABE_IMAGE_URLS.j,
+  j: ALFABE_IMAGE_URLS.j,
+  karton: ALFABE_IMAGE_URLS.k,
+  k: ALFABE_IMAGE_URLS.k,
+  lîmon: ALFABE_IMAGE_URLS.l,
+  l: ALFABE_IMAGE_URLS.l,
+  masî: ALFABE_IMAGE_URLS.m,
+  m: ALFABE_IMAGE_URLS.m,
+  nan: ALFABE_IMAGE_URLS.n,
+  n: ALFABE_IMAGE_URLS.n,
+  otobûs: ALFABE_IMAGE_URLS.o,
+  o: ALFABE_IMAGE_URLS.o,
+  pirtûk: ALFABE_IMAGE_URLS.p,
+  p: ALFABE_IMAGE_URLS.p,
+  qelem: ALFABE_IMAGE_URLS.q,
+  q: ALFABE_IMAGE_URLS.q,
+  roj: ALFABE_IMAGE_URLS.r,
+  r: ALFABE_IMAGE_URLS.r,
+  stêrk: ALFABE_IMAGE_URLS.s,
+  s: ALFABE_IMAGE_URLS.s,
+  şev: ALFABE_IMAGE_URLS.ş,
+  ş: ALFABE_IMAGE_URLS.ş,
+  top: ALFABE_IMAGE_URLS.t,
+  t: ALFABE_IMAGE_URLS.t,
+  uf: ALFABE_IMAGE_URLS.u,
+  u: ALFABE_IMAGE_URLS.u,
+  ûd: ALFABE_IMAGE_URLS.û,
+  û: ALFABE_IMAGE_URLS.û,
+  valîz: ALFABE_IMAGE_URLS.v,
+  v: ALFABE_IMAGE_URLS.v,
+  wêne: ALFABE_IMAGE_URLS.w,
+  w: ALFABE_IMAGE_URLS.w,
+  xew: ALFABE_IMAGE_URLS.x,
+  x: ALFABE_IMAGE_URLS.x,
+  yoyo: ALFABE_IMAGE_URLS.y,
+  y: ALFABE_IMAGE_URLS.y,
+  zebeş: ALFABE_IMAGE_URLS.z,
+  z: ALFABE_IMAGE_URLS.z
+};
 const cropAlfabeCellFromSheet = async (cellMeta) => {
   if (!cellMeta || typeof document === 'undefined') return '';
-  const sheetUrl = ALFABE_SHEET_IMAGE_URL || '';
+  const sheetUrl =
+    (typeof ALFABE_SHEET_IMAGE_URL !== 'undefined' && ALFABE_SHEET_IMAGE_URL) ||
+    ALFABE_IMAGE_URLS.a ||
+    '';
   if (!sheetUrl) return '';
   try {
     const img = new Image();
@@ -217,40 +965,93 @@ const cropAlfabeCellFromSheet = async (cellMeta) => {
     return '';
   }
 };
-
 const BUILTIN_EXERCISES = [
   {
-    id: 'alfabe-match-1', unit_title: 'ALFABE', exercise_type: 'match',
+    id: 'alfabe-match-1',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
     question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (1/5)',
-    options: ['A — Agir=agir', 'B — Bilbil=bilbil', 'C — Cotkar=cotkar', 'Ç — Çay=çay', 'D — Dar=dar', 'E — Ewr=ewr'],
-    correct_answer: '6', explanation: 'A: Agir, B: Bilbil, C: Cotkar, Ç: Çay, D: Dar, E: Ewr', sort_order: 1
+    options: [
+      'A — Agir=agir',
+      'B — Bilbil=bilbil',
+      'C — Cotkar=cotkar',
+      'Ç — Çay=çay',
+      'D — Dar=dar',
+      'E — Ewr=ewr'
+    ],
+    correct_answer: '6',
+    explanation: 'A: Agir, B: Bilbil, C: Cotkar, Ç: Çay, D: Dar, E: Ewr',
+    sort_order: 1
   },
   {
-    id: 'alfabe-match-2', unit_title: 'ALFABE', exercise_type: 'match',
+    id: 'alfabe-match-2',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
     question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (2/5)',
-    options: ['Ê — Êvar=êvar', 'F — Firok=firok', 'G — Gul=gul', 'H — Hêvî=hêvî', 'Î — Îşev=îşev', 'J — Jîr=jîr'],
-    correct_answer: '6', explanation: 'Ê: Êvar, F: Firok, G: Gul, H: Hêvî, Î: Îşev, J: Jîr', sort_order: 2
+    options: [
+      'Ê — Êvar=êvar',
+      'F — Firok=firok',
+      'G — Gul=gul',
+      'H — Hêvî=hêvî',
+      'Î — Îşev=îşev',
+      'J — Jîr=jîr'
+    ],
+    correct_answer: '6',
+    explanation: 'Ê: Êvar, F: Firok, G: Gul, H: Hêvî, Î: Îşev, J: Jîr',
+    sort_order: 2
   },
   {
-    id: 'alfabe-match-3', unit_title: 'ALFABE', exercise_type: 'match',
+    id: 'alfabe-match-3',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
     question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (3/5)',
-    options: ['K — Karton=karton', 'L — Lîmon=lîmon', 'M — Masî=masî', 'N — Nan=nan', 'O — Otobûs=otobûs', 'P — Pirtûk=pirtûk'],
-    correct_answer: '6', explanation: 'K: Karton, L: Lîmon, M: Masî, N: Nan, O: Otobûs, P: Pirtûk', sort_order: 3
+    options: [
+      'K — Karton=karton',
+      'L — Lîmon=lîmon',
+      'M — Masî=masî',
+      'N — Nan=nan',
+      'O — Otobûs=otobûs',
+      'P — Pirtûk=pirtûk'
+    ],
+    correct_answer: '6',
+    explanation: 'K: Karton, L: Lîmon, M: Masî, N: Nan, O: Otobûs, P: Pirtûk',
+    sort_order: 3
   },
   {
-    id: 'alfabe-match-4', unit_title: 'ALFABE', exercise_type: 'match',
+    id: 'alfabe-match-4',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
     question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (4/5)',
-    options: ['Q — Qelem=qelem', 'R — Roj=roj', 'S — Stêrk=stêrk', 'Ş — Şev=şev', 'T — Top=top', 'U — Uf=uf'],
-    correct_answer: '6', explanation: 'Q: Qelem, R: Roj, S: Stêrk, Ş: Şev, T: Top, U: Uf', sort_order: 4
+    options: [
+      'Q — Qelem=qelem',
+      'R — Roj=roj',
+      'S — Stêrk=stêrk',
+      'Ş — Şev=şev',
+      'T — Top=top',
+      'U — Uf=uf'
+    ],
+    correct_answer: '6',
+    explanation: 'Q: Qelem, R: Roj, S: Stêrk, Ş: Şev, T: Top, U: Uf',
+    sort_order: 4
   },
   {
-    id: 'alfabe-match-5', unit_title: 'ALFABE', exercise_type: 'match',
+    id: 'alfabe-match-5',
+    unit_title: 'ALFABE',
+    exercise_type: 'match',
     question_text: 'Her tîp û peyvê bi wêneyê wê/wî re bighîne hev (5/5)',
-    options: ['Û — Ûd=ûd', 'V — Valîz=valîz', 'W — Wêne=wêne', 'X — Xew=xew', 'Y — Yoyo=yoyo', 'Z — Zebeş=zebeş'],
-    correct_answer: '6', explanation: 'Û: Ûd, V: Valîz, W: Wêne, X: Xew, Y: Yoyo, Z: Zebeş', sort_order: 5
+    options: [
+      'Û — Ûd=ûd',
+      'V — Valîz=valîz',
+      'W — Wêne=wêne',
+      'X — Xew=xew',
+      'Y — Yoyo=yoyo',
+      'Z — Zebeş=zebeş'
+    ],
+    correct_answer: '6',
+    explanation: 'Û: Ûd, V: Valîz, W: Wêne, X: Xew, Y: Yoyo, Z: Zebeş',
+    sort_order: 5
   }
 ];
-
 const defaultCategories = [
   { slug: 'zarok', name: 'Zarok' },
   { slug: 'ders', name: 'Ders' },
@@ -258,9 +1059,7 @@ const defaultCategories = [
   { slug: 'video', name: 'Vîdyo' },
   { slug: 'ferheng', name: 'Ferheng' }
 ];
-
 const defaultLevels = ['Destpêk (A1-A2)', 'Navîn (B1-B2)', 'Pêşketî (C1)'];
-
 const defaultGrades = [
   'Pêşdibistan',
   'Pola 1-4',
@@ -268,14 +1067,12 @@ const defaultGrades = [
   'Lîse / Zanîngeh',
   'Hemû Ast'
 ];
-
 const defaultMediaTypes = [
   { id: 'video', label: 'Vîdyo', icon: Video },
   { id: 'document', label: 'Belge / PDF', icon: FileText },
   { id: 'audio', label: 'Deng', icon: Headphones },
   { id: 'book', label: 'Pirtûk', icon: BookOpen }
 ];
-
 const DEFAULT_UI_TEXTS = {
   brand_first: 'Kurdi',
   brand_second: 'Klass',
@@ -335,7 +1132,6 @@ const DEFAULT_UI_TEXTS = {
   ferheng_empty_text: 'Peyvek nehat dîtin. Bi tîp an peyveke din biceribîne.',
   footer_text: 'KurdiKlass — Platforma Perwerdehî û Çavkaniyên Kurdî'
 };
-
 const UI_FIELD_LABELS = [
   { key: 'brand_first', label: 'Navê Malperê (Beşa Yekem)' },
   { key: 'brand_second', label: 'Navê Malperê (Beşa Duyem)' },
@@ -351,14 +1147,12 @@ const UI_FIELD_LABELS = [
   { key: 'list_all_title', label: 'Sernavê Lîsteya Materyalan' },
   { key: 'footer_text', label: 'Nivîsa Binê Malperê (Footer)' }
 ];
-
 const getYouTubeEmbedUrl = (url = '') => {
   const match = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/
   );
   return match ? `https://www.youtube.com/embed/${match[1]}` : null;
 };
-
 const normalizeKurdish = (text = '') =>
   text
     .toLowerCase()
@@ -374,7 +1168,6 @@ const normalizeKurdish = (text = '') =>
     .replace(/['’ʼ`-]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
-
 const sanitizeWiktionaryText = (raw = '') =>
   String(raw || '')
     .replace(/\{\{[^{}]*\}\}/g, ' ')
@@ -383,7 +1176,6 @@ const sanitizeWiktionaryText = (raw = '') =>
     .replace(/'{2,}/g, '')
     .replace(/\s+/g, ' ')
     .trim();
-
 const isLikelyInflectedForm = (gloss = '') => {
   const g = gloss.toLowerCase();
   return (
@@ -396,7 +1188,6 @@ const isLikelyInflectedForm = (gloss = '') => {
     g.includes('form of ')
   );
 };
-
 const extractPosFromWiktionarySection = (sectionText = '') => {
   const posMatch = sectionText.match(
     /^===\s*(Noun|Verb|Adjective|Adverb|Pronoun|Numeral|Conjunction|Preposition|Postposition|Interjection|Particle|Proper noun|Phrase|Idiom|Letter)\s*===/im
@@ -414,7 +1205,6 @@ const extractPosFromWiktionarySection = (sectionText = '') => {
   };
   return map[posMatch[1].toLowerCase()] || 'navdêr';
 };
-
 const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
   if (!wikitext) return { pos: 'navdêr', meanings: [], examples: [] };
   const lines = wikitext.split('\n');
@@ -422,7 +1212,6 @@ const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
   let currentPos = 'navdêr';
   const meanings = [];
   const examples = [];
-
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const h2 = line.match(/^==\s*([^=]+)\s*==\s*$/);
@@ -435,13 +1224,11 @@ const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
       continue;
     }
     if (!inKurdishSection) continue;
-
     const h3 = line.match(/^===\s*([^=]+)\s*===\s*$/);
     if (h3) {
       currentPos = extractPosFromWiktionarySection(`=== ${h3[1]} ===`);
       continue;
     }
-
     const defMatch = line.match(/^#\s+([^:*#].*)$/);
     if (defMatch) {
       const cleaned = sanitizeWiktionaryText(defMatch[1]);
@@ -450,7 +1237,6 @@ const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
       }
       continue;
     }
-
     const exMatch = line.match(/^#:\s*(.+)$/);
     if (exMatch) {
       const cleanedEx = sanitizeWiktionaryText(exMatch[1]);
@@ -459,7 +1245,6 @@ const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
       }
     }
   }
-
   if (meanings.length === 0) {
     const fallbackLines = lines
       .filter((l) => /^#\s+[^:*#]/.test(l))
@@ -467,10 +1252,8 @@ const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
       .filter((t) => t && t.length > 1 && !isLikelyInflectedForm(t));
     meanings.push(...fallbackLines.slice(0, 3));
   }
-
   const uniqueMeanings = [...new Set(meanings)].slice(0, 4);
   const uniqueExamples = [...new Set(examples)].slice(0, 2);
-
   return {
     pos: currentPos,
     meanings: uniqueMeanings,
@@ -478,17 +1261,14 @@ const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
     langCode: targetLangCode
   };
 };
-
 const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
   const cleanTerm = String(rawTerm || '').trim();
   if (!cleanTerm) return null;
-
   const candidateTitles = [cleanTerm];
   const lower = cleanTerm.toLocaleLowerCase('tr');
   if (!candidateTitles.includes(lower)) candidateTitles.push(lower);
   const capitalized = lower.charAt(0).toLocaleUpperCase('tr') + lower.slice(1);
   if (!candidateTitles.includes(capitalized)) candidateTitles.push(capitalized);
-
   for (const title of candidateTitles) {
     try {
       const endpoint = `https://en.wiktionary.org/w/api.php?action=query&prop=revisions|extracts&rvprop=content&rvslots=main&explaintext=1&exlimit=1&format=json&origin=*&titles=${encodeURIComponent(
@@ -500,24 +1280,19 @@ const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
       const pages = data?.query?.pages || {};
       const page = Object.values(pages).find((p) => p && !p.missing);
       if (!page) continue;
-
       const wikitext =
         page?.revisions?.[0]?.slots?.main?.['*'] ||
         page?.revisions?.[0]?.['*'] ||
         '';
-
       const parsed = extractGlossesFromWiktionary(wikitext, selectedLang);
       let glossText = parsed.meanings.join(' ; ');
-
       if (!glossText && page.extract) {
         const cleanExtract = sanitizeWiktionaryText(page.extract);
         if (cleanExtract && !isLikelyInflectedForm(cleanExtract)) {
           glossText = cleanExtract.slice(0, 240);
         }
       }
-
       if (!glossText) continue;
-
       const primaryExample = parsed.examples[0] || '';
       const i18nMap = {
         KU: selectedLang === 'KU' ? glossText : '',
@@ -532,7 +1307,6 @@ const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
       if (selectedLang) {
         i18nMap[selectedLang] = glossText;
       }
-
       return {
         id: `wikt-${normalizeKurdish(page.title || cleanTerm)}`,
         word: page.title || cleanTerm,
@@ -551,7 +1325,6 @@ const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
   }
   return null;
 };
-
 export default function App() {
   const [selectedLang, setSelectedLang] = useState(() => {
     try {
@@ -563,12 +1336,10 @@ export default function App() {
   });
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langDropdownRef = useRef(null);
-
   const [viewMode, setViewMode] = useState('student');
   const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('kk_admin') === 'true');
   const [passwordInput, setPasswordInput] = useState('');
   const [authError, setAuthError] = useState('');
-
   const [categories, setCategories] = useState(defaultCategories);
   const [newCatName, setNewCatName] = useState('');
   const [catMsg, setCatMsg] = useState('');
@@ -577,7 +1348,6 @@ export default function App() {
   const [dynamicMediaTypes, setDynamicMediaTypes] = useState(defaultMediaTypes);
   const [rawUi, setRawUi] = useState(DEFAULT_UI_TEXTS);
   const [settingsMsg, setSettingsMsg] = useState('');
-
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -590,7 +1360,6 @@ export default function App() {
   const [brokenExImages, setBrokenExImages] = useState({});
   const [croppedAlfabeImages, setCroppedAlfabeImages] = useState({});
   const [mediaLoadError, setMediaLoadError] = useState('');
-
   const [editingId, setEditingId] = useState(null);
   const [uploadingField, setUploadingField] = useState(null);
   const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
@@ -606,7 +1375,6 @@ export default function App() {
     teacher_guide: '',
     guide_pdf_url: ''
   });
-
   const [exercises, setExercises] = useState([]);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
@@ -618,13 +1386,11 @@ export default function App() {
   const [comboCount, setComboCount] = useState(0);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioPlayerRef = useRef(null);
-
   const [matchLeftSelected, setMatchLeftSelected] = useState(null);
   const [matchRightSelected, setMatchRightSelected] = useState(null);
   const [matchedPairs, setMatchedPairs] = useState([]);
   const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
   const [matchWrongFlash, setMatchWrongFlash] = useState(false);
-
   const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
   const [streakDays, setStreakDays] = useState(() => Number(localStorage.getItem('kk_streak') || 0));
   const [completedUnits, setCompletedUnits] = useState(() => {
@@ -634,7 +1400,6 @@ export default function App() {
       return [];
     }
   });
-
   const [editingExId, setEditingExId] = useState(null);
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
@@ -652,7 +1417,6 @@ export default function App() {
     image_url: '',
     audio_url: ''
   });
-
   const [dictionaryWords, setDictionaryWords] = useState([]);
   const [totalWordCount, setTotalWordCount] = useState(0);
   const [ferhengQuery, setFerhengQuery] = useState('');
@@ -672,10 +1436,27 @@ export default function App() {
     meaning_ku: '',
     example_sentence: '',
     audio_url: '',
-    meanings_i18n: { KU: '', ZZA: '', CKB: '', TR: '', EN: '', DE: '', FR: '', IT: '' },
-    examples_i18n: { KU: '', ZZA: '', CKB: '', TR: '', EN: '', DE: '', FR: '', IT: '' }
+    meanings_i18n: {
+      KU: '',
+      ZZA: '',
+      CKB: '',
+      TR: '',
+      EN: '',
+      DE: '',
+      FR: '',
+      IT: ''
+    },
+    examples_i18n: {
+      KU: '',
+      ZZA: '',
+      CKB: '',
+      TR: '',
+      EN: '',
+      DE: '',
+      FR: '',
+      IT: ''
+    }
   });
-
   const [searchHistory, setSearchHistory] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
@@ -690,7 +1471,6 @@ export default function App() {
       return [];
     }
   });
-
   const ui = (() => {
     const langPrefix = `${selectedLang.toLowerCase()}_`;
     const merged = { ...DEFAULT_UI_TEXTS };
@@ -703,9 +1483,7 @@ export default function App() {
     });
     return merged;
   })();
-
-  // DÜZELTME: dil seçimi artık veritabanına yazılmıyor, sadece tarayıcıda saklanıyor
-  const handleSelectLanguage = (langCode) => {
+  const handleSelectLanguage = async (langCode) => {
     setSelectedLang(langCode);
     setLangMenuOpen(false);
     try {
@@ -713,8 +1491,14 @@ export default function App() {
     } catch {
       // ignore storage errors
     }
+    try {
+      await supabase
+        .from('site_settings')
+        .upsert([{ key: 'active_ui_language', value: langCode }], { onConflict: 'key' });
+    } catch {
+      // ignore network errors
+    }
   };
-
   useEffect(() => {
     const handleOutsideClick = (e) => {
       if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
@@ -735,10 +1519,7 @@ export default function App() {
       document.removeEventListener('keydown', handleEscKey);
     };
   }, []);
-
-  // DÜZELTME: ilerleme (XP, seri, tamamlanan qonax) artık herkes için ortak değil,
-  // sadece kullanıcının kendi tarayıcısında saklanıyor
-  const persistProgressSnapshot = (nextXp, nextStreak, nextUnits) => {
+  const persistProgressSnapshot = async (nextXp, nextStreak, nextUnits) => {
     try {
       localStorage.setItem('kk_xp', String(nextXp));
       localStorage.setItem('kk_streak', String(nextStreak));
@@ -746,49 +1527,50 @@ export default function App() {
     } catch {
       // ignore storage quota errors
     }
+    try {
+      await supabase.from('site_settings').upsert(
+        [
+          { key: 'learner_xp_remote', value: String(nextXp) },
+          { key: 'learner_streak_remote', value: String(nextStreak) },
+          { key: 'learner_units_remote', value: JSON.stringify(nextUnits) }
+        ],
+        { onConflict: 'key' }
+      );
+    } catch {
+      // ignore network sync errors
+    }
   };
-
   const fetchAllData = async () => {
     setLoading(true);
-
     const { data: lessonsData } = await supabase
       .from('lessons')
       .select('*')
       .order('created_at', { ascending: false });
     if (lessonsData) setLessons(lessonsData);
-
     const { data: exData } = await supabase
       .from('kurmanci_exercises')
       .select('*')
       .order('sort_order', { ascending: true });
     if (exData) setExercises(exData);
-
     const { count: dictCount } = await supabase
       .from('dictionary')
       .select('*', { count: 'exact', head: true });
-
-    // DÜZELTME: Supabase tek istekte en fazla 1000 satır verir; parça parça çekiyoruz
-    let dbRows = [];
-    for (let from = 0; ; from += 1000) {
-      const { data: chunk, error: chunkError } = await supabase
-        .from('dictionary')
-        .select('*')
-        .order('word', { ascending: true })
-        .order('id', { ascending: true })
-        .range(from, from + 999);
-      if (chunkError || !chunk || chunk.length === 0) break;
-      dbRows = dbRows.concat(chunk);
-      if (chunk.length < 1000) break;
-    }
+    const { data: dictData } = await supabase
+      .from('dictionary')
+      .select('*')
+      .order('word', { ascending: true })
+      .range(0, 999);
+    const dbRows = dictData || [];
     setDictionaryWords(dbRows);
     setTotalWordCount(
       Math.max(Number(dictCount || 0), dbRows.length, BUILTIN_DICTIONARY.length)
     );
-
     const { data: settingsData } = await supabase.from('site_settings').select('*');
     if (settingsData) {
       const uiMap = { ...DEFAULT_UI_TEXTS };
-
+      let remoteXp = null;
+      let remoteStreak = null;
+      let remoteUnits = null;
       settingsData.forEach((row) => {
         if (row.key === 'categories_json' && row.value) {
           try {
@@ -848,25 +1630,45 @@ export default function App() {
           } catch {
             // ignore
           }
-        } else if (
-          row.key &&
-          row.key !== 'active_ui_language' &&
-          !row.key.startsWith('learner_')
-        ) {
+        } else if (row.key === 'learner_xp_remote' && row.value !== null) {
+          remoteXp = Number(row.value) || 0;
+        } else if (row.key === 'learner_streak_remote' && row.value !== null) {
+          remoteStreak = Number(row.value) || 0;
+        } else if (row.key === 'learner_units_remote' && row.value) {
+          try {
+            const parsedUnits = JSON.parse(row.value);
+            if (Array.isArray(parsedUnits)) remoteUnits = parsedUnits;
+          } catch {
+            // ignore
+          }
+        } else if (row.key && row.key !== 'active_ui_language') {
           uiMap[row.key] = row.value;
         }
       });
-
       setRawUi(uiMap);
+      const localXp = Number(localStorage.getItem('kk_xp') || 0);
+      if (remoteXp !== null && remoteXp > localXp) {
+        setXpPoints(remoteXp);
+        localStorage.setItem('kk_xp', String(remoteXp));
+      }
+      const localStreak = Number(localStorage.getItem('kk_streak') || 0);
+      if (remoteStreak !== null && remoteStreak > localStreak) {
+        setStreakDays(remoteStreak);
+        localStorage.setItem('kk_streak', String(remoteStreak));
+      }
+      if (Array.isArray(remoteUnits) && remoteUnits.length > 0) {
+        setCompletedUnits((prev) => {
+          const mergedUnits = [...new Set([...prev, ...remoteUnits])];
+          localStorage.setItem('kk_completed_units', JSON.stringify(mergedUnits));
+          return mergedUnits;
+        });
+      }
     }
-
     setLoading(false);
   };
-
   useEffect(() => {
     fetchAllData();
   }, []);
-
   const handleAdminLogin = (e) => {
     e.preventDefault();
     if (passwordInput.trim() === ADMIN_PASSCODE) {
@@ -878,7 +1680,6 @@ export default function App() {
       setAuthError('Şîfre şaş e! Ji kerema xwe dîsa biceribîne.');
     }
   };
-
   const handleLogout = () => {
     setIsAdmin(false);
     sessionStorage.removeItem('kk_admin');
@@ -886,22 +1687,17 @@ export default function App() {
     setEditingWordId(null);
     setEditingExId(null);
   };
-
   const handleFileUpload = async (e, targetField) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setUploadingField(targetField);
     setStatusMsg({ type: '', text: '' });
-
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
     const filePath = `uploads/${fileName}`;
-
     const { error: uploadError } = await supabase.storage
       .from('materyal')
       .upload(filePath, file);
-
     if (uploadError) {
       setStatusMsg({
         type: 'error',
@@ -911,7 +1707,6 @@ export default function App() {
       const { data: publicUrlData } = supabase.storage
         .from('materyal')
         .getPublicUrl(filePath);
-
       if (publicUrlData?.publicUrl) {
         setFormData((prev) => ({ ...prev, [targetField]: publicUrlData.publicUrl }));
         if (targetField === 'thumbnail_url') {
@@ -926,16 +1721,13 @@ export default function App() {
     setUploadingField(null);
     e.target.value = '';
   };
-
   const handleSaveLesson = async (e) => {
     e.preventDefault();
     setStatusMsg({ type: '', text: '' });
-
     if (!formData.title.trim()) {
       setStatusMsg({ type: 'error', text: 'Ji kerema xwe sernavê dersê binivîse.' });
       return;
     }
-
     const payload = {
       title: formData.title.trim(),
       category_slug: formData.category_slug,
@@ -948,7 +1740,6 @@ export default function App() {
       teacher_guide: formData.teacher_guide.trim(),
       guide_pdf_url: formData.guide_pdf_url.trim()
     };
-
     if (editingId) {
       const { error } = await supabase.from('lessons').update(payload).eq('id', editingId);
       if (error) {
@@ -970,7 +1761,6 @@ export default function App() {
       }
     }
   };
-
   const resetForm = () => {
     setFormData({
       title: '',
@@ -986,7 +1776,6 @@ export default function App() {
     });
     setEditingId(null);
   };
-
   const startEditing = (lesson) => {
     setActiveLesson(null);
     setEditingId(lesson.id);
@@ -1005,7 +1794,6 @@ export default function App() {
     setViewMode('admin');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
   const handleDeleteLesson = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê materyalê jê bibî?')) return;
     const { error } = await supabase.from('lessons').delete().eq('id', id);
@@ -1013,31 +1801,26 @@ export default function App() {
       fetchAllData();
     }
   };
-
   const hasActiveFilters =
     selectedCategory !== 'all' ||
     selectedLevel !== 'all' ||
     selectedMedia !== 'all' ||
     searchQuery.trim() !== '';
-
   const handleResetFilters = () => {
     setSelectedCategory('all');
     setSelectedLevel('all');
     setSelectedMedia('all');
     setSearchQuery('');
   };
-
   const handleUpdateCategoryName = (slug, newName) => {
     setCategories((prev) =>
       prev.map((c) => (c.slug === slug ? { ...c, name: newName } : c))
     );
   };
-
   const handleAddCategory = async (e) => {
     e.preventDefault();
     const trimmed = newCatName.trim();
     if (!trimmed) return;
-
     const baseSlug = trimmed
       .toLowerCase()
       .replace(/[^a-z0-9çğıöşü\s-]/g, '')
@@ -1047,7 +1830,6 @@ export default function App() {
     const updated = [...categories, { slug, name: trimmed }];
     setCategories(updated);
     setNewCatName('');
-
     const { error } = await supabase
       .from('site_settings')
       .upsert([{ key: 'categories_json', value: JSON.stringify(updated) }], {
@@ -1056,7 +1838,6 @@ export default function App() {
     setCatMsg(error ? 'Çewtî: ' + error.message : 'Beşa nû hat zêdekirin û tomarkirin!');
     setTimeout(() => setCatMsg(''), 3500);
   };
-
   const handleDeleteCategory = async (slug) => {
     if (categories.length <= 1) {
       setCatMsg('Divê herî kêm beşek bimîne.');
@@ -1072,7 +1853,6 @@ export default function App() {
     setCatMsg(error ? 'Çewtî: ' + error.message : 'Beş hat jêbirin.');
     setTimeout(() => setCatMsg(''), 3500);
   };
-
   const handleSaveCategories = async () => {
     const { error } = await supabase
       .from('site_settings')
@@ -1082,7 +1862,6 @@ export default function App() {
     setCatMsg(error ? 'Çewtî: ' + error.message : 'Navên beşan hatin tomarkirin!');
     setTimeout(() => setCatMsg(''), 3500);
   };
-
   const handleSaveAllUiTexts = async (e) => {
     e.preventDefault();
     const langPrefix = `${selectedLang.toLowerCase()}_`;
@@ -1103,7 +1882,6 @@ export default function App() {
     );
     setTimeout(() => setSettingsMsg(''), 3500);
   };
-
   const recordSearchHistory = (term) => {
     const clean = term.trim();
     if (!clean) return;
@@ -1117,7 +1895,6 @@ export default function App() {
       return next;
     });
   };
-
   const toggleFavoriteWord = (word) => {
     if (!word) return;
     setFavoriteWords((prev) => {
@@ -1131,7 +1908,6 @@ export default function App() {
       return next;
     });
   };
-
   const getWordMeaningByLang = (item, lang = selectedLang) => {
     if (!item) return '';
     const i18n = item.meanings_i18n || {};
@@ -1150,13 +1926,11 @@ export default function App() {
       ''
     );
   };
-
   const getWordExampleByLang = (item, lang = selectedLang) => {
     if (!item) return '';
     const exMap = item.examples_i18n || {};
     return exMap[lang] || exMap.KU || exMap.EN || exMap.TR || item.example_sentence || '';
   };
-
   const playDictionaryPronunciation = (item) => {
     if (!item) return;
     if (item.audio_url) {
@@ -1174,7 +1948,6 @@ export default function App() {
       }
     }
   };
-
   const handleWordAudioUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -1195,18 +1968,15 @@ export default function App() {
     setUploadingWordAudio(false);
     e.target.value = '';
   };
-
   const handleSaveWord = async (e) => {
     e.preventDefault();
     const activeMeaning = (
       wordForm.meanings_i18n?.[selectedLang] ?? wordForm.meaning_tr ?? ''
     ).trim();
     if (!wordForm.word.trim() || !activeMeaning) return;
-
     const activeExample = (
       wordForm.examples_i18n?.[selectedLang] ?? wordForm.example_sentence ?? ''
     ).trim();
-
     const updatedMeanings = {
       ...(wordForm.meanings_i18n || {}),
       [selectedLang]: activeMeaning
@@ -1215,7 +1985,6 @@ export default function App() {
       ...(wordForm.examples_i18n || {}),
       ...(activeExample ? { [selectedLang]: activeExample } : {})
     };
-
     const payload = {
       word: wordForm.word.trim(),
       part_of_speech: wordForm.part_of_speech,
@@ -1227,7 +1996,6 @@ export default function App() {
       meanings_i18n: updatedMeanings,
       examples_i18n: updatedExamples
     };
-
     if (editingWordId) {
       const { error } = await supabase.from('dictionary').update(payload).eq('id', editingWordId);
       if (error) {
@@ -1249,7 +2017,6 @@ export default function App() {
     }
     setTimeout(() => setWordMsg(''), 3500);
   };
-
   const startEditingWord = (item) => {
     setEditingWordId(item.id);
     setWordForm({
@@ -1282,7 +2049,6 @@ export default function App() {
       }
     });
   };
-
   const resetWordForm = () => {
     setEditingWordId(null);
     setWordForm({
@@ -1293,11 +2059,28 @@ export default function App() {
       meaning_ku: '',
       example_sentence: '',
       audio_url: '',
-      meanings_i18n: { KU: '', ZZA: '', CKB: '', TR: '', EN: '', DE: '', FR: '', IT: '' },
-      examples_i18n: { KU: '', ZZA: '', CKB: '', TR: '', EN: '', DE: '', FR: '', IT: '' }
+      meanings_i18n: {
+        KU: '',
+        ZZA: '',
+        CKB: '',
+        TR: '',
+        EN: '',
+        DE: '',
+        FR: '',
+        IT: ''
+      },
+      examples_i18n: {
+        KU: '',
+        ZZA: '',
+        CKB: '',
+        TR: '',
+        EN: '',
+        DE: '',
+        FR: '',
+        IT: ''
+      }
     });
   };
-
   const handleDeleteWord = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê peyvê jê bibî?')) return;
     const { error } = await supabase.from('dictionary').delete().eq('id', id);
@@ -1306,14 +2089,12 @@ export default function App() {
       fetchAllData();
     }
   };
-
   const handleBulkImportDictionary = async () => {
     setSyncingProgress('Peyvên bingehîn tên tomarkirin...');
     let added = 0;
     const existingSet = new Set(
       dictionaryWords.map((w) => normalizeKurdish(w.word || ''))
     );
-
     for (const entry of BUILTIN_DICTIONARY) {
       const key = normalizeKurdish(entry.word);
       if (existingSet.has(key)) continue;
@@ -1334,13 +2115,11 @@ export default function App() {
         existingSet.add(key);
       }
     }
-
     setSyncingProgress('');
     setWordMsg(`${added} peyvên nû li ferhengê hatin zêdekirin.`);
     fetchAllData();
     setTimeout(() => setWordMsg(''), 4000);
   };
-
   useEffect(() => {
     const trimmed = ferhengQuery.trim();
     if (!trimmed || trimmed.length < 2) {
@@ -1348,10 +2127,8 @@ export default function App() {
       setSearchingDict(false);
       return;
     }
-
     let cancelled = false;
     setSearchingDict(true);
-
     const timer = setTimeout(async () => {
       try {
         const entry = await fetchWiktionaryEntry(trimmed, selectedLang);
@@ -1367,20 +2144,17 @@ export default function App() {
         if (!cancelled) setSearchingDict(false);
       }
     }, 250);
-
     return () => {
       cancelled = true;
       clearTimeout(timer);
     };
   }, [ferhengQuery, selectedLang]);
-
   const handleDictionarySearchSubmit = (e) => {
     e.preventDefault();
     if (ferhengQuery.trim()) {
       recordSearchHistory(ferhengQuery.trim());
     }
   };
-
   const effectiveExercises = (() => {
     const hasCustomAlfabe = exercises.some(
       (ex) => (ex.unit_title || '').trim().toUpperCase() === 'ALFABE'
@@ -1391,17 +2165,14 @@ export default function App() {
         : [...BUILTIN_EXERCISES, ...exercises];
     return [...base].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
   })();
-
   const combinedDictionary = (() => {
     const map = new Map();
-
     BUILTIN_DICTIONARY.forEach((item) => {
       const key = normalizeKurdish(item.word || '');
       if (key) {
         map.set(key, { ...item, sourceType: 'builtin' });
       }
     });
-
     dictionaryWords.forEach((item) => {
       const key = normalizeKurdish(item.word || '');
       if (key) {
@@ -1421,7 +2192,6 @@ export default function App() {
         });
       }
     });
-
     wiktionaryMatches.forEach((item) => {
       const key = normalizeKurdish(item.word || '');
       if (key) {
@@ -1443,14 +2213,11 @@ export default function App() {
         }
       }
     });
-
     return Array.from(map.values());
   })();
-
   const filteredDictionary = (() => {
     const rawQ = ferhengQuery.trim();
     const normQ = normalizeKurdish(rawQ);
-
     if (!normQ) {
       return combinedDictionary
         .filter((item) => {
@@ -1464,7 +2231,6 @@ export default function App() {
           })
         );
     }
-
     return combinedDictionary
       .map((item) => {
         const wNorm = normalizeKurdish(item.word || '');
@@ -1475,7 +2241,6 @@ export default function App() {
         const allI18nValues = Object.values(item.meanings_i18n || {})
           .map((v) => normalizeKurdish(String(v || '')))
           .filter(Boolean);
-
         let score = 0;
         if (wNorm === normQ) score = 100;
         else if (activeLangMeaningNorm === normQ) score = 96;
@@ -1491,7 +2256,6 @@ export default function App() {
         else if (trNorm.includes(normQ) || enNorm.includes(normQ)) score = 50;
         else if (allI18nValues.some((v) => v.includes(normQ))) score = 45;
         else if (kuNorm.includes(normQ)) score = 35;
-
         return { ...item, _score: score };
       })
       .filter((item) => item._score > 0)
@@ -1503,21 +2267,22 @@ export default function App() {
           })
       );
   })();
-
   const handleResetGamesSection = async () => {
-    // DÜZELTME: silmeden önce onay iste
-    if (!window.confirm('Hemû lîstik jê dibin! Tu piştrast î?')) return;
-
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
     setIsPlayingAudio(false);
-
     localStorage.removeItem('kk_xp');
     localStorage.removeItem('kk_streak');
     localStorage.removeItem('kk_completed_units');
     localStorage.removeItem('kk_last_day');
-
+    await supabase.from('site_settings').upsert(
+      [
+        { key: 'learner_xp_remote', value: '0' },
+        { key: 'learner_streak_remote', value: '0' },
+        { key: 'learner_units_remote', value: '[]' }
+      ],
+      { onConflict: 'key' }
+    );
     const { error } = await supabase.from('kurmanci_exercises').delete().not('id', 'is', null);
-
     setExercises([]);
     setAlfabeReset(true);
     setSelectedUnit(null);
@@ -1549,7 +2314,6 @@ export default function App() {
     );
     setTimeout(() => setExMsg(''), 4000);
   };
-
   const uploadExFile = async (event, folder, setBusy, field) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -1571,39 +2335,32 @@ export default function App() {
     setBusy(false);
     event.target.value = '';
   };
-
   const handleExImageUpload = (event) =>
     uploadExFile(event, 'exercises', setUploadingExImg, 'image_url');
   const handleExAudioUpload = (event) =>
     uploadExFile(event, 'exercise_audio', setUploadingExAudio, 'audio_url');
-
   const handleSaveExercise = async (e) => {
     e.preventDefault();
     const parsedOptions = exForm.options_raw
       .split(',')
       .map((item) => item.trim())
       .filter(Boolean);
-
     if (!exForm.question_text.trim() || parsedOptions.length < 2) {
       setExMsg('Ji kerema xwe pirs û herî kêm 2 vebijêrk (bi bêhnokê veqetandî) binivîse.');
       return;
     }
-
     const finalCorrect =
       exForm.exercise_type === 'match'
         ? String(parsedOptions.length)
         : exForm.correct_answer.trim();
-
     if (exForm.exercise_type !== 'match' && !finalCorrect) {
       setExMsg('Ji kerema xwe bersiva rast binivîse.');
       return;
     }
-
     if (exForm.exercise_type === 'image_choice' && !exForm.image_url.trim()) {
       setExMsg('Ji bo vê cureyê lîstikê wêne pêwîst e. Wêneyek bar bike.');
       return;
     }
-
     if (
       exForm.exercise_type !== 'match' &&
       exForm.exercise_type !== 'sentence' &&
@@ -1612,7 +2369,6 @@ export default function App() {
       setExMsg('Bersiva rast divê di nav vebijêrkan de hebe.');
       return;
     }
-
     const payload = {
       unit_title: exForm.unit_title.trim(),
       exercise_type: exForm.exercise_type,
@@ -1623,13 +2379,11 @@ export default function App() {
       image_url: exForm.image_url.trim(),
       audio_url: exForm.audio_url.trim()
     };
-
     if (editingExId) {
       const { error } = await supabase
         .from('kurmanci_exercises')
         .update(payload)
         .eq('id', editingExId);
-
       if (error) {
         setExMsg('Çewtî: ' + error.message);
       } else {
@@ -1649,7 +2403,6 @@ export default function App() {
         .from('kurmanci_exercises')
         .insert([{ ...payload, sort_order: exercises.length + 1 }])
         .select();
-
       if (error) {
         setExercises((prev) => [...prev, newRecord]);
         setExMsg('Lîstik li beşa nû hat zêdekirin.');
@@ -1664,7 +2417,6 @@ export default function App() {
     }
     setTimeout(() => setExMsg(''), 4000);
   };
-
   const startEditingExercise = (ex) => {
     setEditingExId(ex.id);
     setExForm({
@@ -1678,7 +2430,6 @@ export default function App() {
       audio_url: ex.audio_url || ''
     });
   };
-
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
@@ -1692,7 +2443,6 @@ export default function App() {
       audio_url: ''
     });
   };
-
   const handleDeleteExercise = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê lîstikê jê bibî?')) return;
     const { error } = await supabase.from('kurmanci_exercises').delete().eq('id', id);
@@ -1705,12 +2455,10 @@ export default function App() {
     }
     setTimeout(() => setExMsg(''), 3500);
   };
-
   const isZarokUnit = (title = '') => {
     const t = title.toLowerCase().trim();
     return t.startsWith('zarok');
   };
-
   const unitList = [
     ...new Set(
       effectiveExercises
@@ -1718,7 +2466,6 @@ export default function App() {
         .map((ex) => ex.unit_title)
     )
   ];
-
   const zarokUnitList = [
     ...new Set(
       effectiveExercises
@@ -1726,11 +2473,9 @@ export default function App() {
         .map((ex) => ex.unit_title)
     )
   ];
-
   const allExerciseUnits = [
     ...new Set(effectiveExercises.map((ex) => ex.unit_title).filter(Boolean))
   ];
-
   const filteredAdminExercises = effectiveExercises.filter((ex) => {
     if (adminExUnitFilter !== 'all' && ex.unit_title !== adminExUnitFilter) return false;
     const q = normalizeKurdish(adminExSearch);
@@ -1741,14 +2486,11 @@ export default function App() {
       normalizeKurdish(ex.correct_answer || '').includes(q)
     );
   });
-
   const unitExercises = (() => {
     if (!selectedUnit) return [];
     return effectiveExercises.filter((ex) => ex.unit_title === selectedUnit);
   })();
-
   const currentEx = unitExercises[currentExIndex];
-
   const playCurrentAudio = (url) => {
     if (!url) return;
     try {
@@ -1763,28 +2505,23 @@ export default function App() {
         startSec = parseFloat(parts[0]) || 0;
         if (parts[1]) endSec = parseFloat(parts[1]);
       }
-
       const audio = new Audio(baseUrl);
       audio.preload = 'auto';
       audioPlayerRef.current = audio;
       setIsPlayingAudio(true);
-
       audio.onloadedmetadata = () => {
         if (startSec > 0) {
           audio.currentTime = startSec;
         }
       };
-
       audio.ontimeupdate = () => {
         if (endSec !== null && audio.currentTime >= endSec) {
           audio.pause();
           setIsPlayingAudio(false);
         }
       };
-
       audio.onended = () => setIsPlayingAudio(false);
       audio.onerror = () => setIsPlayingAudio(false);
-
       audio.play().catch((err) => {
         console.error('Audio play error:', err);
         setIsPlayingAudio(false);
@@ -1793,7 +2530,6 @@ export default function App() {
       setIsPlayingAudio(false);
     }
   };
-
   useEffect(() => {
     setIsPlayingAudio(false);
     setMediaLoadError('');
@@ -1807,37 +2543,31 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [currentEx?.id, viewMode, selectedUnit, unitCompleted]);
-
   useEffect(() => {
     return () => {
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
     };
   }, []);
-
   const resolveMatchVisual = (rawRight, leftText) => {
     const cleanedRight = (rawRight || '').trim();
     const isUrl = /^(https?:\/\/|data:image\/)/i.test(cleanedRight);
     const wordCandidate = cleanedRight.startsWith('img:')
       ? cleanedRight.replace(/^img:/i, '').trim()
       : cleanedRight;
-
     const leftParts = (leftText || '').split('—');
     const letter = leftParts.length > 1 ? leftParts[0].trim() : '';
     const wordFromLeft = leftParts.length > 1 ? leftParts.slice(1).join('—').trim() : wordCandidate;
-
     const cellMeta =
       ALFABE_CELL_META_MAP[wordCandidate.toLocaleLowerCase('tr')] ||
       ALFABE_CELL_META_MAP[wordFromLeft.toLocaleLowerCase('tr')] ||
       ALFABE_CELL_META_MAP[letter.toLocaleLowerCase('tr')] ||
       null;
-
     const mappedImage =
       (isUrl ? cleanedRight : '') ||
       ALFABE_WORD_IMAGE_MAP[wordCandidate.toLocaleLowerCase('tr')] ||
       ALFABE_WORD_IMAGE_MAP[wordFromLeft.toLocaleLowerCase('tr')] ||
       ALFABE_WORD_IMAGE_MAP[letter.toLocaleLowerCase('tr')] ||
       '';
-
     return {
       right: cleanedRight,
       image: mappedImage,
@@ -1846,10 +2576,8 @@ export default function App() {
       cellMeta
     };
   };
-
   const parsedMatchPairs = (() => {
     if (!currentEx || currentEx.exercise_type !== 'match') return [];
-
     if (Array.isArray(currentEx.match_pairs) && currentEx.match_pairs.length > 0) {
       return currentEx.match_pairs.map((mp, idx) => {
         const resolved = resolveMatchVisual(mp.image || mp.right || mp.word, mp.left);
@@ -1864,7 +2592,6 @@ export default function App() {
         };
       });
     }
-
     return (currentEx.options || [])
       .map((pairStr, idx) => {
         const parts = pairStr.split('=');
@@ -1880,7 +2607,6 @@ export default function App() {
       })
       .filter(Boolean);
   })();
-
   useEffect(() => {
     if (currentEx?.exercise_type === 'match') {
       const rightItems = parsedMatchPairs.map((p) => ({
@@ -1899,7 +2625,6 @@ export default function App() {
       setMatchWrongFlash(false);
     }
   }, [currentEx?.id]);
-
   useEffect(() => {
     if (currentEx?.exercise_type !== 'match' || parsedMatchPairs.length === 0) return;
     let cancelled = false;
@@ -1917,23 +2642,18 @@ export default function App() {
       cancelled = true;
     };
   }, [currentEx?.id]);
-
   const handleMatchSelect = (side, pairId) => {
     if (answerState || matchedPairs.includes(pairId) || hearts === 0) return;
-
     const nextLeft = side === 'left' ? pairId : matchLeftSelected;
     const nextRight = side === 'right' ? pairId : matchRightSelected;
-
     setMatchLeftSelected(nextLeft);
     setMatchRightSelected(nextRight);
-
     if (nextLeft !== null && nextRight !== null) {
       if (nextLeft === nextRight) {
         const updated = [...matchedPairs, nextLeft];
         setMatchedPairs(updated);
         setMatchLeftSelected(null);
         setMatchRightSelected(null);
-
         if (updated.length === parsedMatchPairs.length) {
           setAnswerState('correct');
           const nextXp = xpPoints + 15;
@@ -1953,7 +2673,6 @@ export default function App() {
       }
     }
   };
-
   const startUnit = (unitName) => {
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
@@ -1968,7 +2687,6 @@ export default function App() {
     setHearts(5);
     setUnitCompleted(false);
   };
-
   const closeActiveUnit = () => {
     const wasZarok = selectedUnit?.toUpperCase().startsWith('ZAROK:');
     if (audioPlayerRef.current) audioPlayerRef.current.pause();
@@ -1979,7 +2697,6 @@ export default function App() {
       setSelectedCategory('zarok');
     }
   };
-
   const toggleSentenceWord = (word, idx) => {
     if (answerState) return;
     const existsIndex = builtWords.findIndex((item) => item.idx === idx);
@@ -1989,16 +2706,13 @@ export default function App() {
       setBuiltWords((prev) => [...prev, { word, idx }]);
     }
   };
-
   const checkExerciseAnswer = () => {
     if (!currentEx || currentEx.exercise_type === 'match') return;
     const userAnswer =
       currentEx.exercise_type === 'sentence'
         ? builtWords.map((w) => w.word).join(' ').trim()
         : selectedOption.trim();
-
     if (!userAnswer) return;
-
     if (userAnswer.toLowerCase() === currentEx.correct_answer.trim().toLowerCase()) {
       setAnswerState('correct');
       const bonus = comboCount >= 2 ? 15 : 10;
@@ -2012,7 +2726,6 @@ export default function App() {
       setHearts((prev) => Math.max(0, prev - 1));
     }
   };
-
   const updateStreak = () => {
     const today = new Date().toISOString().slice(0, 10);
     const last = localStorage.getItem('kk_last_day');
@@ -2024,7 +2737,6 @@ export default function App() {
     localStorage.setItem('kk_last_day', today);
     return nextStreak;
   };
-
   const goToNextExercise = () => {
     if (hearts === 0) return;
     if (currentExIndex + 1 < unitExercises.length) {
@@ -2043,7 +2755,6 @@ export default function App() {
       persistProgressSnapshot(xpPoints, nextStreak, updatedUnits);
     }
   };
-
   const filteredLessons = lessons.filter((l) => {
     if (selectedCategory !== 'all' && l.category_slug !== selectedCategory) return false;
     if (selectedLevel !== 'all' && l.level !== selectedLevel) return false;
@@ -2055,13 +2766,10 @@ export default function App() {
       normalizeKurdish(l.description || '').includes(q)
     );
   });
-
   const mediaIconFor = (type) =>
     (dynamicMediaTypes.find((m) => m.id === type) || dynamicMediaTypes[0]).icon;
-
   const wrongAnswerLocked = answerState === 'wrong';
   const outOfHearts = hearts === 0 && !unitCompleted;
-
   const renderEmbeddedMedia = (lesson) => {
     const url = (lesson?.media_url || '').trim();
     if (!url) {
@@ -2071,14 +2779,12 @@ export default function App() {
         </p>
       );
     }
-
     const ytEmbed = getYouTubeEmbedUrl(url);
     const isAudio =
       lesson.media_type === 'audio' || /\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url);
     const isPdf =
       lesson.media_type === 'document' || /\.pdf(\?|$)/i.test(url);
     const isVideoFile = /\.(mp4|webm|ogg)(\?|$)/i.test(url);
-
     return (
       <div className="space-y-3">
         {ytEmbed && (
@@ -2130,7 +2836,6 @@ export default function App() {
       </div>
     );
   };
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800">
       {/* ÜST MENÜ */}
@@ -2148,7 +2853,6 @@ export default function App() {
               <span className="text-red-700">{ui.brand_second}</span>
             </span>
           </button>
-
           <nav aria-label="Menuya Sereke" className="flex items-center gap-1 sm:gap-2">
             {[
               { id: 'student', label: ui.nav_site, icon: LayoutDashboard },
@@ -2179,7 +2883,6 @@ export default function App() {
                 </button>
               );
             })}
-
             <div className="relative" ref={langDropdownRef}>
               <button
                 type="button"
@@ -2212,7 +2915,6 @@ export default function App() {
           </nav>
         </div>
       </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ===================== MALPER (ÖĞRENCİ) ===================== */}
         {viewMode === 'student' && (
@@ -2234,7 +2936,6 @@ export default function App() {
                 />
               </div>
             </section>
-
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -2262,7 +2963,6 @@ export default function App() {
                 </button>
               ))}
             </div>
-
             <div className="bg-white border border-slate-200 rounded-2xl p-4 flex flex-wrap items-end gap-4">
               <div className="flex items-center gap-2 font-bold text-slate-700 text-sm">
                 <Filter className="w-4 h-4 text-red-700" />
@@ -2308,7 +3008,6 @@ export default function App() {
                 </button>
               )}
             </div>
-
             {selectedCategory === 'zarok' && zarokUnitList.length > 0 && (
               <section className="bg-red-50/60 border border-red-200 rounded-2xl p-5">
                 <h2 className="font-bold text-red-900 mb-3 flex items-center gap-2">
@@ -2332,14 +3031,12 @@ export default function App() {
                 </div>
               </section>
             )}
-
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-slate-900">{ui.list_all_title}</h2>
               <span className="text-sm text-slate-500">
                 {filteredLessons.length} {ui.list_count_suffix}
               </span>
             </div>
-
             {loading ? (
               <p className="text-center text-slate-500 py-12">{ui.loading_text}</p>
             ) : filteredLessons.length === 0 ? (
@@ -2414,7 +3111,6 @@ export default function App() {
                 })}
               </div>
             )}
-
             {activeLesson && (
               <div
                 className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -2447,7 +3143,6 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-
                   <div className="flex gap-2 mb-4 border-b border-slate-200">
                     {[
                       { id: 'content', label: ui.tab_content },
@@ -2467,7 +3162,6 @@ export default function App() {
                       </button>
                     ))}
                   </div>
-
                   {lessonTab === 'content' ? (
                     <div className="space-y-4">
                       {activeLesson.thumbnail_url &&
@@ -2520,7 +3214,6 @@ export default function App() {
             )}
           </div>
         )}
-
         {/* ===================== HÎNBÛN / LÎSTIK ===================== */}
         {viewMode === 'learn' && (
           <div className="max-w-3xl mx-auto">
@@ -2530,7 +3223,6 @@ export default function App() {
                   <h1 className="text-3xl font-extrabold text-slate-900 mb-2">{ui.learn_title}</h1>
                   <p className="text-slate-500">{ui.learn_subtitle}</p>
                 </div>
-
                 <div className="flex justify-center gap-4 flex-wrap">
                   <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
                     <Zap className="w-5 h-5 text-red-700" />
@@ -2546,7 +3238,6 @@ export default function App() {
                     <span>{completedUnits.length} / {unitList.length} {ui.learn_stage_prefix}</span>
                   </div>
                 </div>
-
                 {unitList.length === 0 ? (
                   <div className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8 space-y-4">
                     <p>{ui.learn_empty_units}</p>
@@ -2655,7 +3346,6 @@ export default function App() {
                     <span>{hearts}</span>
                   </div>
                 </div>
-
                 <div className="space-y-3">
                   <div className="text-xs font-bold text-red-700">
                     {{
@@ -2667,7 +3357,6 @@ export default function App() {
                     }[currentEx.exercise_type] || ''}
                   </div>
                   <h2 className="text-xl font-bold text-slate-900">{currentEx.question_text}</h2>
-
                   {currentEx.image_url && !brokenExImages[currentEx.id] && (
                     <img
                       src={currentEx.image_url}
@@ -2682,7 +3371,6 @@ export default function App() {
                       }`}
                     />
                   )}
-
                   {currentEx.audio_url && (
                     <button
                       type="button"
@@ -2696,7 +3384,6 @@ export default function App() {
                     </button>
                   )}
                 </div>
-
                 {(currentEx.exercise_type === 'choice' ||
                   currentEx.exercise_type === 'fill_blank' ||
                   currentEx.exercise_type === 'image_choice') && (
@@ -2723,7 +3410,6 @@ export default function App() {
                     })}
                   </div>
                 )}
-
                 {currentEx.exercise_type === 'sentence' && (
                   <div className="space-y-4">
                     <div className="min-h-[56px] border-2 border-dashed border-slate-300 rounded-xl p-3 flex flex-wrap gap-2">
@@ -2770,7 +3456,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
                 {currentEx.exercise_type === 'match' && (
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-3">
@@ -2798,7 +3483,6 @@ export default function App() {
                         );
                       })}
                     </div>
-
                     <div className="space-y-3">
                       {shuffledRightOptions.map((p) => {
                         const done = matchedPairs.includes(p.id);
@@ -2835,10 +3519,8 @@ export default function App() {
                                 className="h-24 w-full object-contain rounded-lg"
                               />
                             ) : (
-                              <div className="w-full h-24 rounded-lg bg-emerald-50 border border-emerald-200 flex flex-col items-center justify-center text-slate-800 px-2">
-                                <span className="text-4xl leading-none mb-1">
-                                  {ALFABE_EMOJI[(p.word || '').toLocaleLowerCase('tr')] || '🖼️'}
-                                </span>
+                              <div className="w-full h-24 rounded-lg bg-[#cbe7b8] border border-emerald-200 flex flex-col items-center justify-center text-slate-800 px-2">
+                                <ImageIcon className="w-5 h-5 text-red-700 mb-0.5" />
                                 <span className="text-xs font-extrabold text-slate-800 truncate max-w-full">
                                   {p.word || p.right}
                                 </span>
@@ -2850,7 +3532,6 @@ export default function App() {
                     </div>
                   </div>
                 )}
-
                 {answerState && (
                   <div
                     className={`rounded-xl p-4 text-sm font-medium ${
@@ -2878,7 +3559,6 @@ export default function App() {
                     )}
                   </div>
                 )}
-
                 <div className="flex justify-end">
                   {!answerState && currentEx.exercise_type !== 'match' ? (
                     <button
@@ -2911,7 +3591,6 @@ export default function App() {
             )}
           </div>
         )}
-
         {/* ===================== FERHENG ===================== */}
         {viewMode === 'ferheng' && (
           <div className="max-w-4xl mx-auto space-y-6">
@@ -2927,7 +3606,6 @@ export default function App() {
                 peyv
               </p>
             </div>
-
             <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2">
               <div className="relative flex-1">
                 <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
@@ -2946,7 +3624,6 @@ export default function App() {
                 {ui.ferheng_search_btn}
               </button>
             </form>
-
             {(searchHistory.length > 0 || favoriteWords.length > 0) && (
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 {searchHistory.length > 0 && (
@@ -2987,7 +3664,6 @@ export default function App() {
                 )}
               </div>
             )}
-
             <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
@@ -3015,16 +3691,14 @@ export default function App() {
                 </button>
               ))}
             </div>
-
             {searchingDict && <p className="text-xs text-slate-400">...</p>}
-
             {filteredDictionary.length === 0 ? (
               <p className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8">
                 {ui.ferheng_empty_text}
               </p>
             ) : (
               <div className="space-y-2">
-                {filteredDictionary.slice(0, 300).map((item) => {
+                {filteredDictionary.map((item) => {
                   const isFav = favoriteWords.includes(item.word);
                   const displayMeaning = getWordMeaningByLang(item, selectedLang);
                   return (
@@ -3068,14 +3742,8 @@ export default function App() {
                     </div>
                   );
                 })}
-                {filteredDictionary.length > 300 && (
-                  <p className="text-center text-xs text-slate-400 pt-2">
-                    {filteredDictionary.length - 300} peyvên din hene — lêgerînê bikar bîne an tîpekê hilbijêre.
-                  </p>
-                )}
               </div>
             )}
-
             {selectedWordDetail && (
               <div
                 className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
@@ -3126,7 +3794,6 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-
                   <div className="text-sm space-y-2">
                     {getWordMeaningByLang(selectedWordDetail, selectedLang) && (
                       <p>
@@ -3158,7 +3825,6 @@ export default function App() {
             )}
           </div>
         )}
-
         {/* ===================== RÊVEBER (ADMIN) ===================== */}
         {viewMode === 'admin' && (
           <div>
@@ -3173,7 +3839,6 @@ export default function App() {
                 <p className="text-sm text-center text-slate-500 mb-6">
                   Ji bo birêvebirina naveroka KurdiKlass şîfreyê binivîse.
                 </p>
-
                 <form onSubmit={handleAdminLogin} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
@@ -3188,11 +3853,9 @@ export default function App() {
                       className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                     />
                   </div>
-
                   {authError && (
                     <p className="text-xs text-red-700 font-medium">{authError}</p>
                   )}
-
                   <button
                     type="submit"
                     className="w-full bg-red-700 hover:bg-red-800 text-white font-bold py-2.5 rounded-lg transition"
@@ -3223,8 +3886,6 @@ export default function App() {
                     </button>
                   </div>
                 </div>
-
-                {/* HÎNBÛN / LÎSTIK YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -3235,7 +3896,6 @@ export default function App() {
                           : `Hînbûn / Lîstik (${effectiveExercises.length} lîstik)`}
                       </span>
                     </h2>
-
                     <button
                       type="button"
                       onClick={handleResetGamesSection}
@@ -3244,13 +3904,11 @@ export default function App() {
                       Beşa Lîstikan Sifir Bike
                     </button>
                   </div>
-
                   {exMsg && (
                     <div className="p-3 rounded-xl mb-4 bg-red-50 text-red-800 border border-red-200 text-sm font-medium">
                       {exMsg}
                     </div>
                   )}
-
                   <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
@@ -3265,7 +3923,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Cureyê Lîstikê
@@ -3282,7 +3939,6 @@ export default function App() {
                         <option value="image_choice">Wêneyê Bibîne, Peyvê Hilbijêre</option>
                       </select>
                     </div>
-
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Pirs an Rênîşander
@@ -3296,7 +3952,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Dengê Lîstikê (Vebijarkî)
@@ -3321,7 +3976,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Wêneyê Lîstikê (Vebijarkî)
@@ -3346,7 +4000,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
@@ -3364,7 +4017,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
-
                     {exForm.exercise_type !== 'match' && (
                       <div>
                         <label className="block text-xs font-bold text-slate-600 mb-1">
@@ -3380,7 +4032,6 @@ export default function App() {
                         />
                       </div>
                     )}
-
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Ravekirin (Vebijarkî)
@@ -3393,7 +4044,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
-
                     <div className="md:col-span-2 flex items-center gap-3">
                       <button
                         type="submit"
@@ -3412,7 +4062,6 @@ export default function App() {
                       )}
                     </div>
                   </form>
-
                   <div className="flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4 mb-3">
                     <select
                       value={adminExUnitFilter}
@@ -3432,7 +4081,6 @@ export default function App() {
                       className="flex-1 min-w-[180px] border border-slate-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-red-700"
                     />
                   </div>
-
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {filteredAdminExercises.map((ex) => {
                       const isBuiltinAlfabe = String(ex.id || '').startsWith('alfabe-match-');
@@ -3485,14 +4133,11 @@ export default function App() {
                     })}
                   </div>
                 </div>
-
-                {/* DERS EKLEME FORMU */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <Plus className="w-5 h-5 text-red-700" />
                     <span>{editingId ? 'Dersê Sererast Bike' : 'Materyala Nû Zêde Bike'}</span>
                   </h2>
-
                   {statusMsg.text && (
                     <div
                       className={`p-3.5 rounded-xl mb-4 flex items-center gap-2 text-sm font-medium ${
@@ -3509,7 +4154,6 @@ export default function App() {
                       <span>{statusMsg.text}</span>
                     </div>
                   )}
-
                   <form onSubmit={handleSaveLesson} className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
@@ -3524,7 +4168,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Beş (Kategori)
@@ -3539,7 +4182,6 @@ export default function App() {
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Cureyê Materyalê
@@ -3554,7 +4196,6 @@ export default function App() {
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Lînka Materyalê an Pel Bar Bike
@@ -3578,7 +4219,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Wêneyê Bergê
@@ -3603,7 +4243,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Ast
@@ -3618,7 +4257,6 @@ export default function App() {
                         ))}
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Pola Perwerdehiyê
@@ -3633,7 +4271,6 @@ export default function App() {
                         ))}
                       </select>
                     </div>
-
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold uppercase text-slate-600 mb-1">
                         Daxuyanî û Naveroka Dersê
@@ -3646,14 +4283,12 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2.5 focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div className="md:col-span-2 bg-red-50/40 border border-red-200 rounded-xl p-4 space-y-3">
                       <div className="flex items-center justify-between flex-wrap gap-2">
                         <label className="text-xs font-extrabold uppercase text-red-900 flex items-center gap-1.5">
                           <ClipboardList className="w-4 h-4 text-red-700" />
                           <span>Rêbera Mamosteyan</span>
                         </label>
-
                         <label className="cursor-pointer bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg flex items-center gap-1.5">
                           <Upload className="w-3.5 h-3.5" />
                           <span>
@@ -3671,7 +4306,6 @@ export default function App() {
                           />
                         </label>
                       </div>
-
                       <textarea
                         rows="3"
                         value={formData.teacher_guide}
@@ -3680,7 +4314,6 @@ export default function App() {
                         className="w-full border border-red-200 bg-white rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div className="md:col-span-2 flex items-center gap-3">
                       <button
                         type="submit"
@@ -3700,8 +4333,6 @@ export default function App() {
                     </div>
                   </form>
                 </div>
-
-                {/* FERHENG YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
                     <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
@@ -3712,7 +4343,6 @@ export default function App() {
                           : `Ferheng — Peyvên Nû Zêde Bike (${Math.max(totalWordCount, filteredDictionary.length)} tomarkirî)`}
                       </span>
                     </h2>
-
                     <button
                       type="button"
                       onClick={handleBulkImportDictionary}
@@ -3722,19 +4352,16 @@ export default function App() {
                       + Peyvên Bingehîn Tomar Bike
                     </button>
                   </div>
-
                   {syncingProgress && (
                     <div className="p-3 rounded-xl mb-4 bg-red-50 text-red-900 border border-red-200 text-xs font-bold">
                       {syncingProgress}
                     </div>
                   )}
-
                   {wordMsg && (
                     <div className="p-3 rounded-xl mb-4 bg-red-50 text-red-900 border border-red-200 text-sm font-medium">
                       {wordMsg}
                     </div>
                   )}
-
                   <form onSubmit={handleSaveWord} className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
@@ -3749,7 +4376,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Cureyê Peyvê
@@ -3768,7 +4394,6 @@ export default function App() {
                         <option value="baneşan">baneşan</option>
                       </select>
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Wateya Peyvê ({selectedLang}) *
@@ -3792,7 +4417,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Ravekirina bi Kurmancî (KU)
@@ -3805,7 +4429,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Hevoka Mînak ({selectedLang})
@@ -3828,7 +4451,6 @@ export default function App() {
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                       />
                     </div>
-
                     <div>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         Dengê Telaffuzê (Vebijarkî)
@@ -3853,7 +4475,6 @@ export default function App() {
                         </label>
                       </div>
                     </div>
-
                     <div className="md:col-span-2 flex items-center gap-3">
                       <button
                         type="submit"
@@ -3872,7 +4493,6 @@ export default function App() {
                       )}
                     </div>
                   </form>
-
                   <div className="space-y-2 max-h-60 overflow-y-auto border-t border-slate-100 pt-4">
                     {filteredDictionary.slice(0, 100).map((item) => (
                       <div key={item.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
@@ -3908,13 +4528,10 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-
-                {/* KAYITLI MATERYALLER */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4">
                     Materyalên Tomarkirî ({lessons.length})
                   </h2>
-
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
@@ -3957,20 +4574,16 @@ export default function App() {
                     </table>
                   </div>
                 </div>
-
-                {/* KATEGORİ YÖNETİMİ */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
                     <FolderEdit className="w-5 h-5 text-red-700" />
                     <span>Beş û Sernavên Sereke Biguherîne</span>
                   </h2>
-
                   {catMsg && (
                     <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm font-medium">
                       {catMsg}
                     </div>
                   )}
-
                   <div className="space-y-3 mb-6">
                     {categories.map((cat) => (
                       <div key={cat.slug} className="flex items-center gap-3">
@@ -3990,7 +4603,6 @@ export default function App() {
                         </button>
                       </div>
                     ))}
-
                     <button
                       type="button"
                       onClick={handleSaveCategories}
@@ -3999,7 +4611,6 @@ export default function App() {
                       Navên Beşan Tomar Bike
                     </button>
                   </div>
-
                   <form onSubmit={handleAddCategory} className="pt-4 border-t border-slate-200 flex flex-wrap gap-3">
                     <input
                       type="text"
@@ -4016,20 +4627,16 @@ export default function App() {
                     </button>
                   </form>
                 </div>
-
-                {/* TÜM SİTE YAZILARI */}
                 <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
                   <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-red-700" />
-                    <span>Hemû Nivîsên Malperê Biguherîne ({selectedLang})</span>
+                    <span>Hemû Nivîsên Malperê Biguherîne</span>
                   </h2>
-
                   {settingsMsg && (
                     <div className="p-3 rounded-xl mb-4 bg-emerald-50 text-emerald-800 border border-emerald-200 text-sm font-medium">
                       {settingsMsg}
                     </div>
                   )}
-
                   <form onSubmit={handleSaveAllUiTexts} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {UI_FIELD_LABELS.map((field) => (
                       <div key={field.key}>
@@ -4039,21 +4646,11 @@ export default function App() {
                         <input
                           type="text"
                           value={ui[field.key] || ''}
-                          onChange={(e) => {
-                            // DÜZELTME: seçili dile ait anahtara yaz (başka dilde de düzenlenebilsin)
-                            const v = e.target.value;
-                            const prefixedKey = `${selectedLang.toLowerCase()}_${field.key}`;
-                            setRawUi((prev) => ({
-                              ...prev,
-                              [prefixedKey]: v,
-                              ...(selectedLang === 'KU' ? { [field.key]: v } : {})
-                            }));
-                          }}
+                          onChange={(e) => setRawUi({ ...rawUi, [field.key]: e.target.value })}
                           className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:border-red-700"
                         />
                       </div>
                     ))}
-
                     <div className="md:col-span-2 pt-2">
                       <button
                         type="submit"
@@ -4069,7 +4666,6 @@ export default function App() {
           </div>
         )}
       </main>
-
       <footer className="bg-slate-900 text-slate-400 py-8 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
           <div className="font-bold text-white text-base">
