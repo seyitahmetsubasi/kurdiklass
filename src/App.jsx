@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabaseClient';
+import ALFABE from './ALFABE';
 import {
   BookOpen,
   Video,
@@ -37,7 +38,9 @@ import {
   Eye,
   Zap
 } from 'lucide-react';
+
 const ADMIN_PASSCODE = import.meta.env.VITE_ADMIN_PASSCODE || 'kurdiklass2025';
+
 const LANGUAGE_OPTIONS = [
   { code: 'KU', name: 'Kurmancî', nativeName: 'Kurmancî' },
   { code: 'ZZA', name: 'Zazakî / Kirmanckî', nativeName: 'Zazakî' },
@@ -48,10 +51,12 @@ const LANGUAGE_OPTIONS = [
   { code: 'FR', name: 'French', nativeName: 'Français' },
   { code: 'IT', name: 'Italian', nativeName: 'Italiano' }
 ];
+
 const kurdishAlphabet = [
   'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î', 'J', 'K', 'L',
   'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'Ş', 'T', 'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
 ];
+
 const BUILTIN_DICTIONARY = [
   {
     id: 'builtin-1',
@@ -774,57 +779,7 @@ const BUILTIN_DICTIONARY = [
     }
   }
 ];
-const REQUESTED_GAME_WORDS = [
-  'Agir',
-  'Bilbil',
-  'Cemed',
-  'Çay',
-  'Dar',
-  'Endezyar',
-  'Êlek',
-  'Ferheng',
-  'Gore',
-  'Guh',
-  'Gûz',
-  'Hesp',
-  'Heyv',
-  'Îsot',
-  'Jûjî',
-  'Ker',
-  'Lembe',
-  'Masî',
-  'Nan',
-  'Nivîn',
-  'Pisîk',
-  'Qaz',
-  'Roj',
-  'Rovî',
-  'Stêrk',
-  'Şêr',
-  'Telefon',
-  'Tivir',
-  'Werdek',
-  'Xiyar',
-  'Zebeş'
-];
-const buildFourWordGameStages = (words = REQUESTED_GAME_WORDS) => {
-  const chunks = [];
-  for (let i = 0; i < words.length; i += 4) {
-    chunks.push(words.slice(i, i + 4));
-  }
-  const totalStages = chunks.length;
-  return chunks.map((group, idx) => ({
-    id: `peyvk-stage-${idx + 1}`,
-    unit_title: `PEYVK ${idx + 1}/${totalStages}`,
-    exercise_type: 'match',
-    question_text: `Her peyvê bi wêneyê wê/wî re bighîne hev (${idx + 1}/${totalStages})`,
-    options: group.map((w) => `${w}=${w.toLocaleLowerCase('tr')}`),
-    correct_answer: String(group.length),
-    explanation: group.join(', '),
-    sort_order: idx + 1
-  }));
-};
-const BUILTIN_EXERCISES = buildFourWordGameStages(REQUESTED_GAME_WORDS);
+
 const defaultCategories = [
   { slug: 'zarok', name: 'Zarok' },
   { slug: 'ders', name: 'Ders' },
@@ -832,6 +787,7 @@ const defaultCategories = [
   { slug: 'video', name: 'Vîdyo' },
   { slug: 'ferheng', name: 'Ferheng' }
 ];
+
 const defaultLevels = ['Destpêk (A1-A2)', 'Navîn (B1-B2)', 'Pêşketî (C1)'];
 const defaultGrades = [
   'Pêşdibistan',
@@ -840,12 +796,14 @@ const defaultGrades = [
   'Lîse / Zanîngeh',
   'Hemû Ast'
 ];
+
 const defaultMediaTypes = [
   { id: 'video', label: 'Vîdyo', icon: Video },
   { id: 'document', label: 'Belge / PDF', icon: FileText },
   { id: 'audio', label: 'Deng', icon: Headphones },
   { id: 'book', label: 'Pirtûk', icon: BookOpen }
 ];
+
 const DEFAULT_UI_TEXTS = {
   brand_first: 'Kurdi',
   brand_second: 'Klass',
@@ -905,6 +863,7 @@ const DEFAULT_UI_TEXTS = {
   ferheng_empty_text: 'Peyvek nehat dîtin. Bi tîp an peyveke din biceribîne.',
   footer_text: 'KurdiKlass — Platforma Perwerdehî û Çavkaniyên Kurdî'
 };
+
 const UI_FIELD_LABELS = [
   { key: 'brand_first', label: 'Navê Malperê (Beşa Yekem)' },
   { key: 'brand_second', label: 'Navê Malperê (Beşa Duyem)' },
@@ -920,12 +879,14 @@ const UI_FIELD_LABELS = [
   { key: 'list_all_title', label: 'Sernavê Lîsteya Materyalan' },
   { key: 'footer_text', label: 'Nivîsa Binê Malperê (Footer)' }
 ];
+
 const getYouTubeEmbedUrl = (url = '') => {
   const match = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/
   );
   return match ? `https://www.youtube.com/embed/${match[1]}` : null;
 };
+
 const normalizeKurdish = (text = '') =>
   text
     .toLowerCase()
@@ -941,6 +902,7 @@ const normalizeKurdish = (text = '') =>
     .replace(/['’ʼ`-]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+
 const sanitizeWiktionaryText = (raw = '') =>
   String(raw || '')
     .replace(/\{\{[^{}]*\}\}/g, ' ')
@@ -949,6 +911,7 @@ const sanitizeWiktionaryText = (raw = '') =>
     .replace(/'{2,}/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+
 const isLikelyInflectedForm = (gloss = '') => {
   const g = gloss.toLowerCase();
   return (
@@ -961,6 +924,7 @@ const isLikelyInflectedForm = (gloss = '') => {
     g.includes('form of ')
   );
 };
+
 const extractPosFromWiktionarySection = (sectionText = '') => {
   const posMatch = sectionText.match(
     /^===\s*(Noun|Verb|Adjective|Adverb|Pronoun|Numeral|Conjunction|Preposition|Postposition|Interjection|Particle|Proper noun|Phrase|Idiom|Letter)\s*===/im
@@ -978,6 +942,7 @@ const extractPosFromWiktionarySection = (sectionText = '') => {
   };
   return map[posMatch[1].toLowerCase()] || 'navdêr';
 };
+
 const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
   if (!wikitext) return { pos: 'navdêr', meanings: [], examples: [] };
   const lines = wikitext.split('\n');
@@ -1034,6 +999,7 @@ const extractGlossesFromWiktionary = (wikitext = '', targetLangCode = 'EN') => {
     langCode: targetLangCode
   };
 };
+
 const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
   const cleanTerm = String(rawTerm || '').trim();
   if (!cleanTerm) return null;
@@ -1099,29 +1065,12 @@ const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
   return null;
 };
 export default function App() {
-  const [selectedLang, setSelectedLang] = useState(() => {
-    try {
-      const saved = localStorage.getItem('kk_lang');
-      return saved && LANGUAGE_OPTIONS.some((l) => l.code === saved) ? saved : 'KU';
-    } catch {
-      return 'KU';
-    }
-  });
-  const [langMenuOpen, setLangMenuOpen] = useState(false);
-  const langDropdownRef = useRef(null);
   const [viewMode, setViewMode] = useState('student');
-  const [isAdmin, setIsAdmin] = useState(() => sessionStorage.getItem('kk_admin') === 'true');
-  const [passwordInput, setPasswordInput] = useState('');
-  const [authError, setAuthError] = useState('');
+  const [lessons, setLessons] = useState([]);
   const [categories, setCategories] = useState(defaultCategories);
-  const [newCatName, setNewCatName] = useState('');
-  const [catMsg, setCatMsg] = useState('');
   const [dynamicLevels, setDynamicLevels] = useState(defaultLevels);
   const [dynamicGrades, setDynamicGrades] = useState(defaultGrades);
   const [dynamicMediaTypes, setDynamicMediaTypes] = useState(defaultMediaTypes);
-  const [rawUi, setRawUi] = useState(DEFAULT_UI_TEXTS);
-  const [settingsMsg, setSettingsMsg] = useState('');
-  const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
@@ -1129,59 +1078,58 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeLesson, setActiveLesson] = useState(null);
   const [lessonTab, setLessonTab] = useState('content');
+  const [mediaLoadError, setMediaLoadError] = useState('');
   const [brokenThumbs, setBrokenThumbs] = useState({});
   const [brokenExImages, setBrokenExImages] = useState({});
-  const [mediaLoadError, setMediaLoadError] = useState('');
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [uploadingField, setUploadingField] = useState(null);
-  const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({
     title: '',
-    category_slug: 'zarok',
+    category_slug: 'ders',
     media_type: 'video',
     media_url: '',
     thumbnail_url: '',
-    level: defaultLevels[0],
-    grade_level: defaultGrades[0],
+    level: 'Destpêk (A1-A2)',
+    grade_level: 'Pola 1-4',
     description: '',
     teacher_guide: '',
     guide_pdf_url: ''
   });
+  const [statusMsg, setStatusMsg] = useState({ type: '', text: '' });
+  const [newCatName, setNewCatName] = useState('');
+  const [catMsg, setCatMsg] = useState('');
   const [exercises, setExercises] = useState([]);
+  const [gamesReset, setGamesReset] = useState(false);
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [currentExIndex, setCurrentExIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState('');
   const [builtWords, setBuiltWords] = useState([]);
   const [answerState, setAnswerState] = useState(null);
-  const [unitCompleted, setUnitCompleted] = useState(false);
-  const [hearts, setHearts] = useState(5);
   const [comboCount, setComboCount] = useState(0);
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const audioPlayerRef = useRef(null);
-  const [matchLeftSelected, setMatchLeftSelected] = useState(null);
-  const [matchRightSelected, setMatchRightSelected] = useState(null);
-  const [matchedPairs, setMatchedPairs] = useState([]);
-  const [shuffledRightOptions, setShuffledRightOptions] = useState([]);
-  const [matchWrongFlash, setMatchWrongFlash] = useState(false);
-  const [xpPoints, setXpPoints] = useState(() => Number(localStorage.getItem('kk_xp') || 0));
-  const [streakDays, setStreakDays] = useState(() => Number(localStorage.getItem('kk_streak') || 0));
+  const [hearts, setHearts] = useState(5);
+  const [xpPoints, setXpPoints] = useState(() => {
+    const saved = localStorage.getItem('kk_xp');
+    return saved ? parseInt(saved, 10) || 0 : 0;
+  });
+  const [streakDays, setStreakDays] = useState(() => {
+    const saved = localStorage.getItem('kk_streak');
+    return saved ? parseInt(saved, 10) || 0 : 0;
+  });
   const [completedUnits, setCompletedUnits] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('kk_completed_units') || '[]');
+      const saved = localStorage.getItem('kk_completed_units');
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
+  const [unitCompleted, setUnitCompleted] = useState(false);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  const audioPlayerRef = useRef(null);
   const [editingExId, setEditingExId] = useState(null);
-  const [uploadingExImg, setUploadingExImg] = useState(false);
-  const [uploadingExAudio, setUploadingExAudio] = useState(false);
-  const [inlinePhotoTarget, setInlinePhotoTarget] = useState(null);
-  const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
-  const inlinePhotoInputRef = useRef(null);
-  const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
-  const [adminExSearch, setAdminExSearch] = useState('');
-  const [gamesReset, setGamesReset] = useState(false);
-  const [exMsg, setExMsg] = useState('');
   const [exForm, setExForm] = useState({
     unit_title: '',
     exercise_type: 'choice',
@@ -1192,17 +1140,36 @@ export default function App() {
     image_url: '',
     audio_url: ''
   });
+  const [exMsg, setExMsg] = useState('');
+  const [uploadingExImg, setUploadingExImg] = useState(false);
+  const [uploadingExAudio, setUploadingExAudio] = useState(false);
+  const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
+  const [inlinePhotoTarget, setInlinePhotoTarget] = useState(null);
+  const inlinePhotoInputRef = useRef(null);
+  const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
+  const [adminExSearch, setAdminExSearch] = useState('');
   const [dictionaryWords, setDictionaryWords] = useState([]);
   const [totalWordCount, setTotalWordCount] = useState(0);
   const [ferhengQuery, setFerhengQuery] = useState('');
-  const [wiktionaryMatches, setWiktionaryMatches] = useState([]);
-  const [searchingDict, setSearchingDict] = useState(false);
   const [selectedLetter, setSelectedLetter] = useState('all');
   const [selectedWordDetail, setSelectedWordDetail] = useState(null);
+  const [wiktionaryMatches, setWiktionaryMatches] = useState([]);
+  const [searchingDict, setSearchingDict] = useState(false);
+  const [searchHistory, setSearchHistory] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
+    } catch {
+      return [];
+    }
+  });
+  const [favoriteWords, setFavoriteWords] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem('kk_favorite_words') || '[]');
+    } catch {
+      return [];
+    }
+  });
   const [editingWordId, setEditingWordId] = useState(null);
-  const [uploadingWordAudio, setUploadingWordAudio] = useState(false);
-  const [syncingProgress, setSyncingProgress] = useState('');
-  const [wordMsg, setWordMsg] = useState('');
   const [wordForm, setWordForm] = useState({
     word: '',
     part_of_speech: 'navdêr',
@@ -1232,75 +1199,39 @@ export default function App() {
       IT: ''
     }
   });
-  const [searchHistory, setSearchHistory] = useState(() => {
+  const [wordMsg, setWordMsg] = useState('');
+  const [uploadingWordAudio, setUploadingWordAudio] = useState(false);
+  const [syncingProgress, setSyncingProgress] = useState('');
+  const [selectedLang, setSelectedLang] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
+      return localStorage.getItem('kk_lang') || 'KU';
     } catch {
-      return [];
+      return 'KU';
     }
   });
-  const [favoriteWords, setFavoriteWords] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('kk_favorite_words') || '[]');
-    } catch {
-      return [];
-    }
-  });
-  const ui = (() => {
-    const langPrefix = `${selectedLang.toLowerCase()}_`;
-    const merged = { ...DEFAULT_UI_TEXTS };
-    Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
-      if (rawUi[langPrefix + k]) {
-        merged[k] = rawUi[langPrefix + k];
-      } else if (rawUi[k]) {
-        merged[k] = rawUi[k];
-      }
-    });
-    return merged;
-  })();
-  const handleSelectLanguage = async (langCode) => {
-    setSelectedLang(langCode);
-    setLangMenuOpen(false);
-    try {
-      localStorage.setItem('kk_lang', langCode);
-    } catch {
-      // ignore storage errors
-    }
-    try {
-      await supabase
-        .from('site_settings')
-        .upsert([{ key: 'active_ui_language', value: langCode }], { onConflict: 'key' });
-    } catch {
-      // ignore network errors
-    }
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const langDropdownRef = useRef(null);
+  const [rawUi, setRawUi] = useState(DEFAULT_UI_TEXTS);
+  const [settingsMsg, setSettingsMsg] = useState('');
+  const ui = { ...DEFAULT_UI_TEXTS, ...rawUi };
+  const hasActiveFilters =
+    selectedCategory !== 'all' ||
+    selectedLevel !== 'all' ||
+    selectedMedia !== 'all' ||
+    Boolean(searchQuery.trim());
+  const handleResetFilters = () => {
+    setSelectedCategory('all');
+    setSelectedLevel('all');
+    setSelectedMedia('all');
+    setSearchQuery('');
   };
-  useEffect(() => {
-    const handleOutsideClick = (e) => {
-      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
-        setLangMenuOpen(false);
-      }
-    };
-    const handleEscKey = (e) => {
-      if (e.key === 'Escape') {
-        setLangMenuOpen(false);
-        setActiveLesson(null);
-        setSelectedWordDetail(null);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('keydown', handleEscKey);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEscKey);
-    };
-  }, []);
   const persistProgressSnapshot = async (nextXp, nextStreak, nextUnits) => {
     try {
       localStorage.setItem('kk_xp', String(nextXp));
       localStorage.setItem('kk_streak', String(nextStreak));
       localStorage.setItem('kk_completed_units', JSON.stringify(nextUnits));
     } catch {
-      // ignore storage quota errors
+      // ignore storage errors
     }
     try {
       await supabase.from('site_settings').upsert(
@@ -1312,143 +1243,176 @@ export default function App() {
         { onConflict: 'key' }
       );
     } catch {
-      // ignore network sync errors
+      // ignore remote sync errors
     }
   };
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
+        setLangMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setLangMenuOpen(false);
+        setActiveLesson(null);
+        setSelectedWordDetail(null);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+  useEffect(() => {
+    if (sessionStorage.getItem('kurdiklass_admin') === '1') {
+      setIsAdmin(true);
+    }
+    fetchAllData();
+  }, []);
   const fetchAllData = async () => {
     setLoading(true);
     const { data: lessonsData } = await supabase
       .from('lessons')
       .select('*')
       .order('created_at', { ascending: false });
-    if (lessonsData) setLessons(lessonsData);
+    if (lessonsData) {
+      setLessons(lessonsData);
+      const lessonLevels = lessonsData.map((l) => l.level).filter(Boolean);
+      setDynamicLevels([...new Set([...defaultLevels, ...lessonLevels])]);
+      const lessonGrades = lessonsData.map((l) => l.grade_level).filter(Boolean);
+      setDynamicGrades([...new Set([...defaultGrades, ...lessonGrades])]);
+      const extraMediaIds = lessonsData.map((l) => l.media_type).filter(Boolean);
+      const mergedMedia = [...defaultMediaTypes];
+      extraMediaIds.forEach((mId) => {
+        if (!mergedMedia.some((dm) => dm.id === mId)) {
+          mergedMedia.push({
+            id: mId,
+            label: mId.charAt(0).toUpperCase() + mId.slice(1),
+            icon: FileText
+          });
+        }
+      });
+      setDynamicMediaTypes(mergedMedia);
+    }
     const { data: exData } = await supabase
       .from('kurmanci_exercises')
       .select('*')
       .order('sort_order', { ascending: true });
     if (exData) setExercises(exData);
-    const { count: dictCount } = await supabase
+    const { count: wordTotal } = await supabase
       .from('dictionary')
       .select('*', { count: 'exact', head: true });
+    if (typeof wordTotal === 'number') setTotalWordCount(wordTotal);
     const { data: dictData } = await supabase
       .from('dictionary')
       .select('*')
       .order('word', { ascending: true })
-      .range(0, 999);
-    const dbRows = dictData || [];
-    setDictionaryWords(dbRows);
-    setTotalWordCount(
-      Math.max(Number(dictCount || 0), dbRows.length, BUILTIN_DICTIONARY.length)
-    );
-    const { data: settingsData } = await supabase.from('site_settings').select('*');
-    if (settingsData) {
-      const uiMap = { ...DEFAULT_UI_TEXTS };
-      let remoteXp = null;
-      let remoteStreak = null;
-      let remoteUnits = null;
+      .limit(1000);
+    if (dictData) setDictionaryWords(dictData);
+    const { data: settingsData } = await supabase
+      .from('site_settings')
+      .select('key, value');
+    if (settingsData && settingsData.length > 0) {
+      const map = {};
       settingsData.forEach((row) => {
-        if (row.key === 'categories_json' && row.value) {
-          try {
-            const parsed = JSON.parse(row.value);
-            if (Array.isArray(parsed) && parsed.length > 0) setCategories(parsed);
-          } catch {
-            // ignore malformed JSON
+        map[row.key] = row.value;
+      });
+      if (map.categories_json) {
+        try {
+          const parsedCats = JSON.parse(map.categories_json);
+          if (Array.isArray(parsedCats) && parsedCats.length > 0) {
+            setCategories(parsedCats);
           }
-        } else if (row.key === 'levels_json' && row.value) {
-          try {
-            const parsed = JSON.parse(row.value);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setDynamicLevels(parsed);
-              setFormData((prev) => ({
-                ...prev,
-                level: parsed.includes(prev.level) ? prev.level : parsed[0]
-              }));
-            }
-          } catch {
-            // ignore
-          }
-        } else if (row.key === 'grades_json' && row.value) {
-          try {
-            const parsed = JSON.parse(row.value);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              setDynamicGrades(parsed);
-              setFormData((prev) => ({
-                ...prev,
-                grade_level: parsed.includes(prev.grade_level) ? prev.grade_level : parsed[0]
-              }));
-            }
-          } catch {
-            // ignore
-          }
-        } else if (row.key === 'media_types_json' && row.value) {
-          try {
-            const parsed = JSON.parse(row.value);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              const iconMap = {
-                video: Video,
-                document: FileText,
-                audio: Headphones,
-                book: BookOpen
-              };
-              const hydrated = parsed.map((m) => ({
-                ...m,
-                icon: iconMap[m.id] || BookOpen
-              }));
-              setDynamicMediaTypes(hydrated);
-              setFormData((prev) => ({
-                ...prev,
-                media_type: hydrated.some((m) => m.id === prev.media_type)
-                  ? prev.media_type
-                  : hydrated[0].id
-              }));
-            }
-          } catch {
-            // ignore
-          }
-        } else if (row.key === 'learner_xp_remote' && row.value !== null) {
-          remoteXp = Number(row.value) || 0;
-        } else if (row.key === 'learner_streak_remote' && row.value !== null) {
-          remoteStreak = Number(row.value) || 0;
-        } else if (row.key === 'learner_units_remote' && row.value) {
-          try {
-            const parsedUnits = JSON.parse(row.value);
-            if (Array.isArray(parsedUnits)) remoteUnits = parsedUnits;
-          } catch {
-            // ignore
-          }
-        } else if (row.key && row.key !== 'active_ui_language') {
-          uiMap[row.key] = row.value;
+        } catch {
+          // ignore
+        }
+      }
+      if (map.games_reset === 'true') {
+        setGamesReset(true);
+      }
+      const activeLang = (() => {
+        try {
+          return localStorage.getItem('kk_lang') || 'KU';
+        } catch {
+          return 'KU';
+        }
+      })();
+      const langPrefix = `${activeLang.toLowerCase()}_`;
+      const uiMap = { ...DEFAULT_UI_TEXTS };
+      Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
+        if (map[k] !== undefined) uiMap[k] = map[k];
+      });
+      Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
+        if (map[`${langPrefix}${k}`] !== undefined) {
+          uiMap[k] = map[`${langPrefix}${k}`];
         }
       });
       setRawUi(uiMap);
-      const localXp = Number(localStorage.getItem('kk_xp') || 0);
-      if (remoteXp !== null && remoteXp > localXp) {
-        setXpPoints(remoteXp);
-        localStorage.setItem('kk_xp', String(remoteXp));
+      if (map.learner_xp_remote) {
+        const remoteXp = parseInt(map.learner_xp_remote, 10) || 0;
+        const localXp = parseInt(localStorage.getItem('kk_xp') || '0', 10) || 0;
+        const bestXp = Math.max(remoteXp, localXp);
+        setXpPoints(bestXp);
+        localStorage.setItem('kk_xp', String(bestXp));
       }
-      const localStreak = Number(localStorage.getItem('kk_streak') || 0);
-      if (remoteStreak !== null && remoteStreak > localStreak) {
-        setStreakDays(remoteStreak);
-        localStorage.setItem('kk_streak', String(remoteStreak));
+      if (map.learner_streak_remote) {
+        const remoteStreak = parseInt(map.learner_streak_remote, 10) || 0;
+        const localStreak = parseInt(localStorage.getItem('kk_streak') || '0', 10) || 0;
+        const bestStreak = Math.max(remoteStreak, localStreak);
+        setStreakDays(bestStreak);
+        localStorage.setItem('kk_streak', String(bestStreak));
       }
-      if (Array.isArray(remoteUnits) && remoteUnits.length > 0) {
-        setCompletedUnits((prev) => {
-          const mergedUnits = [...new Set([...prev, ...remoteUnits])];
-          localStorage.setItem('kk_completed_units', JSON.stringify(mergedUnits));
-          return mergedUnits;
-        });
+      if (map.learner_units_remote) {
+        try {
+          const remoteUnits = JSON.parse(map.learner_units_remote);
+          if (Array.isArray(remoteUnits)) {
+            const localUnits = JSON.parse(localStorage.getItem('kk_completed_units') || '[]');
+            const mergedUnits = [...new Set([...(Array.isArray(localUnits) ? localUnits : []), ...remoteUnits])];
+            setCompletedUnits(mergedUnits);
+            localStorage.setItem('kk_completed_units', JSON.stringify(mergedUnits));
+          }
+        } catch {
+          // ignore
+        }
       }
     }
     setLoading(false);
   };
-  useEffect(() => {
-    fetchAllData();
-  }, []);
+  const handleSelectLanguage = async (langCode) => {
+    setSelectedLang(langCode);
+    setLangMenuOpen(false);
+    try {
+      localStorage.setItem('kk_lang', langCode);
+    } catch {
+      // ignore
+    }
+    const { data: settingsData } = await supabase
+      .from('site_settings')
+      .select('key, value');
+    const map = {};
+    (settingsData || []).forEach((row) => {
+      map[row.key] = row.value;
+    });
+    const langPrefix = `${langCode.toLowerCase()}_`;
+    const uiMap = { ...DEFAULT_UI_TEXTS };
+    Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
+      if (map[k] !== undefined) uiMap[k] = map[k];
+    });
+    Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
+      if (map[`${langPrefix}${k}`] !== undefined) {
+        uiMap[k] = map[`${langPrefix}${k}`];
+      }
+    });
+    setRawUi(uiMap);
+  };
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (passwordInput.trim() === ADMIN_PASSCODE) {
+    if (passwordInput === ADMIN_PASSCODE) {
       setIsAdmin(true);
-      sessionStorage.setItem('kk_admin', 'true');
+      sessionStorage.setItem('kurdiklass_admin', '1');
       setAuthError('');
       setPasswordInput('');
     } else {
@@ -1456,17 +1420,16 @@ export default function App() {
     }
   };
   const handleLogout = () => {
+    if (audioPlayerRef.current) audioPlayerRef.current.pause();
+    setIsPlayingAudio(false);
     setIsAdmin(false);
-    sessionStorage.removeItem('kk_admin');
-    setEditingId(null);
-    setEditingWordId(null);
-    setEditingExId(null);
-    setInlinePhotoTarget(null);
+    sessionStorage.removeItem('kurdiklass_admin');
+    resetForm();
   };
-  const handleFileUpload = async (e, targetField) => {
-    const file = e.target.files?.[0];
+  const handleFileUpload = async (event, fieldName) => {
+    const file = event.target.files?.[0];
     if (!file) return;
-    setUploadingField(targetField);
+    setUploadingField(fieldName);
     setStatusMsg({ type: '', text: '' });
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
@@ -1475,35 +1438,22 @@ export default function App() {
       .from('materyal')
       .upload(filePath, file);
     if (uploadError) {
-      setStatusMsg({
-        type: 'error',
-        text: 'Barkirina pelê têk çû: ' + uploadError.message
-      });
+      setStatusMsg({ type: 'error', text: 'Barkirina pelî têk çû: ' + uploadError.message });
     } else {
       const { data: publicUrlData } = supabase.storage
         .from('materyal')
         .getPublicUrl(filePath);
       if (publicUrlData?.publicUrl) {
-        setFormData((prev) => ({ ...prev, [targetField]: publicUrlData.publicUrl }));
-        if (targetField === 'thumbnail_url') {
-          setBrokenThumbs({});
-        }
-        setStatusMsg({
-          type: 'success',
-          text: 'Pel bi serkeftî hat barkirin û lînk hat bicîkirin!'
-        });
+        setFormData((prev) => ({ ...prev, [fieldName]: publicUrlData.publicUrl }));
+        setStatusMsg({ type: 'success', text: 'Pel bi serkeftî hat barkirin!' });
       }
     }
     setUploadingField(null);
-    e.target.value = '';
+    event.target.value = '';
   };
   const handleSaveLesson = async (e) => {
     e.preventDefault();
     setStatusMsg({ type: '', text: '' });
-    if (!formData.title.trim()) {
-      setStatusMsg({ type: 'error', text: 'Ji kerema xwe sernavê dersê binivîse.' });
-      return;
-    }
     const payload = {
       title: formData.title.trim(),
       category_slug: formData.category_slug,
@@ -1522,7 +1472,6 @@ export default function App() {
         setStatusMsg({ type: 'error', text: 'Çewtî çêbû: ' + error.message });
       } else {
         setStatusMsg({ type: 'success', text: 'Ders bi serkeftî hat nûkirin!' });
-        setEditingId(null);
         resetForm();
         fetchAllData();
       }
@@ -1531,44 +1480,44 @@ export default function App() {
       if (error) {
         setStatusMsg({ type: 'error', text: 'Çewtî çêbû: ' + error.message });
       } else {
-        setStatusMsg({ type: 'success', text: 'Materyala nû bi serkeftî hat zêdekirin!' });
+        setStatusMsg({ type: 'success', text: 'Materyala nû li malperê hat zêdekirin!' });
         resetForm();
         fetchAllData();
       }
     }
   };
-  const resetForm = () => {
-    setFormData({
-      title: '',
-      category_slug: categories[0]?.slug || 'zarok',
-      media_type: dynamicMediaTypes[0]?.id || 'video',
-      media_url: '',
-      thumbnail_url: '',
-      level: dynamicLevels[0] || defaultLevels[0],
-      grade_level: dynamicGrades[0] || defaultGrades[0],
-      description: '',
-      teacher_guide: '',
-      guide_pdf_url: ''
-    });
-    setEditingId(null);
-  };
   const startEditing = (lesson) => {
     setActiveLesson(null);
+    setViewMode('admin');
     setEditingId(lesson.id);
     setFormData({
       title: lesson.title || '',
-      category_slug: lesson.category_slug || 'zarok',
+      category_slug: lesson.category_slug || 'ders',
       media_type: lesson.media_type || 'video',
       media_url: lesson.media_url || '',
       thumbnail_url: lesson.thumbnail_url || '',
-      level: lesson.level || dynamicLevels[0] || defaultLevels[0],
-      grade_level: lesson.grade_level || dynamicGrades[0] || defaultGrades[0],
+      level: lesson.level || 'Destpêk (A1-A2)',
+      grade_level: lesson.grade_level || 'Pola 1-4',
       description: lesson.description || '',
       teacher_guide: lesson.teacher_guide || '',
       guide_pdf_url: lesson.guide_pdf_url || ''
     });
-    setViewMode('admin');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      title: '',
+      category_slug: 'ders',
+      media_type: 'video',
+      media_url: '',
+      thumbnail_url: '',
+      level: 'Destpêk (A1-A2)',
+      grade_level: 'Pola 1-4',
+      description: '',
+      teacher_guide: '',
+      guide_pdf_url: ''
+    });
   };
   const handleDeleteLesson = async (id) => {
     if (!window.confirm('Tu piştrast î ku dixwazî vê materyalê jê bibî?')) return;
@@ -1577,66 +1526,68 @@ export default function App() {
       fetchAllData();
     }
   };
-  const hasActiveFilters =
-    selectedCategory !== 'all' ||
-    selectedLevel !== 'all' ||
-    selectedMedia !== 'all' ||
-    searchQuery.trim() !== '';
-  const handleResetFilters = () => {
-    setSelectedCategory('all');
-    setSelectedLevel('all');
-    setSelectedMedia('all');
-    setSearchQuery('');
-  };
   const handleUpdateCategoryName = (slug, newName) => {
     setCategories((prev) =>
       prev.map((c) => (c.slug === slug ? { ...c, name: newName } : c))
     );
   };
-  const handleAddCategory = async (e) => {
-    e.preventDefault();
-    const trimmed = newCatName.trim();
-    if (!trimmed) return;
-    const baseSlug = trimmed
-      .toLowerCase()
-      .replace(/[^a-z0-9çğıöşü\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-');
-    const slug = `${baseSlug || 'bes'}-${Date.now().toString().slice(-4)}`;
-    const updated = [...categories, { slug, name: trimmed }];
-    setCategories(updated);
-    setNewCatName('');
-    const { error } = await supabase
-      .from('site_settings')
-      .upsert([{ key: 'categories_json', value: JSON.stringify(updated) }], {
-        onConflict: 'key'
-      });
-    setCatMsg(error ? 'Çewtî: ' + error.message : 'Beşa nû hat zêdekirin û tomarkirin!');
-    setTimeout(() => setCatMsg(''), 3500);
-  };
-  const handleDeleteCategory = async (slug) => {
-    if (categories.length <= 1) {
-      setCatMsg('Divê herî kêm beşek bimîne.');
-      return;
-    }
-    const updated = categories.filter((c) => c.slug !== slug);
-    setCategories(updated);
-    const { error } = await supabase
-      .from('site_settings')
-      .upsert([{ key: 'categories_json', value: JSON.stringify(updated) }], {
-        onConflict: 'key'
-      });
-    setCatMsg(error ? 'Çewtî: ' + error.message : 'Beş hat jêbirin.');
-    setTimeout(() => setCatMsg(''), 3500);
-  };
   const handleSaveCategories = async () => {
     const { error } = await supabase
       .from('site_settings')
-      .upsert([{ key: 'categories_json', value: JSON.stringify(categories) }], {
-        onConflict: 'key'
-      });
-    setCatMsg(error ? 'Çewtî: ' + error.message : 'Navên beşan hatin tomarkirin!');
+      .upsert(
+        { key: 'categories_json', value: JSON.stringify(categories) },
+        { onConflict: 'key' }
+      );
+    setCatMsg(
+      error
+        ? 'Çewtî: ' + error.message
+        : 'Navên beşan hatin tomarkirin!'
+    );
     setTimeout(() => setCatMsg(''), 3500);
+  };
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCatName.trim()) return;
+    const slug = newCatName
+      .toLowerCase()
+      .trim()
+      .replace(/ç/g, 'c')
+      .replace(/ğ/g, 'g')
+      .replace(/ı/g, 'i')
+      .replace(/î/g, 'i')
+      .replace(/ö/g, 'o')
+      .replace(/ş/g, 's')
+      .replace(/ü/g, 'u')
+      .replace(/û/g, 'u')
+      .replace(/ê/g, 'e')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+    if (!slug) return;
+    const updated = [...categories, { slug, name: newCatName.trim() }];
+    setCategories(updated);
+    setNewCatName('');
+    await supabase
+      .from('site_settings')
+      .upsert(
+        { key: 'categories_json', value: JSON.stringify(updated) },
+        { onConflict: 'key' }
+      );
+    setCatMsg('Beşa nû hat zêdekirin!');
+    setTimeout(() => setCatMsg(''), 3000);
+  };
+  const handleDeleteCategory = async (slug) => {
+    if (categories.length <= 1) return;
+    const updated = categories.filter((c) => c.slug !== slug);
+    setCategories(updated);
+    if (selectedCategory === slug) setSelectedCategory('all');
+    await supabase
+      .from('site_settings')
+      .upsert(
+        { key: 'categories_json', value: JSON.stringify(updated) },
+        { onConflict: 'key' }
+      );
+    setCatMsg('Beş hat jêbirin.');
+    setTimeout(() => setCatMsg(''), 3000);
   };
   const handleSaveAllUiTexts = async (e) => {
     e.preventDefault();
@@ -1932,7 +1883,7 @@ export default function App() {
     }
   };
   const effectiveExercises = (() => {
-    const base = gamesReset ? exercises : [...BUILTIN_EXERCISES, ...exercises];
+    const base = gamesReset ? exercises : [...exercises];
     return [...base].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
   })();
   const combinedDictionary = (() => {
@@ -2143,7 +2094,9 @@ export default function App() {
         exercises.find((item) => item.id === target.exerciseId) ||
         effectiveExercises.find((item) => item.id === target.exerciseId);
       if (!sourceEx) return;
-      const isBuiltinStage = String(sourceEx.id || '').startsWith('peyvk-stage-');
+      const isBuiltinStage =
+        String(sourceEx.id || '').startsWith('peyvk-stage-') ||
+        String(sourceEx.id || '').startsWith('alfabe-peyvk-stage-');
       let basePool = sourceEx;
       if (isBuiltinStage) {
         const bPayload = {
@@ -2339,13 +2292,6 @@ export default function App() {
     const t = title.toLowerCase().trim();
     return t.startsWith('zarok');
   };
-  const unitList = [
-    ...new Set(
-      effectiveExercises
-        .filter((ex) => !isZarokUnit(ex.unit_title))
-        .map((ex) => ex.unit_title)
-    )
-  ];
   const zarokUnitList = [
     ...new Set(
       effectiveExercises
@@ -2366,11 +2312,6 @@ export default function App() {
       normalizeKurdish(ex.correct_answer || '').includes(q)
     );
   });
-  const unitExercises = (() => {
-    if (!selectedUnit) return [];
-    return effectiveExercises.filter((ex) => ex.unit_title === selectedUnit);
-  })();
-  const currentEx = unitExercises[currentExIndex];
   const playCurrentAudio = (url) => {
     if (!url) return;
     try {
@@ -2416,112 +2357,12 @@ export default function App() {
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
     }
-    if (currentEx?.audio_url && viewMode === 'learn' && selectedUnit && !unitCompleted) {
-      const timer = setTimeout(() => {
-        playCurrentAudio(currentEx.audio_url);
-      }, 250);
-      return () => clearTimeout(timer);
-    }
-  }, [currentEx?.id, viewMode, selectedUnit, unitCompleted]);
+  }, [viewMode, selectedUnit]);
   useEffect(() => {
     return () => {
       if (audioPlayerRef.current) audioPlayerRef.current.pause();
     };
   }, []);
-  const resolveMatchVisual = (rawRight, leftText) => {
-    const cleanedRight = (rawRight || '').trim();
-    const isUrl = /^(https?:\/\/|data:image\/)/i.test(cleanedRight);
-    const wordCandidate = cleanedRight.startsWith('img:')
-      ? cleanedRight.replace(/^img:/i, '').trim()
-      : cleanedRight;
-    const leftParts = (leftText || '').split('—');
-    const letter = leftParts.length > 1 ? leftParts[0].trim() : '';
-    const wordFromLeft = leftParts.length > 1 ? leftParts.slice(1).join('—').trim() : wordCandidate;
-    return {
-      right: cleanedRight,
-      image: isUrl ? cleanedRight : '',
-      word: wordFromLeft || wordCandidate || leftText,
-      letter
-    };
-  };
-  const parsedMatchPairs = (() => {
-    if (!currentEx || currentEx.exercise_type !== 'match') return [];
-    if (Array.isArray(currentEx.match_pairs) && currentEx.match_pairs.length > 0) {
-      return currentEx.match_pairs.map((mp, idx) => {
-        const resolved = resolveMatchVisual(mp.image || mp.right || mp.word, mp.left);
-        return {
-          id: mp.id ?? idx,
-          left: mp.left,
-          right: mp.right || resolved.right,
-          image: mp.image || resolved.image,
-          word: mp.word || resolved.word,
-          letter: mp.letter || resolved.letter
-        };
-      });
-    }
-    return (currentEx.options || [])
-      .map((pairStr, idx) => {
-        const parts = pairStr.split('=');
-        if (parts.length < 2) return null;
-        const left = parts[0].trim();
-        const rawRight = parts.slice(1).join('=').trim();
-        const resolved = resolveMatchVisual(rawRight, left);
-        return {
-          id: idx,
-          left,
-          ...resolved
-        };
-      })
-      .filter(Boolean);
-  })();
-  useEffect(() => {
-    if (currentEx?.exercise_type === 'match') {
-      const rightItems = parsedMatchPairs.map((p) => ({
-        id: p.id,
-        right: p.right,
-        image: p.image || '',
-        word: p.word || '',
-        letter: p.letter || ''
-      }));
-      const shuffled = [...rightItems].sort(() => Math.random() - 0.5);
-      setShuffledRightOptions(shuffled);
-      setMatchLeftSelected(null);
-      setMatchRightSelected(null);
-      setMatchedPairs([]);
-      setMatchWrongFlash(false);
-    }
-  }, [currentEx?.id]);
-  const handleMatchSelect = (side, pairId) => {
-    if (answerState || matchedPairs.includes(pairId) || hearts === 0) return;
-    const nextLeft = side === 'left' ? pairId : matchLeftSelected;
-    const nextRight = side === 'right' ? pairId : matchRightSelected;
-    setMatchLeftSelected(nextLeft);
-    setMatchRightSelected(nextRight);
-    if (nextLeft !== null && nextRight !== null) {
-      if (nextLeft === nextRight) {
-        const updated = [...matchedPairs, nextLeft];
-        setMatchedPairs(updated);
-        setMatchLeftSelected(null);
-        setMatchRightSelected(null);
-        if (updated.length === parsedMatchPairs.length) {
-          setAnswerState('correct');
-          const nextXp = xpPoints + 15;
-          setXpPoints(nextXp);
-          setComboCount((c) => c + 1);
-          persistProgressSnapshot(nextXp, streakDays, completedUnits);
-        }
-      } else {
-        setMatchWrongFlash(true);
-        setHearts((prev) => Math.max(0, prev - 1));
-        setComboCount(0);
-        setTimeout(() => {
-          setMatchLeftSelected(null);
-          setMatchRightSelected(null);
-          setMatchWrongFlash(false);
-        }, 550);
-      }
-    }
-  };
   const startUnit = (unitName) => {
     if (audioPlayerRef.current) {
       audioPlayerRef.current.pause();
@@ -2536,45 +2377,6 @@ export default function App() {
     setHearts(5);
     setUnitCompleted(false);
   };
-  const closeActiveUnit = () => {
-    const wasZarok = selectedUnit?.toUpperCase().startsWith('ZAROK:');
-    if (audioPlayerRef.current) audioPlayerRef.current.pause();
-    setIsPlayingAudio(false);
-    setSelectedUnit(null);
-    if (wasZarok) {
-      setViewMode('student');
-      setSelectedCategory('zarok');
-    }
-  };
-  const toggleSentenceWord = (word, idx) => {
-    if (answerState) return;
-    const existsIndex = builtWords.findIndex((item) => item.idx === idx);
-    if (existsIndex > -1) {
-      setBuiltWords((prev) => prev.filter((_, i) => i !== existsIndex));
-    } else {
-      setBuiltWords((prev) => [...prev, { word, idx }]);
-    }
-  };
-  const checkExerciseAnswer = () => {
-    if (!currentEx || currentEx.exercise_type === 'match') return;
-    const userAnswer =
-      currentEx.exercise_type === 'sentence'
-        ? builtWords.map((w) => w.word).join(' ').trim()
-        : selectedOption.trim();
-    if (!userAnswer) return;
-    if (userAnswer.toLowerCase() === currentEx.correct_answer.trim().toLowerCase()) {
-      setAnswerState('correct');
-      const bonus = comboCount >= 2 ? 15 : 10;
-      const nextXp = xpPoints + bonus;
-      setXpPoints(nextXp);
-      setComboCount((c) => c + 1);
-      persistProgressSnapshot(nextXp, streakDays, completedUnits);
-    } else {
-      setAnswerState('wrong');
-      setComboCount(0);
-      setHearts((prev) => Math.max(0, prev - 1));
-    }
-  };
   const updateStreak = () => {
     const today = new Date().toISOString().slice(0, 10);
     const last = localStorage.getItem('kk_last_day');
@@ -2585,24 +2387,6 @@ export default function App() {
     localStorage.setItem('kk_streak', String(nextStreak));
     localStorage.setItem('kk_last_day', today);
     return nextStreak;
-  };
-  const goToNextExercise = () => {
-    if (hearts === 0) return;
-    if (currentExIndex + 1 < unitExercises.length) {
-      setCurrentExIndex((prev) => prev + 1);
-      setSelectedOption('');
-      setBuiltWords([]);
-      setAnswerState(null);
-    } else {
-      setUnitCompleted(true);
-      const nextStreak = updateStreak();
-      const updatedUnits =
-        selectedUnit && !completedUnits.includes(selectedUnit)
-          ? [...completedUnits, selectedUnit]
-          : completedUnits;
-      setCompletedUnits(updatedUnits);
-      persistProgressSnapshot(xpPoints, nextStreak, updatedUnits);
-    }
   };
   const filteredLessons = lessons.filter((l) => {
     if (selectedCategory !== 'all' && l.category_slug !== selectedCategory) return false;
@@ -2617,8 +2401,6 @@ export default function App() {
   });
   const mediaIconFor = (type) =>
     (dynamicMediaTypes.find((m) => m.id === type) || dynamicMediaTypes[0]).icon;
-  const wrongAnswerLocked = answerState === 'wrong';
-  const outOfHearts = hearts === 0 && !unitCompleted;
   const renderEmbeddedMedia = (lesson) => {
     const url = (lesson?.media_url || '').trim();
     if (!url) {
@@ -3063,9 +2845,9 @@ export default function App() {
             )}
           </div>
         )}
-        {/* ===================== HÎNBÛN / LÎSTIK ===================== */}
+        {/* ===================== HÎNBÛN / LÎSTIK (ALFABE) ===================== */}
         {viewMode === 'learn' && (
-          <div className="max-w-3xl mx-auto">
+          <div>
             <input
               ref={inlinePhotoInputRef}
               type="file"
@@ -3073,434 +2855,36 @@ export default function App() {
               className="hidden"
               onChange={handleInlinePhotoFileChange}
             />
-            {!selectedUnit ? (
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h1 className="text-3xl font-extrabold text-slate-900 mb-2">{ui.learn_title}</h1>
-                  <p className="text-slate-500">{ui.learn_subtitle}</p>
-                </div>
-                <div className="flex justify-center gap-4 flex-wrap">
-                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
-                    <Zap className="w-5 h-5 text-red-700" />
-                    <span>{xpPoints}</span>
-                    <span className="text-xs text-slate-500 font-semibold">{ui.learn_xp_label}</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
-                    <Flame className="w-5 h-5 text-red-600" />
-                    <span>{streakDays}</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl px-4 py-2 font-bold">
-                    <Award className="w-5 h-5 text-red-700" />
-                    <span>{completedUnits.length} / {unitList.length} {ui.learn_stage_prefix}</span>
-                  </div>
-                </div>
-                {unitList.length === 0 ? (
-                  <div className="text-center text-slate-500 bg-white border border-dashed border-slate-300 rounded-2xl p-8 space-y-4">
-                    <p>{ui.learn_empty_units}</p>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('admin')}
-                      className="bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-xl text-sm transition"
-                    >
-                      + Lîstika Nû Zêde Bike
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {unitList.map((unit, idx) => {
-                      const count = effectiveExercises.filter(
-                        (ex) => ex.unit_title === unit
-                      ).length;
-                      const done = completedUnits.includes(unit);
-                      return (
-                        <button
-                          key={unit}
-                          type="button"
-                          onClick={() => startUnit(unit)}
-                          className="w-full flex items-center justify-between gap-4 bg-white border border-slate-200 hover:border-red-300 rounded-2xl p-5 text-left transition"
-                        >
-                          <div className="flex items-center gap-4">
-                            <div
-                              className={`w-12 h-12 rounded-full flex items-center justify-center font-extrabold ${
-                                done ? 'bg-red-700 text-white' : 'bg-red-50 text-red-700'
-                              }`}
-                            >
-                              {done ? <Check className="w-6 h-6" /> : idx + 1}
-                            </div>
-                            <div>
-                              <div className="font-bold text-slate-900">{unit}</div>
-                              <div className="text-xs text-slate-500">
-                                {ui.learn_stage_prefix} {idx + 1} • {count} {ui.learn_question_count_suffix}
-                              </div>
-                            </div>
-                          </div>
-                          {done && <Award className="w-6 h-6 text-red-700" />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ) : unitCompleted || outOfHearts ? (
-              <div className="bg-white border border-slate-200 rounded-3xl p-10 text-center space-y-5">
-                {unitCompleted ? (
-                  <Award className="w-16 h-16 text-red-700 mx-auto" />
-                ) : (
-                  <Heart className="w-16 h-16 text-slate-300 mx-auto" />
-                )}
-                <h2 className="text-2xl font-extrabold text-slate-900">
-                  {unitCompleted ? ui.learn_win_title : ui.learn_lose_title}
-                </h2>
-                <div className="flex justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => startUnit(selectedUnit)}
-                    className="flex items-center gap-2 bg-red-700 hover:bg-red-800 text-white font-bold px-5 py-2.5 rounded-xl"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    <span>{ui.learn_replay_btn}</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={closeActiveUnit}
-                    className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-2.5 rounded-xl"
-                  >
-                    {ui.learn_back_units_btn}
-                  </button>
-                </div>
-              </div>
-            ) : !currentEx ? (
-              <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center space-y-4">
-                <p className="text-slate-500">{ui.learn_empty_units}</p>
-                <button
-                  type="button"
-                  onClick={closeActiveUnit}
-                  className="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-5 py-2 rounded-xl"
-                >
-                  {ui.learn_back_units_btn}
-                </button>
-              </div>
-            ) : (
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 md:p-8 space-y-6">
-                <div className="flex items-center gap-4">
-                  <button
-                    type="button"
-                    aria-label="Derkeve"
-                    onClick={closeActiveUnit}
-                    className="p-1.5 rounded-lg hover:bg-slate-100"
-                  >
-                    <X className="w-5 h-5 text-slate-500" />
-                  </button>
-                  <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-red-700 transition-all"
-                      style={{ width: `${(currentExIndex / unitExercises.length) * 100}%` }}
-                    />
-                  </div>
-                  <div className="flex items-center gap-1 font-bold text-red-700">
-                    <Heart className="w-5 h-5 fill-red-700" />
-                    <span>{hearts}</span>
-                  </div>
-                </div>
-                {isAdmin && exMsg && (
-                  <div className="px-3.5 py-2 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs font-semibold">
-                    {exMsg}
-                  </div>
-                )}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="text-xs font-bold text-red-700">
-                      {{
-                        choice: ui.learn_type_choice,
-                        sentence: ui.learn_type_sentence,
-                        match: ui.learn_type_match,
-                        fill_blank: ui.learn_type_fill,
-                        image_choice: ui.learn_type_image
-                      }[currentEx.exercise_type] || ''}
-                    </div>
-                    {isAdmin && currentEx.exercise_type !== 'match' && (
-                      <button
-                        type="button"
-                        disabled={inlinePhotoSaving}
-                        onClick={(e) =>
-                          triggerInlinePhotoPicker(e, {
-                            mode: 'question',
-                            exerciseId: currentEx.id
-                          })
-                        }
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-xs font-bold"
-                      >
-                        <ImageIcon className="w-3.5 h-3.5 text-red-400" />
-                        <span>
-                          {inlinePhotoSaving && inlinePhotoTarget?.exerciseId === currentEx.id
-                            ? 'Tê barkirin...'
-                            : currentEx.image_url
-                            ? 'Wêneyê Biguherîne'
-                            : '+ Foto Ekle'}
-                        </span>
-                      </button>
-                    )}
-                  </div>
-                  <h2 className="text-xl font-bold text-slate-900">{currentEx.question_text}</h2>
-                  {currentEx.image_url && !brokenExImages[currentEx.id] && (
-                    <img
-                      src={currentEx.image_url}
-                      alt=""
-                      onError={() =>
-                        setBrokenExImages((prev) => ({ ...prev, [currentEx.id]: true }))
-                      }
-                      className={`rounded-xl border border-slate-200 mx-auto object-contain ${
-                        currentEx.exercise_type === 'image_choice'
-                          ? 'max-h-72 w-full bg-slate-50'
-                          : 'max-h-56'
-                      }`}
-                    />
-                  )}
-                  {currentEx.audio_url && (
-                    <button
-                      type="button"
-                      onClick={() => playCurrentAudio(currentEx.audio_url)}
-                      className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm text-white ${
-                        isPlayingAudio ? 'bg-red-500' : 'bg-red-700 hover:bg-red-800'
-                      }`}
-                    >
-                      <Volume2 className="w-5 h-5" />
-                      <span>{isPlayingAudio ? '...' : 'Guhdarî Bike'}</span>
-                    </button>
-                  )}
-                </div>
-                {(currentEx.exercise_type === 'choice' ||
-                  currentEx.exercise_type === 'fill_blank' ||
-                  currentEx.exercise_type === 'image_choice') && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {(currentEx.options || []).map((opt) => {
-                      const isSel = selectedOption === opt;
-                      const isRight =
-                        answerState && opt.toLowerCase() === currentEx.correct_answer.trim().toLowerCase();
-                      let cls = 'border-slate-200 hover:border-red-300';
-                      if (isSel && !answerState) cls = 'border-red-700 bg-red-50';
-                      if (answerState && isRight) cls = 'border-emerald-600 bg-emerald-50';
-                      if (answerState === 'wrong' && isSel && !isRight) cls = 'border-red-600 bg-red-50';
-                      return (
-                        <button
-                          key={opt}
-                          type="button"
-                          disabled={Boolean(answerState)}
-                          onClick={() => setSelectedOption(opt)}
-                          className={`border-2 rounded-xl px-4 py-3 font-semibold text-left transition ${cls}`}
-                        >
-                          {opt}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-                {currentEx.exercise_type === 'sentence' && (
-                  <div className="space-y-4">
-                    <div className="min-h-[56px] border-2 border-dashed border-slate-300 rounded-xl p-3 flex flex-wrap gap-2">
-                      {builtWords.length === 0 && (
-                        <span className="text-slate-400 text-sm">{ui.learn_sentence_placeholder}</span>
-                      )}
-                      {builtWords.map((w) => (
-                        <button
-                          key={w.idx}
-                          type="button"
-                          onClick={() => toggleSentenceWord(w.word, w.idx)}
-                          className="bg-red-50 text-red-800 border border-red-200 font-semibold px-3 py-1.5 rounded-lg"
-                        >
-                          {w.word}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {(currentEx.options || []).map((word, idx) => {
-                        const used = builtWords.some((b) => b.idx === idx);
-                        return (
-                          <button
-                            key={`${word}-${idx}`}
-                            type="button"
-                            disabled={used}
-                            onClick={() => toggleSentenceWord(word, idx)}
-                            className={`border-2 border-slate-200 font-semibold px-3 py-1.5 rounded-lg transition ${
-                              used ? 'opacity-30' : 'hover:border-red-300'
-                            }`}
-                          >
-                            {word}
-                          </button>
-                        );
-                      })}
-                      {builtWords.length > 0 && !answerState && (
-                        <button
-                          type="button"
-                          onClick={() => setBuiltWords([])}
-                          className="ml-auto text-xs font-bold text-slate-500 hover:text-slate-800 underline"
-                        >
-                          Ji nû ve rêz bike
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {currentEx.exercise_type === 'match' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-3">
-                      {parsedMatchPairs.map((p) => {
-                        const done = matchedPairs.includes(p.id);
-                        const sel = matchLeftSelected === p.id;
-                        return (
-                          <button
-                            key={p.id}
-                            type="button"
-                            disabled={done}
-                            onClick={() => handleMatchSelect('left', p.id)}
-                            className={`w-full min-h-[112px] border-2 rounded-xl px-4 py-3 font-bold text-base text-left transition flex items-center justify-between ${
-                              done
-                                ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                                : sel
-                                ? matchWrongFlash
-                                  ? 'border-red-600 bg-red-50'
-                                  : 'border-red-700 bg-red-50'
-                                : 'border-slate-200 hover:border-red-300 bg-white'
-                            }`}
-                          >
-                            <span>{p.left}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="space-y-3">
-                      {shuffledRightOptions.map((p) => {
-                        const done = matchedPairs.includes(p.id);
-                        const sel = matchRightSelected === p.id;
-                        const hasRealImage = Boolean(p.image) && !brokenExImages[`match-${p.id}`];
-                        const isThisUploading =
-                          inlinePhotoSaving &&
-                          inlinePhotoTarget?.mode === 'match_pair' &&
-                          inlinePhotoTarget?.exerciseId === currentEx.id &&
-                          inlinePhotoTarget?.pairId === p.id;
-                        return (
-                          <div key={p.id} className="relative">
-                            <button
-                              type="button"
-                              disabled={done}
-                              onClick={() => handleMatchSelect('right', p.id)}
-                              className={`w-full min-h-[112px] border-2 rounded-xl p-2 font-semibold text-sm transition flex items-center justify-center overflow-hidden ${
-                                done
-                                  ? 'border-emerald-600 bg-emerald-50 text-emerald-800'
-                                  : sel
-                                  ? matchWrongFlash
-                                    ? 'border-red-600 bg-red-50'
-                                    : 'border-red-700 bg-red-50'
-                                  : 'border-slate-200 hover:border-red-300 bg-white'
-                              }`}
-                            >
-                              {hasRealImage ? (
-                                <img
-                                  src={p.image}
-                                  alt={p.word || p.right || ''}
-                                  onError={() =>
-                                    setBrokenExImages((prev) => ({
-                                      ...prev,
-                                      [`match-${p.id}`]: true
-                                    }))
-                                  }
-                                  className="h-24 w-full object-contain rounded-lg"
-                                />
-                              ) : (
-                                <div className="w-full h-24 rounded-lg bg-[#cbe7b8] border border-emerald-200 flex flex-col items-center justify-center text-slate-800 px-2">
-                                  <ImageIcon className="w-5 h-5 text-red-700 mb-0.5" />
-                                  <span className="text-xs font-extrabold text-slate-800 truncate max-w-full">
-                                    {p.word || p.right}
-                                  </span>
-                                </div>
-                              )}
-                            </button>
-                            {isAdmin && (
-                              <button
-                                type="button"
-                                disabled={inlinePhotoSaving}
-                                onClick={(e) =>
-                                  triggerInlinePhotoPicker(e, {
-                                    mode: 'match_pair',
-                                    exerciseId: currentEx.id,
-                                    pairId: p.id
-                                  })
-                                }
-                                className="mt-1.5 w-full inline-flex items-center justify-center gap-1 px-2 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white text-[11px] font-bold transition"
-                              >
-                                <ImageIcon className="w-3 h-3 text-red-400" />
-                                <span>
-                                  {isThisUploading
-                                    ? 'Tê barkirin...'
-                                    : hasRealImage
-                                    ? 'Foto Biguherîne'
-                                    : '+ Foto Ekle'}
-                                </span>
-                              </button>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-                {answerState && (
-                  <div
-                    className={`rounded-xl p-4 text-sm font-medium ${
-                      answerState === 'correct'
-                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-                        : 'bg-red-50 text-red-800 border border-red-200'
-                    }`}
-                  >
-                    {answerState === 'correct' ? (
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="w-5 h-5" />
-                        <span>{ui.learn_correct_msg}</span>
-                        {comboCount >= 3 && <Flame className="w-4 h-4 text-red-700" />}
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="w-5 h-5" />
-                        <span>
-                          {ui.learn_wrong_prefix} <b>{currentEx.correct_answer}</b>
-                        </span>
-                      </div>
-                    )}
-                    {currentEx.explanation && (
-                      <p className="mt-2 font-normal">{currentEx.explanation}</p>
-                    )}
-                  </div>
-                )}
-                <div className="flex justify-end">
-                  {!answerState && currentEx.exercise_type !== 'match' ? (
-                    <button
-                      type="button"
-                      onClick={checkExerciseAnswer}
-                      disabled={
-                        currentEx.exercise_type === 'sentence'
-                          ? builtWords.length === 0
-                          : !selectedOption
-                      }
-                      className="bg-red-700 hover:bg-red-800 disabled:opacity-40 text-white font-bold px-8 py-3 rounded-xl"
-                    >
-                      {ui.learn_check_btn}
-                    </button>
-                  ) : answerState ? (
-                    <button
-                      type="button"
-                      onClick={goToNextExercise}
-                      className={`text-white font-bold px-8 py-3 rounded-xl ${
-                        wrongAnswerLocked
-                          ? 'bg-red-700 hover:bg-red-800'
-                          : 'bg-slate-900 hover:bg-slate-800'
-                      }`}
-                    >
-                      {ui.learn_next_btn}
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-            )}
+            <ALFABE
+              exercises={exercises}
+              gamesReset={gamesReset}
+              isAdmin={isAdmin}
+              xpPoints={xpPoints}
+              streakDays={streakDays}
+              completedUnits={completedUnits}
+              onAwardXp={(pts) => {
+                const nextXp = xpPoints + pts;
+                setXpPoints(nextXp);
+                setComboCount((c) => c + 1);
+                persistProgressSnapshot(nextXp, streakDays, completedUnits);
+              }}
+              onDeductHeartOrReset={() => {
+                setComboCount(0);
+              }}
+              onCompleteUnit={(unitName) => {
+                const nextStreak = updateStreak();
+                const updatedUnits = completedUnits.includes(unitName)
+                  ? completedUnits
+                  : [...completedUnits, unitName];
+                setCompletedUnits(updatedUnits);
+                persistProgressSnapshot(xpPoints, nextStreak, updatedUnits);
+              }}
+              onTriggerPhotoUpload={triggerInlinePhotoPicker}
+              inlinePhotoSaving={inlinePhotoSaving}
+              inlinePhotoTarget={inlinePhotoTarget}
+              exMsg={exMsg}
+              ui={ui}
+            />
           </div>
         )}
         {/* ===================== FERHENG ===================== */}
@@ -3995,7 +3379,9 @@ export default function App() {
                   </div>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {filteredAdminExercises.map((ex) => {
-                      const isBuiltinStage = String(ex.id || '').startsWith('peyvk-stage-');
+                      const isBuiltinStage =
+                        String(ex.id || '').startsWith('peyvk-stage-') ||
+                        String(ex.id || '').startsWith('alfabe-peyvk-stage-');
                       return (
                         <div key={ex.id} className="flex items-center justify-between gap-2 bg-slate-50 px-3.5 py-2 rounded-lg text-sm">
                           <div className="flex items-center gap-2.5 flex-1 min-w-0">
