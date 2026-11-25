@@ -699,6 +699,183 @@ const STARTER_GAMES = [
     image_url: '',
     audio_url: '',
     sort_order: 3
+  },
+  // --- UNÎTE 1: SILAVDAN, HEVNASÎN, LIHEVPIRSÎN (SESSÎZ LÎSTIKÊN RÊZIKÎ) ---
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'choice',
+    question_text: 'Destpêk: Rojkey di destpêkê de çi dibêje? ("... Ez Rojkey im.")',
+    options: ['Silav!', 'Şevbaş!', 'Bi xatirê te!', 'Spas!'],
+    correct_answer: 'Silav!',
+    explanation: 'Rojkey bi "Silav! Ez Rojkey im." xwe dide nasîn.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 4
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'fill_blank',
+    question_text: 'Beşa Yekem: Ji bo pirsa tiştan em dibêjin: "Ev ____ ye?"',
+    options: ['çi', 'kî', 'ku', 'çawa'],
+    correct_answer: 'çi',
+    explanation: 'Ji bo nîşandan û pirsa tiştan "Ev çi ye?" tê bikaranîn.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 5
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'sentence',
+    question_text: 'Beşa Yekem (Peyv: nan): Bersiva "Ev çi ye?" ji bo nanî saz bike:',
+    options: ['nan', 'Ev', 'e.', 'wekî'],
+    correct_answer: 'Ev nan e.',
+    explanation: 'Bersiva rast a pirsa "Ev çi ye?" ji bo nan "Ev nan e." ye.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 6
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'choice',
+    question_text: 'Beşa Yekem (Peyv: av): Kîjan peyv şileya vexwarinê nîşan dide?',
+    options: ['av', 'nan', 'sêv', 'hêk'],
+    correct_answer: 'av',
+    explanation: 'Peyva "av" şileya bingehîn a jiyanê ye.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 7
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'match',
+    question_text: 'Beşa Yekem (Silavdan): Silav û wateyên wan bighîne hev:',
+    options: ['Silav=Merhaba / Selam', 'Rojbaş=İyi günler / Günaydın', 'Êvarbaş=İyi akşamlar', 'Nan=Ekmek'],
+    correct_answer: '4',
+    explanation: 'Silav, rojbaş û êvarbaş di demên cuda yên rojê de tên bikaranîn.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 8
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'sentence',
+    question_text: 'Beşa Yekem (Navpirsîn): Pirsa "Navê te çi ye?" rêz bike:',
+    options: ['te', 'Navê', 'ye?', 'çi'],
+    correct_answer: 'Navê te çi ye?',
+    explanation: 'Dema em navê kesekî bipirsin em dibêjin: "Navê te çi ye?"',
+    image_url: '',
+    audio_url: '',
+    sort_order: 9
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'fill_blank',
+    question_text: 'Beşa Duyem (Tu çawa yî?): Bersiva halpirsînê tije bike: "Ez ____ im."',
+    options: ['baş', 'nav', 'nan', 'av'],
+    correct_answer: 'baş',
+    explanation: 'Ji bo bersiva "Tu çawa yî?" em dibêjin: "Ez baş im."',
+    image_url: '',
+    audio_url: '',
+    sort_order: 10
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'sentence',
+    question_text: 'Beşa Duyem: Bersiva "Ez jî baş im." bi peyvên jêrîn ava bike:',
+    options: ['jî', 'Ez', 'im.', 'baş'],
+    correct_answer: 'Ez jî baş im.',
+    explanation: 'Ji bo gotina "ben de iyiyim" em "jî" lê zêde dikin.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 11
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'choice',
+    question_text: 'Beşa Duyem (Peyv: sêv, hêk): Di rîzika "Hêk, hêk, hêk ____ ye" de çi tê?',
+    options: ['spî', 'şîn', 'kesk', 'sor'],
+    correct_answer: 'spî',
+    explanation: 'Di mînaka beşa duyem de "Hêk, hêk, hêk spî ye" hatiye nivîsandin.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 12
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'match',
+    question_text: 'Beşa Duyem (Pifdank, Dar, Selik): Peyvên sêv û hêkê bighîne hev:',
+    options: ['sêv=Fêkiyê darê', 'hêk=Spî û di selikê de', 'nan=Ji ardê', 'av=Şileya zelal'],
+    correct_answer: '4',
+    explanation: 'Sêv û hêk peyvên nû yên beşa duyem in.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 13
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'match',
+    question_text: 'Beşa Sêyem (Lîstika Nexşeyê): Baran, Zelal û Berfînê bi bajarên wan re bighîne hev:',
+    options: ['Baran=Mêrdîn', 'Zelal=Semsûr', 'Berfîn=Amed'],
+    correct_answer: '3',
+    explanation: 'Baran ji Mêrdînê ye, Zelal ji Semsûrê ye, Berfîn ji Amedê ye.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 14
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'sentence',
+    question_text: 'Beşa Sêyem (Tu ji ku yî?): Hevoka "Ez ji Semsûrê me." saz bike:',
+    options: ['Semsûrê', 'Ez', 'me.', 'ji'],
+    correct_answer: 'Ez ji Semsûrê me.',
+    explanation: 'Ji bo nîşandana cihê ku kesek jê tê: "Ez ji ... me."',
+    image_url: '',
+    audio_url: '',
+    sort_order: 15
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'choice',
+    question_text: 'Beşa Sêyem: Pirsa "Tu ji ku yî?" kîjan agahiyê dixwaze?',
+    options: ['Cih û bajarê kesekî', 'Navê xwarinê', 'Rengê cil û bergan', 'Demjimêra rojê'],
+    correct_answer: 'Cih û bajarê kesekî',
+    explanation: '"Tu ji ku yî?" pirsa cih û warê kesekî ye.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 16
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'fill_blank',
+    question_text: 'Beşa Çarem: Ji bo Baran em dibêjin: "Navê ____ çi ye?"',
+    options: ['wî', 'wê', 'te', 'min'],
+    correct_answer: 'wî',
+    explanation: 'Ji bo kesê nêr "wî" tê bikaranîn: "Navê wî çi ye?"',
+    image_url: '',
+    audio_url: '',
+    sort_order: 17
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'fill_blank',
+    question_text: 'Beşa Çarem: Ji bo Berfînê em dibêjin: "Navê ____ çi ye?"',
+    options: ['wê', 'wî', 'we', 'me'],
+    correct_answer: 'wê',
+    explanation: 'Ji bo kesa mê "wê" tê bikaranîn: "Navê wê çi ye?"',
+    image_url: '',
+    audio_url: '',
+    sort_order: 18
+  },
+  {
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
+    exercise_type: 'choice',
+    question_text: 'Kurteçîrok: Rojkey, Baran, Zelal û Berfîn li hev civiyane. Li ber wan nan, av, sêv û hêk hene. Zelal dibêje: "Silav! Navê min Zelal e, ez ji Semsûrê me. Navê wî çi ye?" Bersiv kîjan e?',
+    options: ['Navê wî Baran e.', 'Navê wî Semsûr e.', 'Navê wî Nan e.', 'Navê wî Sêv e.'],
+    correct_answer: 'Navê wî Baran e.',
+    explanation: 'Di çîrokê de lehengê ji Mêrdînê Baran e û bersiv "Navê wî Baran e." ye.',
+    image_url: '',
+    audio_url: '',
+    sort_order: 19
   }
 ];
 
@@ -869,7 +1046,7 @@ export default function App() {
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
   const [exForm, setExForm] = useState({
-    unit_title: 'Beşa 1: Silav û Nasîn',
+    unit_title: 'Unîte 1: Silavdan û Hevnasîn',
     exercise_type: 'choice',
     question_text: '',
     options_raw: '',
@@ -1324,7 +1501,7 @@ export default function App() {
     if (error) {
       setExMsg('Çewtî: ' + error.message);
     } else {
-      setExMsg('Paketa destpêkê ya lîstikan hat barkirin!');
+      setExMsg('Paketa destpêkê ya lîstikan (Unîte 1 jî tê de) hat barkirin!');
       fetchExercises();
     }
     setTimeout(() => setExMsg(''), 4000);
@@ -1452,7 +1629,7 @@ export default function App() {
   const resetExForm = () => {
     setEditingExId(null);
     setExForm({
-      unit_title: 'Beşa 1: Silav û Nasîn',
+      unit_title: 'Unîte 1: Silavdan û Hevnasîn',
       exercise_type: 'choice',
       question_text: '',
       options_raw: '',
@@ -2713,7 +2890,7 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) => setExForm({ ...exForm, unit_title: e.target.value })}
-                        placeholder="Beşa 1: Silav û Nasîn"
+                        placeholder="Unîte 1: Silavdan û Hevnasîn"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2744,7 +2921,7 @@ export default function App() {
                         required
                         value={exForm.question_text}
                         onChange={(e) => setExForm({ ...exForm, question_text: e.target.value })}
-                        placeholder="Guhdarî bike û bersiva rast bibîne:"
+                        placeholder="Ev çi ye? Bersiva rast bibîne:"
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
                     </div>
@@ -2802,7 +2979,7 @@ export default function App() {
                     <div className={exForm.exercise_type === 'match' ? 'md:col-span-2' : ''}>
                       <label className="block text-xs font-bold text-slate-600 mb-1">
                         {exForm.exercise_type === 'match'
-                          ? 'Cotên Peyvan (Mezin=Biçûk, Germ=Sar)'
+                          ? 'Cotên Peyvan (Baran=Mêrdîn, Zelal=Semsûr)'
                           : exForm.exercise_type === 'image_choice'
                           ? 'Vebijêrk (bi bêhnokê veqetandî) — wêne li jor bar bike'
                           : 'Vebijêrk an Peyv (bi bêhnokê veqetandî)'}
@@ -2814,8 +2991,8 @@ export default function App() {
                         onChange={(e) => setExForm({ ...exForm, options_raw: e.target.value })}
                         placeholder={
                           exForm.exercise_type === 'match'
-                            ? 'Mezin=Biçûk, Germ=Sar, Dirêj=Kurt, Spî=Reş'
-                            : 'Rojbaş, Şevbaş, Êvarbaş, Bi xatirê te'
+                            ? 'Baran=Mêrdîn, Zelal=Semsûr, Berfîn=Amed'
+                            : 'nan, av, sêv, hêk'
                         }
                         className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                       />
@@ -2831,7 +3008,7 @@ export default function App() {
                           required
                           value={exForm.correct_answer}
                           onChange={(e) => setExForm({ ...exForm, correct_answer: e.target.value })}
-                          placeholder="Rojbaş"
+                          placeholder="nan"
                           className="w-full border border-slate-300 rounded-lg px-3.5 py-2 text-sm"
                         />
                       </div>
