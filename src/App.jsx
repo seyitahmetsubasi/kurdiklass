@@ -185,7 +185,7 @@ function ALFABE({
       if (activeW === activeI) {
         const nextMatched = { ...matchedPairs, [activeW]: true };
         setMatchedPairs(nextMatched);
-        setPairFeedback({ ok: true, msg: 'Rast hat hevberkirin! (+10 XP)' });
+        setPairFeedback({ ok: true, msg: ui.alfabe_match_ok || 'Rast hat hevberkirin! (+10 XP)' });
         if (typeof onAwardXp === 'function') onAwardXp(10);
         if (Object.keys(nextMatched).length === currentFourWords.length) {
           if (typeof onCompleteUnit === 'function') {
@@ -195,7 +195,10 @@ function ALFABE({
       } else {
         const nextHearts = Math.max(0, heartsLeft - 1);
         setHeartsLeft(nextHearts);
-        setPairFeedback({ ok: false, msg: 'Ev peyv û wêne li hev nayên — dîsa biceribîne!' });
+        setPairFeedback({
+          ok: false,
+          msg: ui.alfabe_match_err || 'Ev peyv û wêne li hev nayên — dîsa biceribîne!'
+        });
         if (typeof onDeductHeartOrReset === 'function') onDeductHeartOrReset(nextHearts);
       }
       setSelectedWordKey('');
@@ -231,7 +234,7 @@ function ALFABE({
           </span>
           <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 border border-amber-200 px-3 py-1.5 rounded-xl">
             <Flame className="w-4 h-4" />
-            <span>{streakDays} roj</span>
+            <span>{streakDays} {ui.learn_streak_suffix || 'roj'}</span>
           </span>
           <span className="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-200 px-3 py-1.5 rounded-xl">
             <Heart className="w-4 h-4 fill-rose-600 text-rose-600" />
@@ -244,10 +247,10 @@ function ALFABE({
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
             <h2 className="text-lg font-extrabold text-slate-900">
-              Lîstika ALFABE: 4 Peyv û 4 Wêne
+              {ui.alfabe_game_title || 'Lîstika ALFABE: 4 Peyv û 4 Wêne'}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Her peyvekê bi wêneyê wê yê rast re hevber bike ({activeWords.length} tîp / peyv)
+              {ui.alfabe_game_desc || 'Her peyvekê bi wêneyê wê yê rast re hevber bike'} ({activeWords.length} {ui.alfabe_letters_suffix || 'tîp / peyv'})
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -257,10 +260,10 @@ function ALFABE({
               onClick={() => changeRound(roundIndex - 1)}
               className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 disabled:opacity-40 hover:bg-slate-50"
             >
-              ← Berê
+              {ui.alfabe_prev_btn || '← Berê'}
             </button>
             <span className="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800">
-              Lîstik {roundIndex + 1} / {totalRounds}
+              {ui.alfabe_round_prefix || 'Lîstik'} {roundIndex + 1} / {totalRounds}
             </span>
             <button
               type="button"
@@ -268,7 +271,7 @@ function ALFABE({
               onClick={() => changeRound(roundIndex + 1)}
               className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 disabled:opacity-40 hover:bg-slate-50"
             >
-              Pêş →
+              {ui.alfabe_next_btn || 'Pêş →'}
             </button>
           </div>
         </div>
@@ -276,7 +279,7 @@ function ALFABE({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-3">
             <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-              4 Peyv
+              {ui.alfabe_words_col || '4 Peyv'}
             </div>
             {currentFourWords.map((item) => {
               const isMatched = Boolean(matchedPairs[item.id]);
@@ -316,11 +319,11 @@ function ALFABE({
                           onTriggerPhotoUpload(e, { wordItem: item, mode: 'alfabe_word' });
                         }
                       }}
-                      title={`Tenê wêne lê zêde bike: ${item.word}`}
+                      title={`${ui.alfabe_add_photo_title || 'Tenê wêne lê zêde bike:'} ${item.word}`}
                       className="shrink-0 px-3 py-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-700 hover:text-red-700 text-xs font-bold inline-flex items-center gap-1.5 transition"
                     >
                       <ImageIcon className="w-4 h-4 text-red-700" />
-                      <span>{inlinePhotoSaving ? '...' : 'Wêne'}</span>
+                      <span>{inlinePhotoSaving ? '...' : (ui.alfabe_photo_btn || 'Wêne')}</span>
                     </button>
                   )}
                 </div>
@@ -330,7 +333,7 @@ function ALFABE({
 
           <div className="space-y-3">
             <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-              4 Wêne
+              {ui.alfabe_images_col || '4 Wêne'}
             </div>
             <div className="grid grid-cols-2 gap-3">
               {currentFourWords.map((item) => {
@@ -360,7 +363,7 @@ function ALFABE({
                       <div className="flex flex-col items-center justify-center text-slate-400 gap-1">
                         <ImageIcon className="w-7 h-7" />
                         <span className="text-[11px] font-bold text-slate-500">
-                          Wêne ({item.letter})
+                          {ui.alfabe_photo_btn || 'Wêne'} ({item.letter})
                         </span>
                       </div>
                     )}
@@ -421,7 +424,7 @@ function ALFABE({
                     {isDone && (
                       <span className="inline-flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                         <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>Temam</span>
+                        <span>{ui.learn_done_badge || 'Temam'}</span>
                       </span>
                     )}
                   </div>
@@ -492,7 +495,7 @@ function ALFABE({
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-lg"
               >
                 <ImageIcon className="w-3.5 h-3.5 text-red-700" />
-                <span>{inlinePhotoSaving ? 'Tê barkirin...' : 'Wêneyê Pirsê Biguherîne'}</span>
+                <span>{inlinePhotoSaving ? '...' : (ui.learn_change_q_photo || 'Wêneyê Pirsê Biguherîne')}</span>
               </button>
             </div>
           )}
@@ -1400,6 +1403,9 @@ const DEFAULT_UI_TEXTS = {
   learn_title: 'Hînbûn û Lîstika Kurdî',
   learn_subtitle: 'Qonaxekê hilbijêre, bersivên rast bide û xalên XP bi dest bixe!',
   learn_xp_label: 'XP',
+  learn_streak_suffix: 'roj',
+  learn_done_badge: 'Temam',
+  learn_change_q_photo: 'Wêneyê Pirsê Biguherîne',
   learn_stage_prefix: 'Qonax',
   learn_question_count_suffix: 'pirs',
   learn_empty_units: 'Hîn lîstik nehatine zêdekirin. Ji panela Rêveber (Admin) dikarî lîstikên nû lê zêde bikî.',
@@ -1417,6 +1423,18 @@ const DEFAULT_UI_TEXTS = {
   learn_wrong_prefix: 'Bersiva rast:',
   learn_check_btn: 'Kontrol Bike',
   learn_next_btn: 'Pirsê Din',
+  alfabe_game_title: 'Lîstika ALFABE: 4 Peyv û 4 Wêne',
+  alfabe_game_desc: 'Her peyvekê bi wêneyê wê yê rast re hevber bike',
+  alfabe_letters_suffix: 'tîp / peyv',
+  alfabe_prev_btn: '← Berê',
+  alfabe_round_prefix: 'Lîstik',
+  alfabe_next_btn: 'Pêş →',
+  alfabe_words_col: '4 Peyv',
+  alfabe_images_col: '4 Wêne',
+  alfabe_photo_btn: 'Wêne',
+  alfabe_add_photo_title: 'Tenê wêne lê zêde bike:',
+  alfabe_match_ok: 'Rast hat hevberkirin! (+10 XP)',
+  alfabe_match_err: 'Ev peyv û wêne li hev nayên — dîsa biceribîne!',
   ferheng_search_placeholder: 'Peyvekê binivîse (Kurmancî, Tirkî, îngilîzî...)',
   ferheng_search_btn: 'Lê bigere',
   ferheng_empty_text: 'Peyvek nehat dîtin. Bi tîp an peyveke din biceribîne.',
@@ -1436,6 +1454,18 @@ const UI_FIELD_LABELS = [
   { key: 'search_placeholder', label: 'Qutiya Lêgerînê (Placeholder)' },
   { key: 'all_categories_label', label: 'Bişkojka Hemû Beşan' },
   { key: 'list_all_title', label: 'Sernavê Lîsteya Materyalan' },
+  { key: 'learn_title', label: 'Hînbûn / Lîstik: Sernavê Sereke' },
+  { key: 'learn_subtitle', label: 'Hînbûn / Lîstik: Binnivîs' },
+  { key: 'alfabe_game_title', label: 'ALFABE: Sernavê Lîstika 4 Peyv - 4 Wêne' },
+  { key: 'alfabe_game_desc', label: 'ALFABE: Şiroveya Lîstika 4 Peyv - 4 Wêne' },
+  { key: 'alfabe_words_col', label: 'ALFABE: Etîketa Stûna Peyvan' },
+  { key: 'alfabe_images_col', label: 'ALFABE: Etîketa Stûna Wêneyan' },
+  { key: 'alfabe_match_ok', label: 'ALFABE: Peyama Hevberkirina Rast' },
+  { key: 'alfabe_match_err', label: 'ALFABE: Peyama Hevberkirina Şaş' },
+  { key: 'learn_correct_msg', label: 'Lîstik: Peyama Bersiva Rast' },
+  { key: 'learn_wrong_prefix', label: 'Lîstik: Pêşpirtika Bersiva Şaş' },
+  { key: 'learn_win_title', label: 'Lîstik: Peyama Serkeftinê' },
+  { key: 'learn_lose_title', label: 'Lîstik: Peyama Dilqedandinê' },
   { key: 'footer_text', label: 'Nivîsa Binê Malperê (Footer)' }
 ];
 
@@ -1721,6 +1751,7 @@ export default function App() {
     wordsText: '',
     imagesText: ''
   });
+  const [alfabeEditMsg, setAlfabeEditMsg] = useState('');
   const [inlinePhotoTarget, setInlinePhotoTarget] = useState(null);
   const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
   const inlinePhotoInputRef = useRef(null);
@@ -2012,6 +2043,24 @@ export default function App() {
     } catch (err) {
       console.error('ALFABE kelime kaydı hatası:', err);
     }
+  };
+
+  const handleInlineAlfabeFieldChange = (id, field, value) => {
+    setAlfabeWords((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, [field]: value } : item))
+    );
+  };
+
+  const handleSaveAllAlfabeWords = async () => {
+    await persistAlfabeWords(alfabeWords);
+    setAlfabeEditMsg('Hemû tîp, peyv û wêneyên Hînbûn / Lîstik (ALFABE) hatin tomarkirin.');
+    setTimeout(() => setAlfabeEditMsg(''), 3500);
+  };
+
+  const handleResetAlfabeDefaultWords = async () => {
+    await persistAlfabeWords(ALFABE_DEFAULT_WORDS);
+    setAlfabeEditMsg('Lîsteya 31 tîpan vegeriya rewşa standard.');
+    setTimeout(() => setAlfabeEditMsg(''), 3500);
   };
 
   const handleCreateAlfabeRound = async (e) => {
@@ -3791,6 +3840,114 @@ export default function App() {
                     <LogOut className="w-4 h-4" />
                     <span>Derkeve</span>
                   </button>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
+                  <div className="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                      <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-red-700" />
+                        <span>Rêveberiya Hînbûn / Lîstik (31 Tîp û Peyvên ALFABE)</span>
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Li vir her tîp, peyv an lînka wêneyî rasterast sererast bike û tomar bike.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={handleResetAlfabeDefaultWords}
+                        className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+                      >
+                        Standard Bike
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSaveAllAlfabeWords}
+                        className="px-4 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-white text-xs font-bold"
+                      >
+                        Hemû Tîp û Peyvan Tomar Bike
+                      </button>
+                    </div>
+                  </div>
+
+                  {alfabeEditMsg && (
+                    <div className="p-3 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+                      {alfabeEditMsg}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[460px] overflow-y-auto pr-1">
+                    {alfabeWords.map((item, idx) => (
+                      <div
+                        key={item.id}
+                        className="p-3 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2"
+                      >
+                        <div className="flex items-center justify-between text-[11px] font-bold text-slate-500">
+                          <span>#{idx + 1}</span>
+                          <span>ID: {item.id}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={item.letter || ''}
+                            onChange={(e) =>
+                              handleInlineAlfabeFieldChange(
+                                item.id,
+                                'letter',
+                                e.target.value
+                              )
+                            }
+                            aria-label={`Tîp ${idx + 1}`}
+                            className="w-14 px-2 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-extrabold text-center text-red-700"
+                          />
+                          <input
+                            type="text"
+                            value={item.word || ''}
+                            onChange={(e) =>
+                              handleInlineAlfabeFieldChange(
+                                item.id,
+                                'word',
+                                e.target.value
+                              )
+                            }
+                            aria-label={`Peyv ${idx + 1}`}
+                            placeholder="Peyv..."
+                            className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-900"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <input
+                            type="text"
+                            value={item.image_url || ''}
+                            onChange={(e) =>
+                              handleInlineAlfabeFieldChange(
+                                item.id,
+                                'image_url',
+                                e.target.value
+                              )
+                            }
+                            placeholder="URL-ya wêneyî..."
+                            className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-slate-700"
+                          />
+                          <button
+                            type="button"
+                            disabled={inlinePhotoSaving}
+                            onClick={(e) =>
+                              handleTriggerInlinePhotoUpload(e, {
+                                wordItem: item,
+                                mode: 'alfabe_word'
+                              })
+                            }
+                            title="Wêne bar bike"
+                            className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-red-50 text-xs font-bold text-slate-700"
+                          >
+                            <Upload className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
