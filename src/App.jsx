@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { supabase } from './supabaseClient';
 
-const ALFABE_STORAGE_VERSION = '2026-11-26-v3';
+const ALFABE_STORAGE_VERSION = '2026-11-26-v4';
 
 const ALFABE_DEFAULT_WORDS = [
   { id: 'alf-1', letter: 'A', word: 'Agir', image_url: '' },
@@ -91,8 +91,7 @@ function maskWordLetter(word) {
   }
   const idx = clean.length > 2 ? 1 : 0;
   const missingChar = clean.charAt(idx);
-  const masked =
-    clean.slice(0, idx) + '_' + clean.slice(idx + 1);
+  const masked = clean.slice(0, idx) + '_' + clean.slice(idx + 1);
   return { masked, missingChar };
 }
 
@@ -115,9 +114,10 @@ function ALFABE({
   exMsg = '',
   ui
 }) {
-  const effectiveBank = Array.isArray(wordBank) && wordBank.length > 0
-    ? wordBank
-    : ALFABE_DEFAULT_WORDS;
+  const effectiveBank =
+    Array.isArray(wordBank) && wordBank.length > 0
+      ? wordBank
+      : ALFABE_DEFAULT_WORDS;
 
   const [gameMode, setGameMode] = useState('match');
 
@@ -165,11 +165,23 @@ function ALFABE({
     return Array.from(grouped.values()).filter((r) => r.items.length > 0);
   })();
 
-  const customModeExercises = (() => {
-    if (gamesReset || !Array.isArray(exercises)) return [];
-    return exercises.filter((ex) =>
-      ['first_letter', 'memory', 'missing_letter'].includes(ex?.exercise_type)
-    );
+  const activeFirstLetterExercise = (() => {
+    if (gamesReset || !Array.isArray(exercises)) return null;
+    const list = exercises.filter((e) => e.exercise_type === 'first_letter');
+    if (list.length === 0) return null;
+    return list[firstLetterIdx % list.length];
+  })();
+
+  const activeMissingLetterExercise = (() => {
+    if (gamesReset || !Array.isArray(exercises)) return null;
+    const list = exercises.filter((e) => e.exercise_type === 'missing_letter');
+    if (list.length === 0) return null;
+    return list[missingIdx % list.length];
+  })();
+
+  const activeMemoryExercise = (() => {
+    if (gamesReset || !Array.isArray(exercises)) return null;
+    return exercises.find((e) => e.exercise_type === 'memory') || null;
   })();
 
   const totalRounds =
@@ -208,12 +220,6 @@ function ALFABE({
   const activeCustomRound =
     roundIndex < customMatchRounds.length ? customMatchRounds[roundIndex] : null;
 
-  const activeCustomExercise = (() => {
-    if (customModeExercises.length === 0) return null;
-    const byType = customModeExercises.find((e) => e.exercise_type === gameMode);
-    return byType || customModeExercises[0] || null;
-  })();
-
   const [shuffledImages, setShuffledImages] = useState([]);
 
   useEffect(() => {
@@ -240,27 +246,60 @@ function ALFABE({
 
   useEffect(() => {
     if (gameMode !== 'memory') return;
-    const pairItems = currentRoundItems.slice(0, 4);
     const deck = [];
-    pairItems.forEach((item, idx) => {
-      const ltr = inferFirstLetter(item);
-      const pairKey = item.id || `pair-${idx}`;
-      deck.push({
-        uid: `${pairKey}-L`,
-        pairKey,
-        kind: 'letter',
-        label: ltr,
-        subLabel: 'Tîp'
+
+    if (
+      activeMemoryExercise &&
+      Array.isArray(activeMemoryExercise.options) &&
+      activeMemoryExercise.options.length > 0
+    ) {
+      activeMemoryExercise.options.slice(0, 4).forEach((line, idx) => {
+        const [rawLetter, rawWord] = String(line).split('=');
+        const ltr =
+          (rawLetter || '').trim().charAt(0).toUpperCase() ||
+          inferFirstLetter({ word: rawWord });
+        const wordLabel =
+          (rawWord || rawLetter || '').trim() || `Peyv ${idx + 1}`;
+        const pairKey = `custom-mem-${activeMemoryExercise.id}-${idx}`;
+        deck.push({
+          uid: `${pairKey}-L`,
+          pairKey,
+          kind: 'letter',
+          label: ltr,
+          subLabel: 'Tîp'
+        });
+        deck.push({
+          uid: `${pairKey}-W`,
+          pairKey,
+          kind: 'word',
+          label: wordLabel,
+          subLabel: ltr,
+          image_url: activeMemoryExercise.image_url || ''
+        });
       });
-      deck.push({
-        uid: `${pairKey}-W`,
-        pairKey,
-        kind: 'word',
-        label: item.word,
-        subLabel: ltr,
-        image_url: item.image_url || ''
+    } else {
+      const pairItems = currentRoundItems.slice(0, 4);
+      pairItems.forEach((item, idx) => {
+        const ltr = inferFirstLetter(item);
+        const pairKey = item.id || `pair-${idx}`;
+        deck.push({
+          uid: `${pairKey}-L`,
+          pairKey,
+          kind: 'letter',
+          label: ltr,
+          subLabel: 'Tîp'
+        });
+        deck.push({
+          uid: `${pairKey}-W`,
+          pairKey,
+          kind: 'word',
+          label: item.word,
+          subLabel: ltr,
+          image_url: item.image_url || ''
+        });
       });
-    });
+    }
+
     for (let i = deck.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -269,7 +308,7 @@ function ALFABE({
     setFlippedCardIds([]);
     setMatchedPairKeys([]);
     setFeedback(null);
-  }, [gameMode, roundIndex, currentRoundItems]);
+  }, [gameMode, roundIndex, currentRoundItems, activeMemoryExercise]);
 
   const handleSelectWord = (item) => {
     if (matchedIds.includes(item.id)) return;
@@ -300,13 +339,31 @@ function ALFABE({
     }
   };
 
-  const currentFirstLetterTarget =
-    currentRoundItems[firstLetterIdx % Math.max(1, currentRoundItems.length)] ||
-    effectiveBank[0];
+  const currentFirstLetterTarget = activeFirstLetterExercise
+    ? {
+        id: `ex-fl-${activeFirstLetterExercise.id}`,
+        exerciseId: activeFirstLetterExercise.id,
+        word:
+          activeFirstLetterExercise.explanation ||
+          activeFirstLetterExercise.question_text ||
+          '',
+        letter:
+          activeFirstLetterExercise.correct_answer ||
+          inferFirstLetter({
+            word:
+              activeFirstLetterExercise.explanation ||
+              activeFirstLetterExercise.question_text
+          }),
+        image_url: activeFirstLetterExercise.image_url || ''
+      }
+    : currentRoundItems[firstLetterIdx % Math.max(1, currentRoundItems.length)] ||
+      effectiveBank[0];
 
   const firstLetterChoices = (() => {
     const correctLetter = inferFirstLetter(currentFirstLetterTarget);
-    const distractors = KURDISH_LETTERS_POOL.filter((l) => l !== correctLetter).slice(
+    const distractors = KURDISH_LETTERS_POOL.filter(
+      (l) => l !== correctLetter
+    ).slice(
       (firstLetterIdx * 3 + roundIndex) % 24,
       ((firstLetterIdx * 3 + roundIndex) % 24) + 5
     );
@@ -372,12 +429,46 @@ function ALFABE({
     }
   };
 
-  const currentMissingTarget =
-    currentRoundItems[missingIdx % Math.max(1, currentRoundItems.length)] ||
-    effectiveBank[0];
+  const currentMissingTarget = activeMissingLetterExercise
+    ? {
+        id: `ex-ml-${activeMissingLetterExercise.id}`,
+        exerciseId: activeMissingLetterExercise.id,
+        word:
+          activeMissingLetterExercise.explanation ||
+          activeMissingLetterExercise.question_text ||
+          '',
+        customMaskIndex: (() => {
+          const firstOpt = Array.isArray(activeMissingLetterExercise.options)
+            ? activeMissingLetterExercise.options[0]
+            : '';
+          const parsed = Number(firstOpt);
+          return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
+        })(),
+        customMissingChar: activeMissingLetterExercise.correct_answer || '',
+        image_url: activeMissingLetterExercise.image_url || ''
+      }
+    : currentRoundItems[missingIdx % Math.max(1, currentRoundItems.length)] ||
+      effectiveBank[0];
 
-  const { masked: maskedWordDisplay, missingChar: expectedMissingChar } =
-    maskWordLetter(currentMissingTarget?.word || '');
+  const { masked: maskedWordDisplay, missingChar: expectedMissingChar } = (() => {
+    const clean = String(currentMissingTarget?.word || '').trim();
+    if (!clean) return { masked: '_', missingChar: 'a' };
+    if (
+      typeof currentMissingTarget?.customMaskIndex === 'number' &&
+      currentMissingTarget.customMaskIndex < clean.length
+    ) {
+      const idx = currentMissingTarget.customMaskIndex;
+      const detectedChar = clean.charAt(idx);
+      const forcedChar =
+        String(currentMissingTarget.customMissingChar || '').trim() ||
+        detectedChar;
+      return {
+        masked: clean.slice(0, idx) + '_' + clean.slice(idx + 1),
+        missingChar: forcedChar
+      };
+    }
+    return maskWordLetter(clean);
+  })();
 
   const missingLetterChoices = (() => {
     const targetChar = String(expectedMissingChar || 'a').toLowerCase();
@@ -428,7 +519,12 @@ function ALFABE({
   };
 
   const editableExerciseForCurrentMode =
-    activeCustomRound?.sourceExercise || activeCustomExercise || exercises[0] || null;
+    activeCustomRound?.sourceExercise ||
+    (gameMode === 'first_letter' ? activeFirstLetterExercise : null) ||
+    (gameMode === 'memory' ? activeMemoryExercise : null) ||
+    (gameMode === 'missing_letter' ? activeMissingLetterExercise : null) ||
+    exercises[0] ||
+    null;
 
   return (
     <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-6 shadow-sm">
@@ -516,11 +612,14 @@ function ALFABE({
                   ? activeCustomRound.roundTitle
                   : ui.alfabe_game_title)}
               {gameMode === 'first_letter' &&
-                'Lîstika Tîpa Pêşîn: Peyv bi kîjan tîpê dest pê dike?'}
+                (activeFirstLetterExercise?.question_text ||
+                  'Lîstika Tîpa Pêşîn: Peyv bi kîjan tîpê dest pê dike?')}
               {gameMode === 'memory' &&
-                'Lîstika Bîrê: Tîpê û peyva wê li hev bîne'}
+                (activeMemoryExercise?.question_text ||
+                  'Lîstika Bîrê: Tîpê û peyva wê li hev bîne')}
               {gameMode === 'missing_letter' &&
-                'Lîstika Tîpa Kêm: Tîpa winda hilbijêre û peyvê temam bike'}
+                (activeMissingLetterExercise?.question_text ||
+                  'Lîstika Tîpa Kêm: Tîpa winda hilbijêre û peyvê temam bike')}
             </h2>
             <p className="text-xs text-slate-600 mt-0.5">
               {gameMode === 'match' && ui.alfabe_game_desc}
@@ -600,7 +699,9 @@ function ALFABE({
                       }`}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-extrabold text-base">{item.word}</span>
+                        <span className="font-extrabold text-base">
+                          {item.word}
+                        </span>
                         {item.letter && (
                           <span
                             className={`text-xs font-extrabold px-2 py-0.5 rounded-md ${
@@ -682,7 +783,9 @@ function ALFABE({
                           className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-red-50 text-[10px] font-bold text-slate-700 hover:text-red-700"
                         >
                           <Upload className="w-3 h-3 text-red-700" />
-                          <span>{inlinePhotoSaving ? '...' : ui.alfabe_photo_btn}</span>
+                          <span>
+                            {inlinePhotoSaving ? '...' : ui.alfabe_photo_btn}
+                          </span>
                         </button>
                       )}
                     </div>
@@ -908,12 +1011,7 @@ function ALFABE({
   );
 }
 
-function AdminGameEditorModal({
-  exercise,
-  onClose,
-  onSaved,
-  onUploadImage
-}) {
+function AdminGameEditorModal({ exercise, onClose, onSaved, onUploadImage }) {
   const [unitTitle, setUnitTitle] = useState(exercise?.unit_title || '');
   const [exerciseType, setExerciseType] = useState(
     exercise?.exercise_type || 'match'
@@ -1029,7 +1127,10 @@ function AdminGameEditorModal({
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+        >
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
               Navê Lîstikê / Qonaxê
@@ -1078,7 +1179,7 @@ function AdminGameEditorModal({
 
           <div className="sm:col-span-2">
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Vebijêrk / Peyv=Wêne (Her rêzek yek)
+              Vebijêrk / Peyv=Wêne / Tîp=Peyv / Îndeks (Her rêzek yek)
             </label>
             <textarea
               rows={4}
@@ -1139,7 +1240,7 @@ function AdminGameEditorModal({
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
-              Ravekirin
+              Peyva Armanc / Ravekirin
             </label>
             <input
               type="text"
@@ -1313,7 +1414,8 @@ const UI_TRANSLATIONS = {
     tab_content: 'Naverok',
     tab_guide: 'Rêbera Mamosteyan',
     guide_heading: 'Not û Rêbera Mamosteyan',
-    guide_empty_text: 'Ji bo vê materyalê hîn notên rêberê nehatine nivîsandin.',
+    guide_empty_text:
+      'Ji bo vê materyalê hîn notên rêberê nehatine nivîsandin.',
     guide_download_btn: 'PDF-ya Rêberê Daxe',
     learn_title: 'Hînbûn û Lîstikên Ziman',
     learn_subtitle:
@@ -1349,7 +1451,8 @@ const UI_TRANSLATIONS = {
     alfabe_match_err: 'Şaş e! Careke din biceribîne.',
     alfabe_add_photo_title: 'Wêneyekî ji komputerê bar bike',
     alfabe_photo_btn: 'Wêne',
-    ferheng_search_placeholder: 'Peyvekê bi Kurdî, Tirkî an Îngilîzî binivîse...',
+    ferheng_search_placeholder:
+      'Peyvekê bi Kurdî, Tirkî an Îngilîzî binivîse...',
     ferheng_search_btn: 'Bigere',
     ferheng_empty_text: 'Peyvek nehat dîtin.',
     footer_text: 'KurdiKlass — Platforma Perwerdehiya Kurdî'
@@ -1503,7 +1606,9 @@ async function fetchWiktionaryEntry(word, selectedLang = 'KU') {
       const lines = wikitext
         .split('\n')
         .map((l) => l.trim())
-        .filter((l) => l.startsWith('#') && !l.startsWith('#*') && !l.startsWith('#:'));
+        .filter(
+          (l) => l.startsWith('#') && !l.startsWith('#*') && !l.startsWith('#:')
+        );
 
       const definitions = lines
         .slice(0, 3)
@@ -1641,6 +1746,19 @@ export default function App() {
   const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
   const [adminExSearch, setAdminExSearch] = useState('');
 
+  const [specialGameForm, setSpecialGameForm] = useState({
+    mode: 'first_letter',
+    unitTitle: 'Lîstikên Taybet - ALFABE',
+    questionText: '',
+    targetWord: '',
+    memoryPairsText: '',
+    missingIndex: '1',
+    correctLetter: '',
+    imageUrl: ''
+  });
+  const [savingSpecialGame, setSavingSpecialGame] = useState(false);
+  const [uploadingSpecialImg, setUploadingSpecialImg] = useState(false);
+
   const [alfabeWords, setAlfabeWords] = useState(() => {
     try {
       const ver = localStorage.getItem('kk_alfabe_version');
@@ -1732,7 +1850,6 @@ export default function App() {
   const dynamicMediaTypes = DEFAULT_MEDIA_TYPES;
   const dynamicLevels = DEFAULT_LEVELS;
   const dynamicGrades = DEFAULT_GRADES;
-
   const kurdishAlphabet = KURDISH_LETTERS_POOL;
 
   const fetchAllData = async () => {
@@ -1799,7 +1916,10 @@ export default function App() {
             if (Array.isArray(parsedWords) && parsedWords.length > 0) {
               setAlfabeWords(parsedWords);
               localStorage.setItem('kk_alfabe_version', ALFABE_STORAGE_VERSION);
-              localStorage.setItem('kk_alfabe_words', JSON.stringify(parsedWords));
+              localStorage.setItem(
+                'kk_alfabe_words',
+                JSON.stringify(parsedWords)
+              );
             }
           } catch {}
         }
@@ -1821,7 +1941,10 @@ export default function App() {
             const cuVal = JSON.parse(map.completed_units_json);
             if (Array.isArray(cuVal)) {
               setCompletedUnits(cuVal);
-              localStorage.setItem('kk_completed_units', JSON.stringify(cuVal));
+              localStorage.setItem(
+                'kk_completed_units',
+                JSON.stringify(cuVal)
+              );
             }
           } catch {}
         }
@@ -1855,7 +1978,10 @@ export default function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem('kk_completed_units', JSON.stringify(completedUnits));
+      localStorage.setItem(
+        'kk_completed_units',
+        JSON.stringify(completedUnits)
+      );
     } catch {}
   }, [completedUnits]);
 
@@ -1881,7 +2007,10 @@ export default function App() {
       }
     };
     const handleClickOutside = (e) => {
-      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+      if (
+        langDropdownRef.current &&
+        !langDropdownRef.current.contains(e.target)
+      ) {
         setLangMenuOpen(false);
       }
     };
@@ -1904,6 +2033,117 @@ export default function App() {
     if (error) throw error;
     const { data } = supabase.storage.from('materyal').getPublicUrl(safeName);
     return data?.publicUrl || '';
+  };
+
+  const handleSpecialGameImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingSpecialImg(true);
+    try {
+      const publicUrl = await uploadImageToBucket(file, 'special-games');
+      if (publicUrl) {
+        setSpecialGameForm((prev) => ({ ...prev, imageUrl: publicUrl }));
+      }
+    } catch (err) {
+      setExMsg('Wêne nehat barkirin: ' + err.message);
+    } finally {
+      setUploadingSpecialImg(false);
+    }
+  };
+
+  const handleCreateSpecialGameExercise = async (e) => {
+    e.preventDefault();
+    setSavingSpecialGame(true);
+    setExMsg('');
+    try {
+      const mode = specialGameForm.mode;
+      const unitTitle =
+        specialGameForm.unitTitle.trim() || 'Lîstikên Taybet - ALFABE';
+      const cleanWord = specialGameForm.targetWord.trim();
+      let payload = null;
+
+      if (mode === 'first_letter') {
+        const inferred =
+          specialGameForm.correctLetter.trim().toUpperCase() ||
+          inferFirstLetter({ word: cleanWord || specialGameForm.questionText });
+        payload = {
+          unit_title: unitTitle,
+          exercise_type: 'first_letter',
+          question_text:
+            specialGameForm.questionText.trim() ||
+            `Peyva "${cleanWord}" bi kîjan tîpê dest pê dike?`,
+          options: KURDISH_LETTERS_POOL.slice(0, 8),
+          correct_answer: inferred,
+          explanation: cleanWord,
+          image_url: specialGameForm.imageUrl.trim(),
+          audio_url: ''
+        };
+      } else if (mode === 'memory') {
+        const pairLines = specialGameForm.memoryPairsText
+          .split('\n')
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .slice(0, 4);
+        if (pairLines.length === 0) {
+          throw new Error(
+            'Ji kerema xwe herî kêm cotek (mînak: B=Berf) binivîse.'
+          );
+        }
+        payload = {
+          unit_title: unitTitle,
+          exercise_type: 'memory',
+          question_text:
+            specialGameForm.questionText.trim() ||
+            'Lîstika Bîrê: Tîp û peyvan li hev bîne',
+          options: pairLines,
+          correct_answer: pairLines.join(', '),
+          explanation: 'Tîp û peyva lihevhatî bi hev re girê bide.',
+          image_url: specialGameForm.imageUrl.trim(),
+          audio_url: ''
+        };
+      } else {
+        const idxNum = Math.max(0, Number(specialGameForm.missingIndex) || 0);
+        const autoChar =
+          cleanWord && idxNum < cleanWord.length ? cleanWord.charAt(idxNum) : '';
+        const finalMissingChar =
+          specialGameForm.correctLetter.trim() || autoChar || 'a';
+        payload = {
+          unit_title: unitTitle,
+          exercise_type: 'missing_letter',
+          question_text:
+            specialGameForm.questionText.trim() ||
+            'Tîpa winda hilbijêre û peyvê temam bike',
+          options: [String(idxNum)],
+          correct_answer: finalMissingChar,
+          explanation: cleanWord,
+          image_url: specialGameForm.imageUrl.trim(),
+          audio_url: ''
+        };
+      }
+
+      const { error } = await supabase
+        .from('kurmanci_exercises')
+        .insert([payload]);
+      if (error) throw error;
+
+      setGamesReset(false);
+      setSpecialGameForm((prev) => ({
+        ...prev,
+        questionText: '',
+        targetWord: '',
+        memoryPairsText: '',
+        correctLetter: '',
+        imageUrl: ''
+      }));
+      setExMsg(
+        'Pirs / lîstika taybet hat tomarkirin; hem di ALFABE hem jî di Lîstik û Pirs de dikarî biguherînî.'
+      );
+      await fetchAllData();
+    } catch (err) {
+      setExMsg('Tomarkirina lîstika taybet bi ser neket: ' + err.message);
+    } finally {
+      setSavingSpecialGame(false);
+    }
   };
 
   const handleInlineAlfabeFieldChange = (id, field, value) => {
@@ -2101,6 +2341,7 @@ export default function App() {
       inlinePhotoTargetRef.current = null;
     }
   };
+
   const handleSelectLanguage = (code) => {
     setSelectedLang(code);
     setLangMenuOpen(false);
@@ -2152,7 +2393,9 @@ export default function App() {
             className="w-full max-h-[460px] rounded-xl bg-black"
           />
           {mediaLoadError && (
-            <p className="text-xs text-red-600 font-semibold">{mediaLoadError}</p>
+            <p className="text-xs text-red-600 font-semibold">
+              {mediaLoadError}
+            </p>
           )}
         </div>
       );
@@ -2168,7 +2411,9 @@ export default function App() {
             className="w-full"
           />
           {mediaLoadError && (
-            <p className="text-xs text-red-600 font-semibold">{mediaLoadError}</p>
+            <p className="text-xs text-red-600 font-semibold">
+              {mediaLoadError}
+            </p>
           )}
         </div>
       );
@@ -2283,7 +2528,10 @@ export default function App() {
       const publicUrl = await uploadImageToBucket(file, 'lessons');
       if (publicUrl) {
         setFormData((prev) => ({ ...prev, [fieldName]: publicUrl }));
-        setStatusMsg({ type: 'success', text: 'Pel bi serkeftî hat barkirin.' });
+        setStatusMsg({
+          type: 'success',
+          text: 'Pel bi serkeftî hat barkirin.'
+        });
       }
     } catch (err) {
       setStatusMsg({
@@ -2305,11 +2553,17 @@ export default function App() {
           .update(formData)
           .eq('id', editingId);
         if (error) throw error;
-        setStatusMsg({ type: 'success', text: 'Materyal bi serkeftî hat nûkirin.' });
+        setStatusMsg({
+          type: 'success',
+          text: 'Materyal bi serkeftî hat nûkirin.'
+        });
       } else {
         const { error } = await supabase.from('lessons').insert([formData]);
         if (error) throw error;
-        setStatusMsg({ type: 'success', text: 'Materyala nû hat tomarkirin.' });
+        setStatusMsg({
+          type: 'success',
+          text: 'Materyala nû hat tomarkirin.'
+        });
       }
       resetForm();
       await fetchAllData();
@@ -2342,7 +2596,10 @@ export default function App() {
       setLessons((prev) => prev.filter((item) => item.id !== id));
       setStatusMsg({ type: 'success', text: 'Materyal hat jêbirin.' });
     } catch (err) {
-      setStatusMsg({ type: 'error', text: 'Jêbirin bi ser neket: ' + err.message });
+      setStatusMsg({
+        type: 'error',
+        text: 'Jêbirin bi ser neket: ' + err.message
+      });
     }
   };
 
@@ -2373,9 +2630,10 @@ export default function App() {
     try {
       await supabase
         .from('site_settings')
-        .upsert([{ key: 'categories_json', value: JSON.stringify(categories) }], {
-          onConflict: 'key'
-        });
+        .upsert(
+          [{ key: 'categories_json', value: JSON.stringify(categories) }],
+          { onConflict: 'key' }
+        );
       setCatMsg('Beş hatin tomarkirin.');
       setTimeout(() => setCatMsg(''), 3000);
     } catch (err) {
@@ -2563,7 +2821,8 @@ export default function App() {
         .upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from('materyal').getPublicUrl(path);
-      if (data?.publicUrl) setExForm((prev) => ({ ...prev, audio_url: data.publicUrl }));
+      if (data?.publicUrl)
+        setExForm((prev) => ({ ...prev, audio_url: data.publicUrl }));
     } catch (err) {
       setExMsg('Deng nehat barkirin: ' + err.message);
     } finally {
@@ -2671,14 +2930,19 @@ export default function App() {
     if (item.meanings_i18n && item.meanings_i18n[lang]) {
       return item.meanings_i18n[lang];
     }
-    if (lang === 'TR') return item.meaning_tr || item.meaning_en || item.meaning_ku || '';
-    if (lang === 'EN') return item.meaning_en || item.meaning_tr || item.meaning_ku || '';
-    if (lang === 'KU') return item.meaning_ku || item.meaning_tr || item.meaning_en || '';
+    if (lang === 'TR')
+      return item.meaning_tr || item.meaning_en || item.meaning_ku || '';
+    if (lang === 'EN')
+      return item.meaning_en || item.meaning_tr || item.meaning_ku || '';
+    if (lang === 'KU')
+      return item.meaning_ku || item.meaning_tr || item.meaning_en || '';
     return (
       item.meaning_tr ||
       item.meaning_en ||
       item.meaning_ku ||
-      (item.meanings_i18n ? Object.values(item.meanings_i18n).find(Boolean) : '') ||
+      (item.meanings_i18n
+        ? Object.values(item.meanings_i18n).find(Boolean)
+        : '') ||
       ''
     );
   };
@@ -2782,14 +3046,17 @@ export default function App() {
     e.preventDefault();
     const clean = ferhengQuery.trim();
     if (!clean) return;
-    setSearchHistory((prev) => [clean, ...prev.filter((t) => t !== clean)].slice(0, 8));
+    setSearchHistory((prev) =>
+      [clean, ...prev.filter((t) => t !== clean)].slice(0, 8)
+    );
     setSearchingDict(true);
     try {
       const entry = await fetchWiktionaryEntry(clean, selectedLang);
       if (entry) {
         setWiktionaryResults((prev) => {
           const filtered = prev.filter(
-            (item) => normalizeKurdish(item.word) !== normalizeKurdish(entry.word)
+            (item) =>
+              normalizeKurdish(item.word) !== normalizeKurdish(entry.word)
           );
           return [entry, ...filtered];
         });
@@ -2813,7 +3080,11 @@ export default function App() {
       audio.play().catch(() => {});
       return;
     }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window && item?.word) {
+    if (
+      typeof window !== 'undefined' &&
+      'speechSynthesis' in window &&
+      item?.word
+    ) {
       const utter = new SpeechSynthesisUtterance(item.word);
       utter.lang = 'ku';
       window.speechSynthesis.speak(utter);
@@ -2856,7 +3127,8 @@ export default function App() {
         .upload(path, file, { upsert: true });
       if (error) throw error;
       const { data } = supabase.storage.from('materyal').getPublicUrl(path);
-      if (data?.publicUrl) setWordForm((prev) => ({ ...prev, audio_url: data.publicUrl }));
+      if (data?.publicUrl)
+        setWordForm((prev) => ({ ...prev, audio_url: data.publicUrl }));
     } catch (err) {
       setWordMsg('Deng nehat barkirin: ' + err.message);
     } finally {
@@ -2875,11 +3147,16 @@ export default function App() {
     const payload = {
       word: wordForm.word.trim(),
       part_of_speech: wordForm.part_of_speech.trim() || 'navdêr',
-      meaning_tr: wordForm.meanings_i18n?.TR || wordForm.meaning_tr || activeMeaning,
-      meaning_en: wordForm.meanings_i18n?.EN || wordForm.meaning_en || activeMeaning,
-      meaning_ku: wordForm.meanings_i18n?.KU || wordForm.meaning_ku || activeMeaning,
+      meaning_tr:
+        wordForm.meanings_i18n?.TR || wordForm.meaning_tr || activeMeaning,
+      meaning_en:
+        wordForm.meanings_i18n?.EN || wordForm.meaning_en || activeMeaning,
+      meaning_ku:
+        wordForm.meanings_i18n?.KU || wordForm.meaning_ku || activeMeaning,
       example_sentence:
-        wordForm.examples_i18n?.[selectedLang] || wordForm.example_sentence || '',
+        wordForm.examples_i18n?.[selectedLang] ||
+        wordForm.example_sentence ||
+        '',
       audio_url: wordForm.audio_url || '',
       meanings_i18n: {
         ...(wordForm.meanings_i18n || {}),
@@ -2946,7 +3223,9 @@ export default function App() {
   const handleBulkImportDictionary = async () => {
     setSyncingProgress('Peyvên bingehîn tên barkirin...');
     try {
-      const rows = BUILTIN_DICTIONARY.map(({ id, sourceType, ...rest }) => rest);
+      const rows = BUILTIN_DICTIONARY.map(
+        ({ id, sourceType, ...rest }) => rest
+      );
       const { error } = await supabase.from('dictionary').insert(rows);
       if (error) throw error;
       setWordMsg(`${rows.length} peyvên bingehîn hatin barkirin.`);
@@ -2988,7 +3267,6 @@ export default function App() {
       (ex.correct_answer && ex.correct_answer.toLowerCase().includes(q));
     return matchesUnit && matchesSearch;
   });
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <input
@@ -3115,7 +3393,9 @@ export default function App() {
                       }`}
                     >
                       <span>{opt.nativeName}</span>
-                      {selectedLang === opt.code && <Check className="w-3.5 h-3.5" />}
+                      {selectedLang === opt.code && (
+                        <Check className="w-3.5 h-3.5" />
+                      )}
                     </button>
                   ))}
                 </div>
@@ -3243,7 +3523,9 @@ export default function App() {
               ) : filteredLessons.length === 0 ? (
                 <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center space-y-3">
                   <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
-                  <h3 className="text-lg font-bold text-slate-800">{ui.empty_title}</h3>
+                  <h3 className="text-lg font-bold text-slate-800">
+                    {ui.empty_title}
+                  </h3>
                   <p className="text-sm text-slate-500 max-w-md mx-auto">
                     {ui.empty_subtitle}
                   </p>
@@ -3263,7 +3545,8 @@ export default function App() {
                       (m) => m.id === lesson.media_type
                     );
                     const MediaIcon = mediaObj?.icon || FileText;
-                    const showThumb = lesson.thumbnail_url && !brokenThumbs[lesson.id];
+                    const showThumb =
+                      lesson.thumbnail_url && !brokenThumbs[lesson.id];
                     return (
                       <article
                         key={lesson.id}
@@ -3333,7 +3616,9 @@ export default function App() {
                           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
                             <span>
                               {ui.meta_level_prefix}{' '}
-                              <strong className="text-slate-700">{lesson.level}</strong>
+                              <strong className="text-slate-700">
+                                {lesson.level}
+                              </strong>
                             </span>
                             <span>
                               {ui.meta_grade_prefix}{' '}
@@ -3417,7 +3702,9 @@ export default function App() {
                             <div className="text-xs font-bold text-red-700">
                               {ui.learn_stage_prefix} {idx + 1}
                             </div>
-                            <div className="font-bold text-slate-900 mt-0.5">{uTitle}</div>
+                            <div className="font-bold text-slate-900 mt-0.5">
+                              {uTitle}
+                            </div>
                           </button>
                           {isAdmin && unitSample && (
                             <button
@@ -3478,19 +3765,20 @@ export default function App() {
                     <p className="text-lg font-bold text-slate-900">
                       {currentExercise.question_text}
                     </p>
-                    {currentExercise.image_url && !brokenExImages[currentExercise.id] && (
-                      <img
-                        src={currentExercise.image_url}
-                        alt={currentExercise.question_text}
-                        onError={() =>
-                          setBrokenExImages((prev) => ({
-                            ...prev,
-                            [currentExercise.id]: true
-                          }))
-                        }
-                        className="max-h-60 rounded-xl border border-slate-200 object-contain bg-white p-1"
-                      />
-                    )}
+                    {currentExercise.image_url &&
+                      !brokenExImages[currentExercise.id] && (
+                        <img
+                          src={currentExercise.image_url}
+                          alt={currentExercise.question_text}
+                          onError={() =>
+                            setBrokenExImages((prev) => ({
+                              ...prev,
+                              [currentExercise.id]: true
+                            }))
+                          }
+                          className="max-h-60 rounded-xl border border-slate-200 object-contain bg-white p-1"
+                        />
+                      )}
                     {currentExercise.audio_url && (
                       <button
                         type="button"
@@ -3503,7 +3791,9 @@ export default function App() {
                       >
                         <Volume2 className="w-4 h-4 text-red-700" />
                         <span>
-                          {isPlayingAudio ? 'Deng rawestîne' : 'Deng guhdar bike'}
+                          {isPlayingAudio
+                            ? 'Deng rawestîne'
+                            : 'Deng guhdar bike'}
                         </span>
                       </button>
                     )}
@@ -3623,7 +3913,10 @@ export default function App() {
                 </span>
               </div>
 
-              <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2">
+              <form
+                onSubmit={handleDictionarySearchSubmit}
+                className="flex gap-2"
+              >
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
@@ -3765,12 +4058,16 @@ export default function App() {
                           </p>
                         )}
                         {exampleText && (
-                          <p className="text-xs italic text-slate-500">“{exampleText}”</p>
+                          <p className="text-xs italic text-slate-500">
+                            “{exampleText}”
+                          </p>
                         )}
                       </div>
                       <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
                         <span>
-                          {item.sourceType === 'wiktionary' ? 'Wiktionary' : 'Ferheng'}
+                          {item.sourceType === 'wiktionary'
+                            ? 'Wiktionary'
+                            : 'Ferheng'}
                         </span>
                         <span className="inline-flex items-center gap-1 text-red-700 font-semibold">
                           <Eye className="w-3 h-3" />
@@ -3811,7 +4108,9 @@ export default function App() {
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
                   {authError && (
-                    <p className="text-xs font-bold text-red-600">{authError}</p>
+                    <p className="text-xs font-bold text-red-600">
+                      {authError}
+                    </p>
                   )}
                   <button
                     type="submit"
@@ -3850,8 +4149,8 @@ export default function App() {
                         </span>
                       </h2>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Her tîp û peyvê sererast bike û wêneyan rasterast ji komputerê bar
-                        bike.
+                        Her tîp û peyvê sererast bike û wêneyan rasterast ji
+                        komputerê bar bike.
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -3935,7 +4234,9 @@ export default function App() {
                             className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-red-50 hover:border-red-300 text-xs font-bold text-slate-700 hover:text-red-700"
                           >
                             <Upload className="w-3.5 h-3.5 text-red-700" />
-                            <span>{inlinePhotoSaving ? '...' : 'Wêne Bar Bike'}</span>
+                            <span>
+                              {inlinePhotoSaving ? '...' : 'Wêne Bar Bike'}
+                            </span>
                           </button>
                         </div>
                       </div>
@@ -3950,8 +4251,9 @@ export default function App() {
                         Lîstika Nû ya ALFABE: 4 Peyv û 4 Wêne
                       </h2>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        4 peyvan binivîse û wêneyan rasterast ji komputerê hilbijêre. Her
-                        lîstika nû li jêr di &quot;Lîstik û Pirs&quot; de tê guherandin.
+                        4 peyvan binivîse û wêneyan rasterast ji komputerê
+                        hilbijêre. Her lîstika nû li jêr di &quot;Lîstik û
+                        Pirs&quot; de tê guherandin.
                       </p>
                     </div>
                   </div>
@@ -4038,6 +4340,309 @@ export default function App() {
                 </div>
 
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div>
+                      <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-red-700" />
+                        <span>
+                          Rêveberiya Lîstikên Taybet: Tîpa Pêşîn, Bîr û Tîpa Kêm
+                        </span>
+                      </h2>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Ji bo her sê modên ALFABE (first_letter, memory,
+                        missing_letter) pirs û setên taybet çêbike û pîştî
+                        tomarkirinê biguherîne.
+                      </p>
+                    </div>
+                  </div>
+
+                  <form
+                    onSubmit={handleCreateSpecialGameExercise}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                  >
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Moda Lîstikê
+                      </label>
+                      <select
+                        value={specialGameForm.mode}
+                        onChange={(e) =>
+                          setSpecialGameForm((prev) => ({
+                            ...prev,
+                            mode: e.target.value
+                          }))
+                        }
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm font-semibold"
+                      >
+                        <option value="first_letter">
+                          Tîpa Pêşîn Bibîne (first_letter)
+                        </option>
+                        <option value="memory">
+                          Lîstika Bîrê / Hafıza (memory)
+                        </option>
+                        <option value="missing_letter">
+                          Tîpa Kêm Dagire (missing_letter)
+                        </option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Navê Qonaxê (Unit)
+                      </label>
+                      <input
+                        type="text"
+                        value={specialGameForm.unitTitle}
+                        onChange={(e) =>
+                          setSpecialGameForm((prev) => ({
+                            ...prev,
+                            unitTitle: e.target.value
+                          }))
+                        }
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Wêne (Ji Komputerê)
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={specialGameForm.imageUrl}
+                          onChange={(e) =>
+                            setSpecialGameForm((prev) => ({
+                              ...prev,
+                              imageUrl: e.target.value
+                            }))
+                          }
+                          placeholder="URL an wêne bar bike..."
+                          className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                        />
+                        <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1">
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>{uploadingSpecialImg ? '...' : 'Wêne'}</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleSpecialGameImageUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Nivîsa Pirsê / Sernavê Taybet
+                      </label>
+                      <input
+                        type="text"
+                        value={specialGameForm.questionText}
+                        onChange={(e) =>
+                          setSpecialGameForm((prev) => ({
+                            ...prev,
+                            questionText: e.target.value
+                          }))
+                        }
+                        placeholder="Mînak: Ev peyv bi kîjan tîpê dest pê dike?"
+                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                      />
+                    </div>
+
+                    {specialGameForm.mode === 'first_letter' && (
+                      <>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Tîpa Rast (Vala bihêle bixweber tê dîtin)
+                          </label>
+                          <input
+                            type="text"
+                            value={specialGameForm.correctLetter}
+                            onChange={(e) =>
+                              setSpecialGameForm((prev) => ({
+                                ...prev,
+                                correctLetter: e.target.value
+                              }))
+                            }
+                            placeholder="Mînak: B"
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                          />
+                        </div>
+                        <div className="md:col-span-3">
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Peyva Armanc
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={specialGameForm.targetWord}
+                            onChange={(e) =>
+                              setSpecialGameForm((prev) => ({
+                                ...prev,
+                                targetWord: e.target.value
+                              }))
+                            }
+                            placeholder="Mînak: Berf"
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    {specialGameForm.mode === 'memory' && (
+                      <div className="md:col-span-3">
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Cotên Kartên Bîrê (Her rêzek: Tîp=Peyv, heta 4 cotan)
+                        </label>
+                        <textarea
+                          rows={4}
+                          required
+                          value={specialGameForm.memoryPairsText}
+                          onChange={(e) =>
+                            setSpecialGameForm((prev) => ({
+                              ...prev,
+                              memoryPairsText: e.target.value
+                            }))
+                          }
+                          placeholder={'A=Agir\nB=Berf\nC=Cemed\nÇ=Çay'}
+                          className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                        />
+                      </div>
+                    )}
+
+                    {specialGameForm.mode === 'missing_letter' && (
+                      <>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Peyva Tam
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={specialGameForm.targetWord}
+                            onChange={(e) =>
+                              setSpecialGameForm((prev) => ({
+                                ...prev,
+                                targetWord: e.target.value
+                              }))
+                            }
+                            placeholder="Mînak: Pirtûk"
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Rêza Tîpa Vala (0 = tîpa 1em, 1 = tîpa 2em...)
+                          </label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={specialGameForm.missingIndex}
+                            onChange={(e) =>
+                              setSpecialGameForm((prev) => ({
+                                ...prev,
+                                missingIndex: e.target.value
+                              }))
+                            }
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-slate-700 mb-1">
+                            Tîpa Winda ya Rast (Vala bihêle bixweber tê
+                            girtin)
+                          </label>
+                          <input
+                            type="text"
+                            value={specialGameForm.correctLetter}
+                            onChange={(e) =>
+                              setSpecialGameForm((prev) => ({
+                                ...prev,
+                                correctLetter: e.target.value
+                              }))
+                            }
+                            placeholder="Mînak: i"
+                            className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div className="md:col-span-3 flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={savingSpecialGame}
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-red-700 hover:bg-red-800 disabled:opacity-60 text-white text-sm font-bold"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>
+                          {savingSpecialGame
+                            ? 'Tê tomarkirin...'
+                            : 'Lîstika Taybet Tomar Bike'}
+                        </span>
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="border-t border-slate-100 pt-4 space-y-2.5">
+                    <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                      Qeydên Taybet ên Heyî (
+                      {
+                        exercises.filter((ex) =>
+                          ['first_letter', 'memory', 'missing_letter'].includes(
+                            ex.exercise_type
+                          )
+                        ).length
+                      }
+                      )
+                    </div>
+                    <div className="divide-y divide-slate-100">
+                      {exercises
+                        .filter((ex) =>
+                          ['first_letter', 'memory', 'missing_letter'].includes(
+                            ex.exercise_type
+                          )
+                        )
+                        .map((ex) => (
+                          <div
+                            key={ex.id}
+                            className="py-2.5 flex items-center justify-between gap-3 flex-wrap"
+                          >
+                            <div>
+                              <div className="text-sm font-bold text-slate-900">
+                                {ex.question_text}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                Mod: <strong>{ex.exercise_type}</strong> •
+                                Peyv/Set: {ex.explanation || ex.correct_answer}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => handleEditGameInAdmin(ex)}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold border border-amber-300"
+                              >
+                                <Edit3 className="w-3.5 h-3.5" />
+                                <span>Biguherîne</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteExercise(ex.id)}
+                                className="p-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
                   <h2 className="text-lg font-extrabold text-slate-900">
                     {editingId
                       ? 'Materyalê Biguherîne'
@@ -4074,7 +4679,10 @@ export default function App() {
                         required
                         value={formData.title}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, title: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            title: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4169,12 +4777,16 @@ export default function App() {
                         <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1">
                           <Upload className="w-3.5 h-3.5" />
                           <span>
-                            {uploadingField === 'thumbnail_url' ? '...' : 'Wêne'}
+                            {uploadingField === 'thumbnail_url'
+                              ? '...'
+                              : 'Wêne'}
                           </span>
                           <input
                             type="file"
                             accept="image/*"
-                            onChange={(e) => handleFileUpload(e, 'thumbnail_url')}
+                            onChange={(e) =>
+                              handleFileUpload(e, 'thumbnail_url')
+                            }
                             className="hidden"
                           />
                         </label>
@@ -4188,7 +4800,10 @@ export default function App() {
                         type="text"
                         value={formData.level}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, level: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            level: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4228,12 +4843,16 @@ export default function App() {
                         <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1">
                           <Upload className="w-3.5 h-3.5" />
                           <span>
-                            {uploadingField === 'guide_pdf_url' ? '...' : 'PDF'}
+                            {uploadingField === 'guide_pdf_url'
+                              ? '...'
+                              : 'PDF'}
                           </span>
                           <input
                             type="file"
                             accept=".pdf"
-                            onChange={(e) => handleFileUpload(e, 'guide_pdf_url')}
+                            onChange={(e) =>
+                              handleFileUpload(e, 'guide_pdf_url')
+                            }
                             className="hidden"
                           />
                         </label>
@@ -4302,10 +4921,12 @@ export default function App() {
                         className="py-3 flex items-center justify-between gap-3 flex-wrap"
                       >
                         <div>
-                          <div className="font-bold text-slate-900">{item.title}</div>
+                          <div className="font-bold text-slate-900">
+                            {item.title}
+                          </div>
                           <div className="text-xs text-slate-500">
-                            {getCategoryName(item.category_slug)} • {item.level} •{' '}
-                            {item.grade_level}
+                            {getCategoryName(item.category_slug)} • {item.level}{' '}
+                            • {item.grade_level}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -4338,7 +4959,9 @@ export default function App() {
                       <span>Rêveberiya Beşan</span>
                     </h2>
                     {catMsg && (
-                      <span className="text-xs font-bold text-emerald-700">{catMsg}</span>
+                      <span className="text-xs font-bold text-emerald-700">
+                        {catMsg}
+                      </span>
                     )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -4404,7 +5027,8 @@ export default function App() {
                         <span>Lîstik û Pirs ({exercises.length})</span>
                       </h2>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Hemû lîstikên nû û heyî li vir têne guherandin an jêbirin.
+                        Hemû lîstikên nû û heyî li vir têne guherandin an
+                        jêbirin.
                       </p>
                     </div>
                     <button
@@ -4418,7 +5042,9 @@ export default function App() {
 
                   {editingExId && (
                     <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-950 text-xs font-bold flex items-center justify-between gap-2">
-                      <span>Niha Lîstik / Pirs #{editingExId} tê guherandin.</span>
+                      <span>
+                        Niha Lîstik / Pirs #{editingExId} tê guherandin.
+                      </span>
                       <button
                         type="button"
                         onClick={resetExForm}
@@ -4465,12 +5091,16 @@ export default function App() {
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       >
                         <option value="choice">{ui.learn_type_choice}</option>
-                        <option value="sentence">{ui.learn_type_sentence}</option>
+                        <option value="sentence">
+                          {ui.learn_type_sentence}
+                        </option>
                         <option value="match">{ui.learn_type_match}</option>
                         <option value="first_letter">
                           Tîpa Pêşîn Bibîne (First Letter)
                         </option>
-                        <option value="memory">Lîstika Bîrê (Memory Cards)</option>
+                        <option value="memory">
+                          Lîstika Bîrê (Memory Cards)
+                        </option>
                         <option value="missing_letter">
                           Tîpa Kêm Dagire (Missing Letter)
                         </option>
@@ -4531,7 +5161,7 @@ export default function App() {
                       </div>
                       <div>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
-                          Ravekirin
+                          Peyva Armanc / Ravekirin
                         </label>
                         <input
                           type="text"
@@ -4658,8 +5288,8 @@ export default function App() {
                             {ex.question_text}
                           </div>
                           <div className="text-xs text-slate-500">
-                            {ex.unit_title} • Cure: {ex.exercise_type} • Bersiv:{' '}
-                            {ex.correct_answer}
+                            {ex.unit_title} • Cure: {ex.exercise_type} •
+                            Bersiv: {ex.correct_answer}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -4725,7 +5355,10 @@ export default function App() {
                         required
                         value={wordForm.word}
                         onChange={(e) =>
-                          setWordForm((prev) => ({ ...prev, word: e.target.value }))
+                          setWordForm((prev) => ({
+                            ...prev,
+                            word: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4884,7 +5517,9 @@ export default function App() {
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
                       <Settings className="w-5 h-5 text-red-700" />
-                      <span>Mîhengên Nivîsên Malperê ({selectedLang})</span>
+                      <span>
+                        Mîhengên Nivîsên Malperê ({selectedLang})
+                      </span>
                     </h2>
                     {settingsMsg && (
                       <span className="text-xs font-bold text-emerald-700">
@@ -4942,7 +5577,8 @@ export default function App() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="text-xs font-bold text-red-700 uppercase">
-                  {getCategoryName(activeLesson.category_slug)} • {activeLesson.level}
+                  {getCategoryName(activeLesson.category_slug)} •{' '}
+                  {activeLesson.level}
                 </div>
                 <h2 className="text-2xl font-extrabold text-slate-900 mt-1">
                   {activeLesson.title}
@@ -5001,7 +5637,9 @@ export default function App() {
                     {activeLesson.teacher_guide}
                   </div>
                 ) : (
-                  <p className="text-sm text-slate-500">{ui.guide_empty_text}</p>
+                  <p className="text-sm text-slate-500">
+                    {ui.guide_empty_text}
+                  </p>
                 )}
                 {activeLesson.guide_pdf_url && (
                   <a
