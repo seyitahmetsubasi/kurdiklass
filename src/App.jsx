@@ -74,6 +74,40 @@ const ALFABE_DEFAULT_WORDS = [
   { id: 'alf-31', word: 'Zebeş', letter: 'Z', image_url: '' }
 ];
 
+const EXTRA_WORD_MEANINGS = {
+  Agir: { KU: 'Şewqa germ û ronahiyê', TR: 'Ateş', EN: 'Fire' },
+  Bilbil: { KU: 'Çûkê stranbêj ê xweşdeng', TR: 'Bülbül', EN: 'Nightingale' },
+  Cemed: { KU: 'Ava cemidî û sar', TR: 'Buz', EN: 'Ice' },
+  Çay: { KU: 'Vexwarina germ an çemê avê', TR: 'Çay / Irmak', EN: 'Tea / Stream' },
+  Dar: { KU: 'Riweka qedqalind û şîn', TR: 'Ağaç', EN: 'Tree' },
+  Ewr: { KU: 'Komên avê yên li esmanî', TR: 'Bulut', EN: 'Cloud' },
+  Êvar: { KU: 'Dema rojavabûnê', TR: 'Akşam', EN: 'Evening' },
+  Ferheng: { KU: 'Pirtûka wateya peyvan', TR: 'Sözlük', EN: 'Dictionary' },
+  Guh: { KU: 'Endamê bihîstinê', TR: 'Kulak', EN: 'Ear' },
+  Hesp: { KU: 'Heywanê siwarbûnê yê bilez', TR: 'At', EN: 'Horse' },
+  Irmak: { KU: 'Çemê mezin ê avê', TR: 'Irmak', EN: 'River' },
+  Îsot: { KU: 'Sebzeya tûj a sor an kesk', TR: 'Biber', EN: 'Pepper' },
+  Jûjî: { KU: 'Heywanê biçûk ê stirîdar', TR: 'Kirpi', EN: 'Hedgehog' },
+  Ker: { KU: 'Heywanê barkêş ê guhdirêj', TR: 'Eşek', EN: 'Donkey' },
+  Lembe: { KU: 'Çiraya ronahiyê', TR: 'Lamba', EN: 'Lamp' },
+  Masî: { KU: 'Heywanê ku di avê de dijî', TR: 'Balık', EN: 'Fish' },
+  Nan: { KU: 'Xwarina sereke ya ji hevîr', TR: 'Ekmek', EN: 'Bread' },
+  Oda: { KU: 'Jûra di hundirê malê de', TR: 'Oda', EN: 'Room' },
+  Pisîk: { KU: 'Heywanê kedî yê malê', TR: 'Kedi', EN: 'Cat' },
+  Qaz: { KU: 'Balindeya avê ya stûdirêj', TR: 'Kaz', EN: 'Goose' },
+  Roj: { KU: 'Demjimêrên ronahiyê û tavê', TR: 'Gün / Güneş', EN: 'Day / Sun' },
+  Stêrk: { KU: 'Ronahiya li esmanê şevê', TR: 'Yıldız', EN: 'Star' },
+  Şêr: { KU: 'Heywanê kovî yê bihêz', TR: 'Aslan', EN: 'Lion' },
+  Telefon: { KU: 'Amûra ragihandinê', TR: 'Telefon', EN: 'Telephone' },
+  Uskûre: { KU: 'Taca an xemla serî', TR: 'Taç / Başlık', EN: 'Crown / Headdress' },
+  Ûd: { KU: 'Amûreke mûzîkê ya têldar', TR: 'Ud', EN: 'Oud' },
+  Vîrus: { KU: 'Mikroorganîzmaya pir biçûk', TR: 'Virüs', EN: 'Virus' },
+  Wêne: { KU: 'Şiklê dîtbarî an resm', TR: 'Resim / Fotoğraf', EN: 'Picture / Image' },
+  Xiyar: { KU: 'Sebzeya kesk û avdar', TR: 'Salatalık', EN: 'Cucumber' },
+  Yek: { KU: 'Hejmara pêşîn (1)', TR: 'Bir (1)', EN: 'One (1)' },
+  Zebeş: { KU: 'Fêkiyê havînê yê kesk û sor', TR: 'Karpuz', EN: 'Watermelon' }
+};
+
 function ALFABE({
   exercises = [],
   gamesReset = false,
@@ -82,6 +116,8 @@ function ALFABE({
   streakDays = 0,
   completedUnits = [],
   wordBank = ALFABE_DEFAULT_WORDS,
+  dictionaryItems = [],
+  selectedLang = 'KU',
   onAwardXp,
   onDeductHeartOrReset,
   onCompleteUnit,
@@ -111,6 +147,21 @@ function ALFABE({
 
   const totalRounds = Math.ceil(activeWords.length / 4);
   const currentFourWords = activeWords.slice(roundIndex * 4, roundIndex * 4 + 4);
+
+  // 1) Tîpa Yekem Bîne state
+  const [firstLetterIdx, setFirstLetterIdx] = useState(0);
+  const [chosenFirstLetter, setChosenFirstLetter] = useState('');
+  const [firstLetterFeedback, setFirstLetterFeedback] = useState(null);
+
+  // 2) Wêne Bibîne û Tîpan Rêz Bike state
+  const [spellWordIdx, setSpellWordIdx] = useState(0);
+  const [pickedLetterTiles, setPickedLetterTiles] = useState([]);
+  const [spellFeedback, setSpellFeedback] = useState(null);
+
+  // 3) Wateya Rast Hilbijêre state
+  const [meaningWordIdx, setMeaningWordIdx] = useState(0);
+  const [chosenMeaning, setChosenMeaning] = useState('');
+  const [meaningFeedback, setMeaningFeedback] = useState(null);
 
   const unitQuestions = currentUnit
     ? activeExercises.filter((e) => e.unit_title === currentUnit)
@@ -214,6 +265,176 @@ function ALFABE({
     setPairFeedback(null);
   };
 
+  // --- YENİ OYUN 1: Tîpa Yekem Bîne ---
+  const safeFirstIdx = firstLetterIdx % activeWords.length;
+  const currentFirstWordObj = activeWords[safeFirstIdx] || activeWords[0];
+  const targetFirstLetter = (
+    currentFirstWordObj.letter ||
+    (currentFirstWordObj.word || '').trim().charAt(0) ||
+    'A'
+  ).toUpperCase();
+  const maskedFirstWord = (() => {
+    const w = (currentFirstWordObj.word || '').trim();
+    if (!w) return `_${targetFirstLetter.toLowerCase()}`;
+    return `_${w.slice(1)}`;
+  })();
+  const firstLetterChoices = (() => {
+    const pool = activeWords.map((w) =>
+      (w.letter || (w.word || '').trim().charAt(0) || 'A').toUpperCase()
+    );
+    const uniquePool = [...new Set([targetFirstLetter, ...pool])];
+    const startPos = (safeFirstIdx * 3) % uniquePool.length;
+    const rotated = [
+      ...uniquePool.slice(startPos),
+      ...uniquePool.slice(0, startPos)
+    ];
+    const four = rotated.includes(targetFirstLetter)
+      ? rotated.slice(0, 4)
+      : [targetFirstLetter, ...rotated.slice(0, 3)];
+    return [...new Set(four)].slice(0, 4);
+  })();
+
+  const handleCheckFirstLetter = (letterOpt) => {
+    setChosenFirstLetter(letterOpt);
+    if (letterOpt === targetFirstLetter) {
+      setFirstLetterFeedback({
+        ok: true,
+        msg: `Rast e! Peyv "${currentFirstWordObj.word}" bi tîpa "${targetFirstLetter}" dest pê dike. (+10 XP)`
+      });
+      if (typeof onAwardXp === 'function') onAwardXp(10);
+    } else {
+      const nextHearts = Math.max(0, heartsLeft - 1);
+      setHeartsLeft(nextHearts);
+      setFirstLetterFeedback({
+        ok: false,
+        msg: `Tîpa yekem a rast "${targetFirstLetter}" e (${currentFirstWordObj.word}).`
+      });
+      if (typeof onDeductHeartOrReset === 'function') onDeductHeartOrReset(nextHearts);
+    }
+  };
+
+  const handleNextFirstLetter = () => {
+    setChosenFirstLetter('');
+    setFirstLetterFeedback(null);
+    setFirstLetterIdx((prev) => (prev + 1) % activeWords.length);
+  };
+
+  // --- YENİ OYUN 2: Wêne Bibîne û Tîpan Rêz Bike ---
+  const safeSpellIdx = spellWordIdx % activeWords.length;
+  const currentSpellWordObj = activeWords[safeSpellIdx] || activeWords[0];
+  const targetSpellWord = (currentSpellWordObj.word || 'Agir').trim();
+  const targetSpellChars = Array.from(targetSpellWord);
+  const scrambledLetterTiles = (() => {
+    const indexed = targetSpellChars.map((ch, idx) => ({
+      id: `${safeSpellIdx}-${idx}-${ch}`,
+      char: ch
+    }));
+    if (indexed.length <= 1) return indexed;
+    const shift = (safeSpellIdx % (indexed.length - 1)) + 1;
+    return [...indexed.slice(shift), ...indexed.slice(0, shift)];
+  })();
+
+  const handlePickSpellTile = (tile) => {
+    if (spellFeedback?.ok) return;
+    const nextPicked = [...pickedLetterTiles, tile];
+    setPickedLetterTiles(nextPicked);
+
+    const builtStr = nextPicked.map((t) => t.char).join('');
+    if (builtStr.length === targetSpellChars.length) {
+      if (builtStr.toLowerCase() === targetSpellWord.toLowerCase()) {
+        setSpellFeedback({
+          ok: true,
+          msg: `Pîroz be! Te peyva "${targetSpellWord}" rast rêz kir. (+15 XP)`
+        });
+        if (typeof onAwardXp === 'function') onAwardXp(15);
+      } else {
+        const nextHearts = Math.max(0, heartsLeft - 1);
+        setHeartsLeft(nextHearts);
+        setSpellFeedback({
+          ok: false,
+          msg: `Rêza tîpan ne rast bû. Peyva rast: "${targetSpellWord}".`
+        });
+        if (typeof onDeductHeartOrReset === 'function') onDeductHeartOrReset(nextHearts);
+      }
+    }
+  };
+
+  const handleResetSpellTiles = () => {
+    setPickedLetterTiles([]);
+    setSpellFeedback(null);
+  };
+
+  const handleNextSpellWord = () => {
+    setPickedLetterTiles([]);
+    setSpellFeedback(null);
+    setSpellWordIdx((prev) => (prev + 1) % activeWords.length);
+  };
+
+  // --- YENİ OYUN 3: Wateya Rast Hilbijêre ---
+  const resolveMeaningForWord = (wordStr) => {
+    const clean = (wordStr || '').trim();
+    const dbMatch = Array.isArray(dictionaryItems)
+      ? dictionaryItems.find(
+          (d) => (d.word || '').trim().toLowerCase() === clean.toLowerCase()
+        )
+      : null;
+    if (dbMatch) {
+      if (selectedLang === 'TR' && dbMatch.meaning_tr) return dbMatch.meaning_tr;
+      if (selectedLang === 'EN' && dbMatch.meaning_en) return dbMatch.meaning_en;
+      if (selectedLang === 'KU' && dbMatch.meaning_ku) return dbMatch.meaning_ku;
+      const fromAny =
+        dbMatch.meaning_ku || dbMatch.meaning_tr || dbMatch.meaning_en;
+      if (fromAny) return fromAny;
+    }
+    const extra = EXTRA_WORD_MEANINGS[clean];
+    if (extra) {
+      return extra[selectedLang] || extra.KU || extra.TR || extra.EN;
+    }
+    return `Wateya peyva "${clean}"`;
+  };
+
+  const safeMeaningIdx = meaningWordIdx % activeWords.length;
+  const currentMeaningWordObj = activeWords[safeMeaningIdx] || activeWords[0];
+  const correctMeaningText = resolveMeaningForWord(currentMeaningWordObj.word);
+  const meaningOptions = (() => {
+    const distractors = [];
+    for (let i = 1; i < activeWords.length && distractors.length < 3; i++) {
+      const candidateObj = activeWords[(safeMeaningIdx + i * 3) % activeWords.length];
+      const m = resolveMeaningForWord(candidateObj.word);
+      if (m && m !== correctMeaningText && !distractors.includes(m)) {
+        distractors.push(m);
+      }
+    }
+    const combined = [correctMeaningText, ...distractors];
+    const rotateBy = safeMeaningIdx % combined.length;
+    return [...combined.slice(rotateBy), ...combined.slice(0, rotateBy)];
+  })();
+
+  const handleChooseMeaning = (optMeaning) => {
+    setChosenMeaning(optMeaning);
+    if (optMeaning === correctMeaningText) {
+      setMeaningFeedback({
+        ok: true,
+        msg: `Rast e! Wateya "${currentMeaningWordObj.word}" hat hilbijartin. (+10 XP)`
+      });
+      if (typeof onAwardXp === 'function') onAwardXp(10);
+    } else {
+      const nextHearts = Math.max(0, heartsLeft - 1);
+      setHeartsLeft(nextHearts);
+      setMeaningFeedback({
+        ok: false,
+        msg: `Wateya rast: "${correctMeaningText}".`
+      });
+      if (typeof onDeductHeartOrReset === 'function') onDeductHeartOrReset(nextHearts);
+    }
+  };
+
+  const handleNextMeaningWord = () => {
+    setChosenMeaning('');
+    setMeaningFeedback(null);
+    setMeaningWordIdx((prev) => (prev + 1) % activeWords.length);
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4">
@@ -242,6 +463,7 @@ function ALFABE({
         </div>
       </div>
 
+      {/* Mevcut 4 Peyv û 4 Wêne Lîstiki (Dokunulmadı) */}
       <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
           <div>
@@ -383,6 +605,283 @@ function ALFABE({
             }`}
           >
             {pairFeedback.msg}
+          </div>
+        )}
+      </div>
+
+      {/* YENİ LÎSTIK 1: Tîpa Yekem Bîne */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Tîpa Yekem Bîne
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Tîpa yekem a wenda ya peyvê hilbijêre ({safeFirstIdx + 1} / {activeWords.length})
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleNextFirstLetter}
+            className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700"
+          >
+            Peyva Din →
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+          <div className="flex items-center gap-4">
+            <div className="w-28 h-28 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+              {currentFirstWordObj.image_url ? (
+                <img
+                  src={currentFirstWordObj.image_url}
+                  alt={currentFirstWordObj.word}
+                  className="w-full h-full object-contain p-1.5"
+                />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-slate-400" />
+              )}
+            </div>
+            <div className="space-y-1">
+              <div className="text-xs font-bold uppercase text-red-700">
+                Peyva Wenda
+              </div>
+              <div className="text-3xl font-extrabold tracking-wide text-slate-900">
+                {chosenFirstLetter === targetFirstLetter
+                  ? currentFirstWordObj.word
+                  : maskedFirstWord}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-4 gap-2.5">
+            {firstLetterChoices.map((ltr) => {
+              const isSelected = chosenFirstLetter === ltr;
+              return (
+                <button
+                  key={ltr}
+                  type="button"
+                  onClick={() => handleCheckFirstLetter(ltr)}
+                  className={`py-3.5 rounded-xl border text-lg font-extrabold transition ${
+                    isSelected && ltr === targetFirstLetter
+                      ? 'bg-emerald-50 border-emerald-400 text-emerald-800'
+                      : isSelected
+                      ? 'bg-rose-50 border-rose-400 text-rose-800'
+                      : 'bg-white border-slate-200 hover:border-red-300 text-slate-900'
+                  }`}
+                >
+                  {ltr}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {firstLetterFeedback && (
+          <div
+            className={`p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 ${
+              firstLetterFeedback.ok
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border border-rose-200'
+            }`}
+          >
+            <span>{firstLetterFeedback.msg}</span>
+            <button
+              type="button"
+              onClick={handleNextFirstLetter}
+              className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold"
+            >
+              Pêş →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* YENİ LÎSTIK 2: Wêne Bibîne û Tîpan Rêz Bike */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Wêne Bibîne û Tîpan Rêz Bike
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Li gorî wêneyê tîpan bi rêzê hilbijêre ({safeSpellIdx + 1} / {activeWords.length})
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleResetSpellTiles}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700"
+            >
+              Paqij Bike
+            </button>
+            <button
+              type="button"
+              onClick={handleNextSpellWord}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700"
+            >
+              Peyva Din →
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-center">
+          <div className="flex items-center gap-4">
+            <div className="w-28 h-28 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+              {currentSpellWordObj.image_url ? (
+                <img
+                  src={currentSpellWordObj.image_url}
+                  alt={currentSpellWordObj.word}
+                  className="w-full h-full object-contain p-1.5"
+                />
+              ) : (
+                <ImageIcon className="w-8 h-8 text-slate-400" />
+              )}
+            </div>
+            <div className="space-y-2 flex-1">
+              <div className="text-xs font-bold text-slate-500">
+                Peyva Çêbûyî ({pickedLetterTiles.length} / {targetSpellChars.length} tîp)
+              </div>
+              <div className="min-h-12 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 flex items-center gap-1.5 flex-wrap">
+                {pickedLetterTiles.length === 0 ? (
+                  <span className="text-xs text-slate-400">
+                    Li jêr li tîpan bitikîne...
+                  </span>
+                ) : (
+                  pickedLetterTiles.map((t, i) => (
+                    <span
+                      key={`${t.id}-${i}`}
+                      className="px-2.5 py-1 rounded-lg bg-red-700 text-white text-sm font-extrabold"
+                    >
+                      {t.char}
+                    </span>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {scrambledLetterTiles.map((tile) => {
+              const alreadyUsed = pickedLetterTiles.some((p) => p.id === tile.id);
+              return (
+                <button
+                  key={tile.id}
+                  type="button"
+                  disabled={alreadyUsed || Boolean(spellFeedback?.ok)}
+                  onClick={() => handlePickSpellTile(tile)}
+                  className={`w-12 h-12 rounded-xl border text-base font-extrabold transition ${
+                    alreadyUsed
+                      ? 'bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed'
+                      : 'bg-white border-slate-300 hover:border-red-400 text-slate-900'
+                  }`}
+                >
+                  {tile.char}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {spellFeedback && (
+          <div
+            className={`p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 ${
+              spellFeedback.ok
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border border-rose-200'
+            }`}
+          >
+            <span>{spellFeedback.msg}</span>
+            <button
+              type="button"
+              onClick={handleNextSpellWord}
+              className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold"
+            >
+              Pêş →
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* YENİ LÎSTIK 3: Wateya Rast Hilbijêre */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Wateya Rast Hilbijêre
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Wateya peyva "{currentMeaningWordObj.word}" hilbijêre ({safeMeaningIdx + 1} / {activeWords.length})
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleNextMeaningWord}
+            className="px-3 py-1.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-xs font-bold text-slate-700"
+          >
+            Peyva Din →
+          </button>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="w-20 h-20 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+            {currentMeaningWordObj.image_url ? (
+              <img
+                src={currentMeaningWordObj.image_url}
+                alt={currentMeaningWordObj.word}
+                className="w-full h-full object-contain p-1"
+              />
+            ) : (
+              <BookA className="w-7 h-7 text-red-700" />
+            )}
+          </div>
+          <div>
+            <div className="text-xs font-bold text-red-700 uppercase">Peyv</div>
+            <div className="text-2xl font-extrabold text-slate-900">
+              {currentMeaningWordObj.word}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {meaningOptions.map((optText, idx) => {
+            const isPicked = chosenMeaning === optText;
+            return (
+              <button
+                key={`${optText}-${idx}`}
+                type="button"
+                onClick={() => handleChooseMeaning(optText)}
+                className={`p-3.5 rounded-xl border text-left text-sm font-bold transition ${
+                  isPicked && optText === correctMeaningText
+                    ? 'bg-emerald-50 border-emerald-400 text-emerald-800'
+                    : isPicked
+                    ? 'bg-rose-50 border-rose-400 text-rose-800'
+                    : 'bg-white border-slate-200 hover:border-red-300 text-slate-800'
+                }`}
+              >
+                {optText}
+              </button>
+            );
+          })}
+        </div>
+
+        {meaningFeedback && (
+          <div
+            className={`p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 ${
+              meaningFeedback.ok
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border border-rose-200'
+            }`}
+          >
+            <span>{meaningFeedback.msg}</span>
+            <button
+              type="button"
+              onClick={handleNextMeaningWord}
+              className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-800 font-bold"
+            >
+              Pêş →
+            </button>
           </div>
         )}
       </div>
@@ -3386,6 +3885,8 @@ export default function App() {
               streakDays={streakDays}
               completedUnits={completedUnits}
               wordBank={alfabeWords}
+              dictionaryItems={combinedDictionary}
+              selectedLang={selectedLang}
               onAwardXp={(pts) => setXpPoints((prev) => prev + pts)}
               onDeductHeartOrReset={(nextHearts) => {
                 if (nextHearts <= 0) setHearts(0);
