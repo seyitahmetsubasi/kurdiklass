@@ -68,6 +68,34 @@ const ALFABE_DEFAULT_WORDS = [
   { id: 'alf-31', letter: 'Z', word: 'Zarok', image_url: '' }
 ];
 
+const KURDISH_LETTERS_POOL = [
+  'A', 'B', 'C', 'Ç', 'D', 'E', 'Ê', 'F', 'G', 'H', 'I', 'Î', 'J', 'K', 'L',
+  'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'Ş', 'T', 'U', 'Û', 'V', 'W', 'X', 'Y', 'Z'
+];
+
+function inferFirstLetter(item) {
+  if (item?.letter && String(item.letter).trim()) {
+    return String(item.letter).trim().charAt(0).toUpperCase();
+  }
+  const w = String(item?.word || '').trim();
+  if (!w) return 'A';
+  const first = w.charAt(0).toUpperCase();
+  if (first === 'İ') return 'Î';
+  return first;
+}
+
+function maskWordLetter(word) {
+  const clean = String(word || '').trim();
+  if (clean.length <= 1) {
+    return { masked: '_', missingChar: clean || 'A' };
+  }
+  const idx = clean.length > 2 ? 1 : 0;
+  const missingChar = clean.charAt(idx);
+  const masked =
+    clean.slice(0, idx) + '_' + clean.slice(idx + 1);
+  return { masked, missingChar };
+}
+
 function ALFABE({
   exercises = [],
   gamesReset = false,
@@ -90,6 +118,8 @@ function ALFABE({
   const effectiveBank = Array.isArray(wordBank) && wordBank.length > 0
     ? wordBank
     : ALFABE_DEFAULT_WORDS;
+
+  const [gameMode, setGameMode] = useState('match');
 
   const customMatchRounds = (() => {
     if (gamesReset || !Array.isArray(exercises)) return [];
@@ -135,6 +165,13 @@ function ALFABE({
     return Array.from(grouped.values()).filter((r) => r.items.length > 0);
   })();
 
+  const customModeExercises = (() => {
+    if (gamesReset || !Array.isArray(exercises)) return [];
+    return exercises.filter((ex) =>
+      ['first_letter', 'memory', 'missing_letter'].includes(ex?.exercise_type)
+    );
+  })();
+
   const totalRounds =
     customMatchRounds.length + Math.max(1, Math.ceil(effectiveBank.length / 4));
   const [roundIndex, setRoundIndex] = useState(0);
@@ -142,6 +179,23 @@ function ALFABE({
   const [matchedIds, setMatchedIds] = useState([]);
   const [feedback, setFeedback] = useState(null);
   const [localHearts, setLocalHearts] = useState(5);
+
+  const [firstLetterIdx, setFirstLetterIdx] = useState(0);
+  const [firstLetterSolved, setFirstLetterSolved] = useState(false);
+
+  const [memoryCards, setMemoryCards] = useState([]);
+  const [flippedCardIds, setFlippedCardIds] = useState([]);
+  const [matchedPairKeys, setMatchedPairKeys] = useState([]);
+
+  const [missingIdx, setMissingIdx] = useState(0);
+  const [missingSolved, setMissingSolved] = useState(false);
+
+  useEffect(() => {
+    setRoundIndex(0);
+    setFirstLetterIdx(0);
+    setMissingIdx(0);
+    setFeedback(null);
+  }, [gameMode]);
 
   const currentRoundItems = (() => {
     if (roundIndex < customMatchRounds.length) {
@@ -153,6 +207,12 @@ function ALFABE({
 
   const activeCustomRound =
     roundIndex < customMatchRounds.length ? customMatchRounds[roundIndex] : null;
+
+  const activeCustomExercise = (() => {
+    if (customModeExercises.length === 0) return null;
+    const byType = customModeExercises.find((e) => e.exercise_type === gameMode);
+    return byType || customModeExercises[0] || null;
+  })();
 
   const [shuffledImages, setShuffledImages] = useState([]);
 
@@ -167,6 +227,49 @@ function ALFABE({
     }
     setShuffledImages(copy);
   }, [roundIndex, effectiveBank, customMatchRounds.length]);
+
+  useEffect(() => {
+    setFirstLetterSolved(false);
+    setFeedback(null);
+  }, [firstLetterIdx, roundIndex, gameMode]);
+
+  useEffect(() => {
+    setMissingSolved(false);
+    setFeedback(null);
+  }, [missingIdx, roundIndex, gameMode]);
+
+  useEffect(() => {
+    if (gameMode !== 'memory') return;
+    const pairItems = currentRoundItems.slice(0, 4);
+    const deck = [];
+    pairItems.forEach((item, idx) => {
+      const ltr = inferFirstLetter(item);
+      const pairKey = item.id || `pair-${idx}`;
+      deck.push({
+        uid: `${pairKey}-L`,
+        pairKey,
+        kind: 'letter',
+        label: ltr,
+        subLabel: 'Tîp'
+      });
+      deck.push({
+        uid: `${pairKey}-W`,
+        pairKey,
+        kind: 'word',
+        label: item.word,
+        subLabel: ltr,
+        image_url: item.image_url || ''
+      });
+    });
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    setMemoryCards(deck);
+    setFlippedCardIds([]);
+    setMatchedPairKeys([]);
+    setFeedback(null);
+  }, [gameMode, roundIndex, currentRoundItems]);
 
   const handleSelectWord = (item) => {
     if (matchedIds.includes(item.id)) return;
@@ -197,6 +300,117 @@ function ALFABE({
     }
   };
 
+  const currentFirstLetterTarget =
+    currentRoundItems[firstLetterIdx % Math.max(1, currentRoundItems.length)] ||
+    effectiveBank[0];
+
+  const firstLetterChoices = (() => {
+    const correctLetter = inferFirstLetter(currentFirstLetterTarget);
+    const distractors = KURDISH_LETTERS_POOL.filter((l) => l !== correctLetter).slice(
+      (firstLetterIdx * 3 + roundIndex) % 24,
+      ((firstLetterIdx * 3 + roundIndex) % 24) + 5
+    );
+    const combined = [correctLetter, ...distractors].slice(0, 6);
+    return combined.sort((a, b) => a.localeCompare(b, 'ku'));
+  })();
+
+  const handlePickFirstLetter = (chosenLetter) => {
+    const correctLetter = inferFirstLetter(currentFirstLetterTarget);
+    if (chosenLetter === correctLetter) {
+      setFirstLetterSolved(true);
+      setFeedback({
+        type: 'ok',
+        text: `Rast e! "${currentFirstLetterTarget.word}" bi tîpa "${correctLetter}" dest pê dike.`
+      });
+      if (typeof onAwardXp === 'function') onAwardXp(10);
+      if (typeof onCompleteUnit === 'function') {
+        onCompleteUnit(`TIPA-PESIN-${currentFirstLetterTarget.word}`);
+      }
+    } else {
+      setFeedback({
+        type: 'err',
+        text: `Şaş e! Tîpa pêşîn a "${currentFirstLetterTarget.word}" ne "${chosenLetter}" ye.`
+      });
+    }
+  };
+
+  const handleFlipMemoryCard = (card) => {
+    if (matchedPairKeys.includes(card.pairKey)) return;
+    if (flippedCardIds.includes(card.uid)) return;
+    if (flippedCardIds.length >= 2) return;
+
+    const nextFlipped = [...flippedCardIds, card.uid];
+    setFlippedCardIds(nextFlipped);
+
+    if (nextFlipped.length === 2) {
+      const [firstId, secondId] = nextFlipped;
+      const c1 = memoryCards.find((c) => c.uid === firstId);
+      const c2 = memoryCards.find((c) => c.uid === secondId);
+      if (c1 && c2 && c1.pairKey === c2.pairKey && c1.kind !== c2.kind) {
+        const nextMatchedPairs = [...matchedPairKeys, c1.pairKey];
+        setMatchedPairKeys(nextMatchedPairs);
+        setFlippedCardIds([]);
+        setFeedback({
+          type: 'ok',
+          text: `Li hev hat! Tîp û peyva "${c2.label}" hatin dîtin.`
+        });
+        if (typeof onAwardXp === 'function') onAwardXp(10);
+        if (nextMatchedPairs.length * 2 === memoryCards.length) {
+          if (typeof onCompleteUnit === 'function') {
+            onCompleteUnit(`BIRE-${roundIndex + 1}`);
+          }
+        }
+      } else {
+        setFeedback({
+          type: 'err',
+          text: 'Ev her du kart li hev nehatin — dîsa biceribîne!'
+        });
+        setTimeout(() => {
+          setFlippedCardIds([]);
+        }, 700);
+      }
+    }
+  };
+
+  const currentMissingTarget =
+    currentRoundItems[missingIdx % Math.max(1, currentRoundItems.length)] ||
+    effectiveBank[0];
+
+  const { masked: maskedWordDisplay, missingChar: expectedMissingChar } =
+    maskWordLetter(currentMissingTarget?.word || '');
+
+  const missingLetterChoices = (() => {
+    const targetChar = String(expectedMissingChar || 'a').toLowerCase();
+    const pool = KURDISH_LETTERS_POOL.map((l) => l.toLowerCase()).filter(
+      (c) => c !== targetChar
+    );
+    const picks = pool.slice(
+      (missingIdx * 2 + roundIndex) % 24,
+      ((missingIdx * 2 + roundIndex) % 24) + 5
+    );
+    return [targetChar, ...picks].slice(0, 6).sort();
+  })();
+
+  const handlePickMissingChar = (charOption) => {
+    const targetChar = String(expectedMissingChar || '').toLowerCase();
+    if (charOption.toLowerCase() === targetChar) {
+      setMissingSolved(true);
+      setFeedback({
+        type: 'ok',
+        text: `Bijî! Peyv temam bû: "${currentMissingTarget.word}".`
+      });
+      if (typeof onAwardXp === 'function') onAwardXp(10);
+      if (typeof onCompleteUnit === 'function') {
+        onCompleteUnit(`TIPA-KEM-${currentMissingTarget.word}`);
+      }
+    } else {
+      setFeedback({
+        type: 'err',
+        text: `Şaş e! Tîpa "${charOption}" li vê valahiyê nayê.`
+      });
+    }
+  };
+
   const resolveWordPreview = (wordText) => {
     if (!Array.isArray(dictionaryItems)) return '';
     const clean = String(wordText || '').trim().toLowerCase();
@@ -212,6 +426,9 @@ function ALFABE({
       ''
     );
   };
+
+  const editableExerciseForCurrentMode =
+    activeCustomRound?.sourceExercise || activeCustomExercise || exercises[0] || null;
 
   return (
     <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 space-y-6 shadow-sm">
@@ -243,24 +460,86 @@ function ALFABE({
         </div>
       )}
 
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => setGameMode('match')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition ${
+            gameMode === 'match'
+              ? 'bg-red-700 text-white'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          1. Hevberkirin (Peyv + Wêne)
+        </button>
+        <button
+          type="button"
+          onClick={() => setGameMode('first_letter')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition ${
+            gameMode === 'first_letter'
+              ? 'bg-red-700 text-white'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          2. Tîpa Pêşîn Bibîne
+        </button>
+        <button
+          type="button"
+          onClick={() => setGameMode('memory')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition ${
+            gameMode === 'memory'
+              ? 'bg-red-700 text-white'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          3. Lîstika Bîrê (Tîp - Peyv)
+        </button>
+        <button
+          type="button"
+          onClick={() => setGameMode('missing_letter')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition ${
+            gameMode === 'missing_letter'
+              ? 'bg-red-700 text-white'
+              : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+          }`}
+        >
+          4. Tîpa Kêm Dagire
+        </button>
+      </div>
+
       <div className="bg-slate-50/80 border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-extrabold text-slate-900">
-              {activeCustomRound
-                ? activeCustomRound.roundTitle
-                : ui.alfabe_game_title}
+              {gameMode === 'match' &&
+                (activeCustomRound
+                  ? activeCustomRound.roundTitle
+                  : ui.alfabe_game_title)}
+              {gameMode === 'first_letter' &&
+                'Lîstika Tîpa Pêşîn: Peyv bi kîjan tîpê dest pê dike?'}
+              {gameMode === 'memory' &&
+                'Lîstika Bîrê: Tîpê û peyva wê li hev bîne'}
+              {gameMode === 'missing_letter' &&
+                'Lîstika Tîpa Kêm: Tîpa winda hilbijêre û peyvê temam bike'}
             </h2>
-            <p className="text-xs text-slate-600 mt-0.5">{ui.alfabe_game_desc}</p>
+            <p className="text-xs text-slate-600 mt-0.5">
+              {gameMode === 'match' && ui.alfabe_game_desc}
+              {gameMode === 'first_letter' &&
+                'Li peyvê an wêneyê binêre û tîpa destpêkê ya rast hilbijêre.'}
+              {gameMode === 'memory' &&
+                'Du kartan veke; heke tîp û peyva li gorî wê tîpê li hev hatin, cot tê dîtin.'}
+              {gameMode === 'missing_letter' &&
+                'Tîpa vala (_) di peyvê de bi tîpa rast dagire.'}
+            </p>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            {isAdmin && activeCustomRound?.sourceExercise && (
+            {isAdmin && editableExerciseForCurrentMode && (
               <button
                 type="button"
                 onClick={() =>
                   typeof onEditGameInAdmin === 'function' &&
-                  onEditGameInAdmin(activeCustomRound.sourceExercise)
+                  onEditGameInAdmin(editableExerciseForCurrentMode)
                 }
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-extrabold border border-amber-300"
               >
@@ -295,122 +574,323 @@ function ALFABE({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-2.5">
-            <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-              {ui.alfabe_words_col}
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {currentRoundItems.map((item) => {
-                const isMatched = matchedIds.includes(item.id);
-                const isSelected = selectedWordId === item.id;
-                const meaningHint = resolveWordPreview(item.word);
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    disabled={isMatched}
-                    onClick={() => handleSelectWord(item)}
-                    className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1 ${
-                      isMatched
-                        ? 'bg-emerald-50 border-emerald-300 text-emerald-900 opacity-75'
-                        : isSelected
-                        ? 'bg-red-700 border-red-700 text-white shadow-sm'
-                        : 'bg-white border-slate-200 hover:border-red-300 text-slate-900'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-extrabold text-base">{item.word}</span>
-                      {item.letter && (
+        {gameMode === 'match' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="space-y-2.5">
+              <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                {ui.alfabe_words_col}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {currentRoundItems.map((item) => {
+                  const isMatched = matchedIds.includes(item.id);
+                  const isSelected = selectedWordId === item.id;
+                  const meaningHint = resolveWordPreview(item.word);
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      disabled={isMatched}
+                      onClick={() => handleSelectWord(item)}
+                      className={`p-3.5 rounded-xl border text-left transition flex flex-col justify-between gap-1 ${
+                        isMatched
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900 opacity-75'
+                          : isSelected
+                          ? 'bg-red-700 border-red-700 text-white shadow-sm'
+                          : 'bg-white border-slate-200 hover:border-red-300 text-slate-900'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-extrabold text-base">{item.word}</span>
+                        {item.letter && (
+                          <span
+                            className={`text-xs font-extrabold px-2 py-0.5 rounded-md ${
+                              isSelected
+                                ? 'bg-white/20 text-white'
+                                : 'bg-slate-100 text-slate-700'
+                            }`}
+                          >
+                            {item.letter}
+                          </span>
+                        )}
+                      </div>
+                      {meaningHint && (
                         <span
-                          className={`text-xs font-extrabold px-2 py-0.5 rounded-md ${
-                            isSelected
-                              ? 'bg-white/20 text-white'
-                              : 'bg-slate-100 text-slate-700'
+                          className={`text-[11px] line-clamp-1 ${
+                            isSelected ? 'text-red-100' : 'text-slate-500'
                           }`}
                         >
-                          {item.letter}
+                          {meaningHint}
                         </span>
                       )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+                {ui.alfabe_images_col}
+              </div>
+              <div className="grid grid-cols-2 gap-2.5">
+                {shuffledImages.map((imgItem) => {
+                  const isMatched = matchedIds.includes(imgItem.id);
+                  return (
+                    <div
+                      key={imgItem.id}
+                      onClick={() => !isMatched && handleSelectImage(imgItem)}
+                      className={`relative min-h-[118px] rounded-xl border p-2.5 flex flex-col items-center justify-center text-center transition ${
+                        isMatched
+                          ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                          : selectedWordId
+                          ? 'bg-white border-slate-300 hover:border-red-500 cursor-pointer'
+                          : 'bg-white border-slate-200'
+                      }`}
+                    >
+                      {imgItem.image_url ? (
+                        <img
+                          src={imgItem.image_url}
+                          alt={imgItem.word}
+                          className="w-full h-20 object-contain rounded-lg"
+                        />
+                      ) : (
+                        <div className="text-xs font-bold text-slate-400 px-2">
+                          {imgItem.letter ? `${imgItem.letter} — ` : ''}
+                          {imgItem.word}
+                        </div>
+                      )}
+
+                      {isMatched && (
+                        <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-extrabold text-emerald-700">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>{imgItem.word}</span>
+                        </span>
+                      )}
+
+                      {isAdmin && typeof onTriggerPhotoUpload === 'function' && (
+                        <button
+                          type="button"
+                          disabled={inlinePhotoSaving}
+                          onClick={(e) =>
+                            onTriggerPhotoUpload(e, {
+                              wordItem: imgItem,
+                              mode: imgItem.exerciseId ? 'question' : 'alfabe_word',
+                              exerciseId: imgItem.exerciseId
+                            })
+                          }
+                          title={ui.alfabe_add_photo_title}
+                          className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-red-50 text-[10px] font-bold text-slate-700 hover:text-red-700"
+                        >
+                          <Upload className="w-3 h-3 text-red-700" />
+                          <span>{inlinePhotoSaving ? '...' : ui.alfabe_photo_btn}</span>
+                        </button>
+                      )}
                     </div>
-                    {meaningHint && (
-                      <span
-                        className={`text-[11px] line-clamp-1 ${
-                          isSelected ? 'text-red-100' : 'text-slate-500'
-                        }`}
-                      >
-                        {meaningHint}
-                      </span>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {gameMode === 'first_letter' && currentFirstLetterTarget && (
+          <div className="space-y-4">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center sm:text-left">
+                <div className="text-xs font-extrabold text-red-700 uppercase">
+                  Peyva #{firstLetterIdx + 1} ji {currentRoundItems.length} peyvan
+                </div>
+                <div className="text-2xl font-extrabold text-slate-900">
+                  {currentFirstLetterTarget.word}
+                </div>
+                {resolveWordPreview(currentFirstLetterTarget.word) && (
+                  <div className="text-xs text-slate-500">
+                    {resolveWordPreview(currentFirstLetterTarget.word)}
+                  </div>
+                )}
+              </div>
+
+              {currentFirstLetterTarget.image_url && (
+                <img
+                  src={currentFirstLetterTarget.image_url}
+                  alt={currentFirstLetterTarget.word}
+                  className="w-24 h-24 object-contain rounded-xl border border-slate-100"
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+              {firstLetterChoices.map((ltr) => (
+                <button
+                  key={ltr}
+                  type="button"
+                  onClick={() => handlePickFirstLetter(ltr)}
+                  className="py-3.5 rounded-xl bg-white hover:bg-red-700 hover:text-white border border-slate-200 text-lg font-extrabold text-slate-900 transition"
+                >
+                  {ltr}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={() =>
+                  setFirstLetterIdx((prev) =>
+                    prev > 0 ? prev - 1 : Math.max(0, currentRoundItems.length - 1)
+                  )
+                }
+                className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700"
+              >
+                Peyva Berê
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setFirstLetterIdx(
+                    (prev) => (prev + 1) % Math.max(1, currentRoundItems.length)
+                  )
+                }
+                className="px-4 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold"
+              >
+                {firstLetterSolved ? 'Peyva Din →' : 'Derbas Bike'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {gameMode === 'memory' && (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs font-bold text-slate-500">
+              <span>
+                Cotên hatî dîtin: {matchedPairKeys.length} /{' '}
+                {Math.max(1, Math.floor(memoryCards.length / 2))}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const copy = [...memoryCards];
+                  for (let i = copy.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [copy[i], copy[j]] = [copy[j], copy[i]];
+                  }
+                  setMemoryCards(copy);
+                  setFlippedCardIds([]);
+                  setMatchedPairKeys([]);
+                  setFeedback(null);
+                }}
+                className="px-3 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100"
+              >
+                Kartên Bîrê Tev Bide
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {memoryCards.map((card) => {
+                const isMatched = matchedPairKeys.includes(card.pairKey);
+                const isFlipped = flippedCardIds.includes(card.uid) || isMatched;
+                return (
+                  <button
+                    key={card.uid}
+                    type="button"
+                    disabled={isMatched}
+                    onClick={() => handleFlipMemoryCard(card)}
+                    className={`min-h-[104px] p-3 rounded-xl border text-center transition flex flex-col items-center justify-center gap-1 ${
+                      isMatched
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
+                        : isFlipped
+                        ? 'bg-white border-red-400 text-slate-900 shadow-xs'
+                        : 'bg-slate-800 hover:bg-slate-700 border-slate-800 text-white'
+                    }`}
+                  >
+                    {isFlipped ? (
+                      <>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-red-700">
+                          {card.kind === 'letter' ? 'Tîp' : 'Peyv'}
+                        </span>
+                        <span
+                          className={`font-extrabold ${
+                            card.kind === 'letter' ? 'text-2xl' : 'text-base'
+                          }`}
+                        >
+                          {card.label}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xl font-extrabold tracking-widest">?</span>
                     )}
                   </button>
                 );
               })}
             </div>
           </div>
+        )}
 
-          <div className="space-y-2.5">
-            <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
-              {ui.alfabe_images_col}
-            </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              {shuffledImages.map((imgItem) => {
-                const isMatched = matchedIds.includes(imgItem.id);
-                return (
-                  <div
-                    key={imgItem.id}
-                    onClick={() => !isMatched && handleSelectImage(imgItem)}
-                    className={`relative min-h-[118px] rounded-xl border p-2.5 flex flex-col items-center justify-center text-center transition ${
-                      isMatched
-                        ? 'bg-emerald-50 border-emerald-300 text-emerald-900'
-                        : selectedWordId
-                        ? 'bg-white border-slate-300 hover:border-red-500 cursor-pointer'
-                        : 'bg-white border-slate-200'
-                    }`}
-                  >
-                    {imgItem.image_url ? (
-                      <img
-                        src={imgItem.image_url}
-                        alt={imgItem.word}
-                        className="w-full h-20 object-contain rounded-lg"
-                      />
-                    ) : (
-                      <div className="text-xs font-bold text-slate-400 px-2">
-                        {imgItem.letter ? `${imgItem.letter} — ` : ''}
-                        {imgItem.word}
-                      </div>
-                    )}
-
-                    {isMatched && (
-                      <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-extrabold text-emerald-700">
-                        <Check className="w-3.5 h-3.5" />
-                        <span>{imgItem.word}</span>
-                      </span>
-                    )}
-
-                    {isAdmin && typeof onTriggerPhotoUpload === 'function' && (
-                      <button
-                        type="button"
-                        disabled={inlinePhotoSaving}
-                        onClick={(e) =>
-                          onTriggerPhotoUpload(e, {
-                            wordItem: imgItem,
-                            mode: imgItem.exerciseId ? 'question' : 'alfabe_word',
-                            exerciseId: imgItem.exerciseId
-                          })
-                        }
-                        title={ui.alfabe_add_photo_title}
-                        className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-100 hover:bg-red-50 text-[10px] font-bold text-slate-700 hover:text-red-700"
-                      >
-                        <Upload className="w-3 h-3 text-red-700" />
-                        <span>{inlinePhotoSaving ? '...' : ui.alfabe_photo_btn}</span>
-                      </button>
-                    )}
+        {gameMode === 'missing_letter' && currentMissingTarget && (
+          <div className="space-y-4">
+            <div className="p-5 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="space-y-1 text-center sm:text-left">
+                <div className="text-xs font-extrabold text-red-700 uppercase">
+                  Peyva #{missingIdx + 1} ji {currentRoundItems.length} peyvan
+                </div>
+                <div className="text-2xl font-extrabold tracking-widest text-slate-900">
+                  {missingSolved ? currentMissingTarget.word : maskedWordDisplay}
+                </div>
+                {resolveWordPreview(currentMissingTarget.word) && (
+                  <div className="text-xs text-slate-500">
+                    {resolveWordPreview(currentMissingTarget.word)}
                   </div>
-                );
-              })}
+                )}
+              </div>
+
+              {currentMissingTarget.image_url && (
+                <img
+                  src={currentMissingTarget.image_url}
+                  alt={currentMissingTarget.word}
+                  className="w-24 h-24 object-contain rounded-xl border border-slate-100"
+                />
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+              {missingLetterChoices.map((ch) => (
+                <button
+                  key={ch}
+                  type="button"
+                  onClick={() => handlePickMissingChar(ch)}
+                  className="py-3.5 rounded-xl bg-white hover:bg-red-700 hover:text-white border border-slate-200 text-lg font-extrabold text-slate-900 uppercase transition"
+                >
+                  {ch}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <button
+                type="button"
+                onClick={() =>
+                  setMissingIdx((prev) =>
+                    prev > 0 ? prev - 1 : Math.max(0, currentRoundItems.length - 1)
+                  )
+                }
+                className="px-3.5 py-1.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-700"
+              >
+                Peyva Berê
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  setMissingIdx(
+                    (prev) => (prev + 1) % Math.max(1, currentRoundItems.length)
+                  )
+                }
+                className="px-4 py-1.5 rounded-xl bg-slate-900 text-white text-xs font-bold"
+              >
+                {missingSolved ? 'Peyva Din →' : 'Derbas Bike'}
+              </button>
             </div>
           </div>
-        </div>
+        )}
 
         {feedback && (
           <div
@@ -573,6 +1053,9 @@ function AdminGameEditorModal({
               className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
             >
               <option value="match">Hevberkirin (Match)</option>
+              <option value="first_letter">Tîpa Pêşîn Bibîne (First Letter)</option>
+              <option value="memory">Lîstika Bîrê (Memory Cards)</option>
+              <option value="missing_letter">Tîpa Kêm Dagire (Missing Letter)</option>
               <option value="choice">Hilbijartin (Choice)</option>
               <option value="sentence">Hevok (Sentence)</option>
               <option value="fill">Valahî Dagirtin (Fill)</option>
@@ -834,7 +1317,7 @@ const UI_TRANSLATIONS = {
     guide_download_btn: 'PDF-ya Rêberê Daxe',
     learn_title: 'Hînbûn û Lîstikên Ziman',
     learn_subtitle:
-      'Bi lîstikên hevberkirin, hevok û pirsan peyv û tîpên Kurdî fêr bibe.',
+      'Bi lîstikên hevberkirin, tîpa pêşîn, bîr û tîpa kêm peyv û tîpên Kurdî fêr bibe.',
     learn_xp_label: 'XP',
     learn_streak_suffix: 'Roj Rêz',
     learn_done_badge: 'Qonax Qediya',
@@ -1250,39 +1733,7 @@ export default function App() {
   const dynamicLevels = DEFAULT_LEVELS;
   const dynamicGrades = DEFAULT_GRADES;
 
-  const kurdishAlphabet = [
-    'A',
-    'B',
-    'C',
-    'Ç',
-    'D',
-    'E',
-    'Ê',
-    'F',
-    'G',
-    'H',
-    'I',
-    'Î',
-    'J',
-    'K',
-    'L',
-    'M',
-    'N',
-    'O',
-    'P',
-    'Q',
-    'R',
-    'S',
-    'Ş',
-    'T',
-    'U',
-    'Û',
-    'V',
-    'W',
-    'X',
-    'Y',
-    'Z'
-  ];
+  const kurdishAlphabet = KURDISH_LETTERS_POOL;
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -4016,6 +4467,13 @@ export default function App() {
                         <option value="choice">{ui.learn_type_choice}</option>
                         <option value="sentence">{ui.learn_type_sentence}</option>
                         <option value="match">{ui.learn_type_match}</option>
+                        <option value="first_letter">
+                          Tîpa Pêşîn Bibîne (First Letter)
+                        </option>
+                        <option value="memory">Lîstika Bîrê (Memory Cards)</option>
+                        <option value="missing_letter">
+                          Tîpa Kêm Dagire (Missing Letter)
+                        </option>
                         <option value="fill">{ui.learn_type_fill}</option>
                         <option value="image">{ui.learn_type_image}</option>
                       </select>
