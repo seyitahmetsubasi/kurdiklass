@@ -38,6 +38,40 @@ import {
   Zap
 } from 'lucide-react';
 
+const ALFABE_DEFAULT_WORDS = [
+  { id: 'alf-1', word: 'Agir', letter: 'A', image_url: '' },
+  { id: 'alf-2', word: 'bilbil', letter: 'B', image_url: '' },
+  { id: 'alf-3', word: 'cemed', letter: 'C', image_url: '' },
+  { id: 'alf-4', word: 'çay', letter: 'Ç', image_url: '' },
+  { id: 'alf-5', word: 'dar', letter: 'D', image_url: '' },
+  { id: 'alf-6', word: 'endezyar', letter: 'E', image_url: '' },
+  { id: 'alf-7', word: 'êlek', letter: 'Ê', image_url: '' },
+  { id: 'alf-8', word: 'ferheng', letter: 'F', image_url: '' },
+  { id: 'alf-9', word: 'gore', letter: 'G', image_url: '' },
+  { id: 'alf-10', word: 'guh', letter: 'G', image_url: '' },
+  { id: 'alf-11', word: 'gûz', letter: 'G', image_url: '' },
+  { id: 'alf-12', word: 'hesp', letter: 'H', image_url: '' },
+  { id: 'alf-13', word: 'heyv', letter: 'H', image_url: '' },
+  { id: 'alf-14', word: 'îsot', letter: 'Î', image_url: '' },
+  { id: 'alf-15', word: 'jûjî', letter: 'J', image_url: '' },
+  { id: 'alf-16', word: 'ker', letter: 'K', image_url: '' },
+  { id: 'alf-17', word: 'lembe', letter: 'L', image_url: '' },
+  { id: 'alf-18', word: 'masî', letter: 'M', image_url: '' },
+  { id: 'alf-19', word: 'nan', letter: 'N', image_url: '' },
+  { id: 'alf-20', word: 'nivîn', letter: 'N', image_url: '' },
+  { id: 'alf-21', word: 'pisîk', letter: 'P', image_url: '' },
+  { id: 'alf-22', word: 'qaz', letter: 'Q', image_url: '' },
+  { id: 'alf-23', word: 'roj', letter: 'R', image_url: '' },
+  { id: 'alf-24', word: 'rovî', letter: 'R', image_url: '' },
+  { id: 'alf-25', word: 'stêrk', letter: 'S', image_url: '' },
+  { id: 'alf-26', word: 'şêr', letter: 'Ş', image_url: '' },
+  { id: 'alf-27', word: 'telefon', letter: 'T', image_url: '' },
+  { id: 'alf-28', word: 'tivir', letter: 'T', image_url: '' },
+  { id: 'alf-29', word: 'werdek', letter: 'W', image_url: '' },
+  { id: 'alf-30', word: 'xiyar', letter: 'X', image_url: '' },
+  { id: 'alf-31', word: 'zebeş', letter: 'Z', image_url: '' }
+];
+
 function ALFABE({
   exercises = [],
   gamesReset = false,
@@ -45,10 +79,12 @@ function ALFABE({
   xpPoints = 0,
   streakDays = 0,
   completedUnits = [],
+  wordBank = ALFABE_DEFAULT_WORDS,
   onAwardXp,
   onDeductHeartOrReset,
   onCompleteUnit,
   onTriggerPhotoUpload,
+  onSaveWordImage,
   inlinePhotoSaving = false,
   exMsg = '',
   ui = {}
@@ -62,6 +98,18 @@ function ALFABE({
   const [feedback, setFeedback] = useState(null);
   const [heartsLeft, setHeartsLeft] = useState(5);
   const [finished, setFinished] = useState(false);
+
+  const activeWords = Array.isArray(wordBank) && wordBank.length >= 4
+    ? wordBank
+    : ALFABE_DEFAULT_WORDS;
+  const [roundIndex, setRoundIndex] = useState(0);
+  const [selectedWordKey, setSelectedWordKey] = useState('');
+  const [selectedImageKey, setSelectedImageKey] = useState('');
+  const [matchedPairs, setMatchedPairs] = useState({});
+  const [pairFeedback, setPairFeedback] = useState(null);
+
+  const totalRounds = Math.ceil(activeWords.length / 4);
+  const currentFourWords = activeWords.slice(roundIndex * 4, roundIndex * 4 + 4);
 
   const unitQuestions = currentUnit
     ? activeExercises.filter((e) => e.unit_title === currentUnit)
@@ -124,6 +172,44 @@ function ALFABE({
     }
   };
 
+  const handleSelectPair = (wordId, imageId) => {
+    if (wordId) setSelectedWordKey(wordId === selectedWordKey ? '' : wordId);
+    if (imageId) setSelectedImageKey(imageId === selectedImageKey ? '' : imageId);
+
+    const activeW = wordId ? (wordId === selectedWordKey ? '' : wordId) : selectedWordKey;
+    const activeI = imageId ? (imageId === selectedImageKey ? '' : imageId) : selectedImageKey;
+
+    if (activeW && activeI) {
+      if (activeW === activeI) {
+        const nextMatched = { ...matchedPairs, [activeW]: true };
+        setMatchedPairs(nextMatched);
+        setPairFeedback({ ok: true, msg: 'Rast hat hevberkirin! (+10 XP)' });
+        if (typeof onAwardXp === 'function') onAwardXp(10);
+        if (Object.keys(nextMatched).length === currentFourWords.length) {
+          if (typeof onCompleteUnit === 'function') {
+            onCompleteUnit(`ALFABE-R${roundIndex + 1}`);
+          }
+        }
+      } else {
+        const nextHearts = Math.max(0, heartsLeft - 1);
+        setHeartsLeft(nextHearts);
+        setPairFeedback({ ok: false, msg: 'Ev peyv û wêne li hev nayên — dîsa biceribîne!' });
+        if (typeof onDeductHeartOrReset === 'function') onDeductHeartOrReset(nextHearts);
+      }
+      setSelectedWordKey('');
+      setSelectedImageKey('');
+    }
+  };
+
+  const changeRound = (nextIdx) => {
+    const bounded = Math.max(0, Math.min(totalRounds - 1, nextIdx));
+    setRoundIndex(bounded);
+    setSelectedWordKey('');
+    setSelectedImageKey('');
+    setMatchedPairs({});
+    setPairFeedback(null);
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-wrap items-center justify-between gap-4">
@@ -150,6 +236,155 @@ function ALFABE({
             <span>{heartsLeft}</span>
           </span>
         </div>
+      </div>
+
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+          <div>
+            <h2 className="text-lg font-extrabold text-slate-900">
+              Lîstika ALFABE: 4 Peyv û 4 Wêne
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Her peyvekê bi wêneyê wê yê rast re hevber bike ({activeWords.length} peyv)
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={roundIndex <= 0}
+              onClick={() => changeRound(roundIndex - 1)}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 disabled:opacity-40 hover:bg-slate-50"
+            >
+              ← Berê
+            </button>
+            <span className="text-xs font-extrabold px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800">
+              Lîstik {roundIndex + 1} / {totalRounds}
+            </span>
+            <button
+              type="button"
+              disabled={roundIndex >= totalRounds - 1}
+              onClick={() => changeRound(roundIndex + 1)}
+              className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 disabled:opacity-40 hover:bg-slate-50"
+            >
+              Pêş →
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-3">
+            <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+              4 Peyv
+            </div>
+            {currentFourWords.map((item) => {
+              const isMatched = Boolean(matchedPairs[item.id]);
+              const isPicked = selectedWordKey === item.id;
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-2"
+                >
+                  <button
+                    type="button"
+                    disabled={isMatched}
+                    onClick={() => handleSelectPair(item.id, '')}
+                    className={`flex-1 px-4 py-3.5 rounded-xl border text-left font-extrabold text-base transition flex items-center justify-between ${
+                      isMatched
+                        ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                        : isPicked
+                        ? 'bg-red-50 border-red-700 text-red-800 ring-2 ring-red-200'
+                        : 'bg-white border-slate-200 hover:border-red-300 text-slate-900'
+                    }`}
+                  >
+                    <span>
+                      <span className="text-xs font-bold text-red-700 mr-2">[{item.letter}]</span>
+                      {item.word}
+                    </span>
+                    {isMatched && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
+                  </button>
+
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      disabled={inlinePhotoSaving}
+                      onClick={(e) => {
+                        if (typeof onSaveWordImage === 'function') {
+                          onSaveWordImage(e, item);
+                        } else if (typeof onTriggerPhotoUpload === 'function') {
+                          onTriggerPhotoUpload(e, { wordItem: item, mode: 'alfabe_word' });
+                        }
+                      }}
+                      title={`Tenê wêne lê zêde bike: ${item.word}`}
+                      className="shrink-0 px-3 py-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-700 hover:text-red-700 text-xs font-bold inline-flex items-center gap-1.5 transition"
+                    >
+                      <ImageIcon className="w-4 h-4 text-red-700" />
+                      <span>{inlinePhotoSaving ? '...' : 'Wêne'}</span>
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="space-y-3">
+            <div className="text-xs font-extrabold uppercase tracking-wider text-slate-500">
+              4 Wêne
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {currentFourWords.map((item) => {
+                const isMatched = Boolean(matchedPairs[item.id]);
+                const isPicked = selectedImageKey === item.id;
+                return (
+                  <button
+                    key={`img-${item.id}`}
+                    type="button"
+                    disabled={isMatched}
+                    onClick={() => handleSelectPair('', item.id)}
+                    className={`h-32 rounded-xl border overflow-hidden flex flex-col items-center justify-center p-2 transition relative ${
+                      isMatched
+                        ? 'bg-emerald-50 border-emerald-300'
+                        : isPicked
+                        ? 'bg-red-50 border-red-700 ring-2 ring-red-200'
+                        : 'bg-slate-50 border-slate-200 hover:border-red-300'
+                    }`}
+                  >
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.word}
+                        className="w-full h-full object-cover rounded-lg"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center justify-center text-slate-400 gap-1">
+                        <ImageIcon className="w-7 h-7" />
+                        <span className="text-[11px] font-bold text-slate-500">
+                          Wêne ({item.letter})
+                        </span>
+                      </div>
+                    )}
+                    {isMatched && (
+                      <span className="absolute top-1.5 right-1.5 bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                        {item.word}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {pairFeedback && (
+          <div
+            className={`p-3 rounded-xl text-xs font-bold ${
+              pairFeedback.ok
+                ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                : 'bg-rose-50 text-rose-800 border border-rose-200'
+            }`}
+          >
+            {pairFeedback.msg}
+          </div>
+        )}
       </div>
 
       {exMsg && (
@@ -361,7 +596,6 @@ function ALFABE({
     </div>
   );
 }
-
 const ADMIN_PASSCODE = import.meta.env.VITE_ADMIN_PASSCODE || 'kurdiklass2025';
 
 const LANGUAGE_OPTIONS = [
@@ -1387,6 +1621,7 @@ const fetchWiktionaryEntry = async (rawTerm, selectedLang = 'KU') => {
   }
   return null;
 };
+
 export default function App() {
   const [viewMode, setViewMode] = useState('student');
   const [lessons, setLessons] = useState([]);
@@ -1464,6 +1699,23 @@ export default function App() {
     audio_url: ''
   });
   const [exMsg, setExMsg] = useState('');
+  const [alfabeWords, setAlfabeWords] = useState(() => {
+    try {
+      const saved = localStorage.getItem('kk_alfabe_words');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore storage errors
+    }
+    return ALFABE_DEFAULT_WORDS;
+  });
+  const [alfabeRoundForm, setAlfabeRoundForm] = useState({
+    roundTitle: '',
+    wordsText: '',
+    imagesText: ''
+  });
   const [uploadingExImg, setUploadingExImg] = useState(false);
   const [uploadingExAudio, setUploadingExAudio] = useState(false);
   const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
@@ -1648,6 +1900,17 @@ export default function App() {
           const parsedCats = JSON.parse(map.categories_json);
           if (Array.isArray(parsedCats) && parsedCats.length > 0) {
             setCategories(parsedCats);
+          }
+        } catch {
+          // ignore
+        }
+      }
+      if (map.alfabe_words_json) {
+        try {
+          const parsedWords = JSON.parse(map.alfabe_words_json);
+          if (Array.isArray(parsedWords) && parsedWords.length > 0) {
+            setAlfabeWords(parsedWords);
+            localStorage.setItem('kk_alfabe_words', JSON.stringify(parsedWords));
           }
         } catch {
           // ignore
@@ -2578,6 +2841,79 @@ export default function App() {
     inlinePhotoInputRef.current.value = '';
     inlinePhotoInputRef.current.click();
   };
+  const handleSaveWordImage = (e, wordItem) => {
+    handleTriggerInlinePhotoUpload(e, {
+      wordId: wordItem.id,
+      wordLabel: wordItem.word,
+      mode: 'alfabe_word'
+    });
+  };
+  const handleCreateAlfabeRound = async (e) => {
+    e.preventDefault();
+    const wordLines = alfabeRoundForm.wordsText
+      .split(/\n|,/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+
+    if (wordLines.length !== 4) {
+      setExMsg('Ji kerema xwe tam 4 peyv binivîse.');
+      return;
+    }
+
+    const imageLines = alfabeRoundForm.imagesText
+      .split(/\n|,/)
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 4);
+
+    const newEntries = wordLines.map((w, idx) => {
+      const cleanChar = w.trim().charAt(0).toLocaleUpperCase('tr') || 'A';
+      return {
+        id: `alf-custom-${Date.now()}-${idx}`,
+        word: w,
+        letter: cleanChar,
+        image_url: imageLines[idx] || ''
+      };
+    });
+
+    const merged = [...newEntries, ...alfabeWords];
+    setAlfabeWords(merged);
+    try {
+      localStorage.setItem('kk_alfabe_words', JSON.stringify(merged));
+    } catch {
+      // ignore storage errors
+    }
+
+    await supabase
+      .from('site_settings')
+      .upsert(
+        { key: 'alfabe_words_json', value: JSON.stringify(merged) },
+        { onConflict: 'key' }
+      );
+
+    if (alfabeRoundForm.roundTitle.trim()) {
+      const unitLabel = alfabeRoundForm.roundTitle.trim();
+      const exRows = newEntries.map((entry, idx) => ({
+        unit_title: unitLabel,
+        exercise_type: 'image',
+        question_text: `Wêneyê "${entry.word}" hilbijêre`,
+        options: newEntries.map((x) => x.word),
+        correct_answer: entry.word,
+        explanation: `${entry.letter} — ${entry.word}`,
+        image_url: entry.image_url,
+        audio_url: '',
+        sort_order: exercises.length + idx + 1
+      }));
+      const { error } = await supabase.from('kurmanci_exercises').insert(exRows);
+      if (!error) {
+        fetchAllData();
+      }
+    }
+
+    setAlfabeRoundForm({ roundTitle: '', wordsText: '', imagesText: '' });
+    setExMsg('Lîstika nû ya 4 peyv û 4 wêneyan hat zêdekirin!');
+  };
   const handleInlinePhotoFileSelected = async (e) => {
     const file = e.target.files?.[0];
     const target = inlinePhotoTarget;
@@ -2589,7 +2925,12 @@ export default function App() {
     try {
       const fileExt = file.name.split('.').pop() || 'jpg';
       const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const folder = target.mode === 'question' ? 'exercises' : 'thumbnails';
+      const folder =
+        target.mode === 'question'
+          ? 'exercises'
+          : target.mode === 'alfabe_word'
+          ? 'alfabe'
+          : 'thumbnails';
       const filePath = `${folder}/${safeName}`;
       const { error: uploadError } = await supabase.storage
         .from('materyal')
@@ -2622,6 +2963,23 @@ export default function App() {
           setExForm((prev) => ({ ...prev, image_url: newUrl }));
         }
         setExMsg('Wêneyê lîstikê bi serkeftî hat guhertin!');
+      } else if (target.mode === 'alfabe_word' && target.wordId) {
+        const updatedWords = alfabeWords.map((w) =>
+          w.id === target.wordId ? { ...w, image_url: newUrl } : w
+        );
+        setAlfabeWords(updatedWords);
+        try {
+          localStorage.setItem('kk_alfabe_words', JSON.stringify(updatedWords));
+        } catch {
+          // ignore storage errors
+        }
+        await supabase
+          .from('site_settings')
+          .upsert(
+            { key: 'alfabe_words_json', value: JSON.stringify(updatedWords) },
+            { onConflict: 'key' }
+          );
+        setExMsg(`"${target.wordLabel || ''}" ji bo wêne bi serkeftî hat barkirin!`);
       } else if (target.mode === 'lesson' && target.lessonId) {
         const { error: updateErr } = await supabase
           .from('lessons')
@@ -2648,7 +3006,7 @@ export default function App() {
       }
     } catch (err) {
       const errText = 'Guhertina wêneyî têk çû: ' + (err?.message || 'Çewtiya nenas');
-      if (target.mode === 'question') {
+      if (target.mode === 'question' || target.mode === 'alfabe_word') {
         setExMsg(errText);
       } else {
         setStatusMsg({ type: 'error', text: errText });
@@ -3195,6 +3553,7 @@ export default function App() {
             xpPoints={xpPoints}
             streakDays={streakDays}
             completedUnits={completedUnits}
+            wordBank={alfabeWords}
             onAwardXp={(amount) => {
               const nextXp = xpPoints + amount;
               const nextStreak = streakDays === 0 ? 1 : streakDays;
@@ -3220,6 +3579,7 @@ export default function App() {
               persistProgressSnapshot(nextXp, nextStreak, nextUnits);
             }}
             onTriggerPhotoUpload={handleTriggerInlinePhotoUpload}
+            onSaveWordImage={handleSaveWordImage}
             inlinePhotoSaving={inlinePhotoSaving}
             exMsg={exMsg}
             ui={ui}
@@ -3749,6 +4109,83 @@ export default function App() {
                       {exMsg}
                     </div>
                   )}
+
+                  <form
+                    onSubmit={handleCreateAlfabeRound}
+                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-4"
+                  >
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <h4 className="text-sm font-extrabold text-slate-900">
+                        Lîstika ALFABE Zêde Bike (4 Peyv + 4 Wêne)
+                      </h4>
+                      <span className="text-[11px] font-semibold text-slate-500">
+                        Her rêzekê de peyvek û wêneyek binivîse
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          Navê Lîstikê (Opsiyonel)
+                        </label>
+                        <input
+                          type="text"
+                          value={alfabeRoundForm.roundTitle}
+                          onChange={(e) =>
+                            setAlfabeRoundForm((prev) => ({
+                              ...prev,
+                              roundTitle: e.target.value
+                            }))
+                          }
+                          placeholder="Mînak: ALFABE - Koma 1"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          4 Peyv (Her rêzekê de 1 peyv) *
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={alfabeRoundForm.wordsText}
+                          onChange={(e) =>
+                            setAlfabeRoundForm((prev) => ({
+                              ...prev,
+                              wordsText: e.target.value
+                            }))
+                          }
+                          placeholder={'Agir\nbilbil\ncemed\nçay'}
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-bold text-slate-700 mb-1">
+                          4 Lînkên Wêneyan (Her rêzekê de 1 URL)
+                        </label>
+                        <textarea
+                          rows={4}
+                          value={alfabeRoundForm.imagesText}
+                          onChange={(e) =>
+                            setAlfabeRoundForm((prev) => ({
+                              ...prev,
+                              imagesText: e.target.value
+                            }))
+                          }
+                          placeholder={'https://.../agir.jpg\nhttps://.../bilbil.jpg'}
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-sm bg-white"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-xl text-xs transition"
+                    >
+                      4 Peyv û 4 Wêneyan Zêde Bike
+                    </button>
+                  </form>
 
                   <form onSubmit={handleSaveExercise} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
