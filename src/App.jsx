@@ -427,6 +427,266 @@ function ALFABE({
     </section>
   );
 }
+
+function AdminGameEditorModal({
+  exercise,
+  onClose,
+  onSaved,
+  onUploadImage
+}) {
+  const [unitTitle, setUnitTitle] = useState(exercise?.unit_title || '');
+  const [exerciseType, setExerciseType] = useState(
+    exercise?.exercise_type || 'match'
+  );
+  const [questionText, setQuestionText] = useState(
+    exercise?.question_text || ''
+  );
+  const [optionsRaw, setOptionsRaw] = useState(
+    Array.isArray(exercise?.options) ? exercise.options.join('\n') : ''
+  );
+  const [correctAnswer, setCorrectAnswer] = useState(
+    exercise?.correct_answer || ''
+  );
+  const [explanation, setExplanation] = useState(exercise?.explanation || '');
+  const [imageUrl, setImageUrl] = useState(exercise?.image_url || '');
+  const [audioUrl, setAudioUrl] = useState(exercise?.audio_url || '');
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  useEffect(() => {
+    setUnitTitle(exercise?.unit_title || '');
+    setExerciseType(exercise?.exercise_type || 'match');
+    setQuestionText(exercise?.question_text || '');
+    setOptionsRaw(
+      Array.isArray(exercise?.options) ? exercise.options.join('\n') : ''
+    );
+    setCorrectAnswer(exercise?.correct_answer || '');
+    setExplanation(exercise?.explanation || '');
+    setImageUrl(exercise?.image_url || '');
+    setAudioUrl(exercise?.audio_url || '');
+    setErrorMsg('');
+  }, [exercise]);
+
+  if (!exercise) return null;
+
+  const handleImagePick = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || typeof onUploadImage !== 'function') return;
+    setUploading(true);
+    setErrorMsg('');
+    try {
+      const url = await onUploadImage(file, 'exercises');
+      if (url) setImageUrl(url);
+    } catch (err) {
+      setErrorMsg('Wêne nehat barkirin: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    setErrorMsg('');
+    try {
+      const parsedOptions = optionsRaw
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean);
+
+      const payload = {
+        unit_title: unitTitle.trim(),
+        exercise_type: exerciseType,
+        question_text: questionText.trim(),
+        options: parsedOptions,
+        correct_answer: correctAnswer.trim(),
+        explanation: explanation.trim(),
+        image_url: imageUrl.trim(),
+        audio_url: audioUrl.trim()
+      };
+
+      const { error } = await supabase
+        .from('kurmanci_exercises')
+        .update(payload)
+        .eq('id', exercise.id);
+
+      if (error) throw error;
+      if (typeof onSaved === 'function') await onSaved();
+      onClose();
+    } catch (err) {
+      setErrorMsg('Tomarkirin bi ser neket: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white border border-slate-200 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 className="text-lg font-extrabold text-slate-900">
+            Lîstikê Biguherîne (Admin Formu — #{exercise.id})
+          </h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {errorMsg && (
+          <div className="p-3 rounded-xl bg-red-50 text-red-700 border border-red-200 text-xs font-bold">
+            {errorMsg}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Navê Lîstikê / Qonaxê
+            </label>
+            <input
+              type="text"
+              required
+              value={unitTitle}
+              onChange={(e) => setUnitTitle(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Cureyê Lîstikê
+            </label>
+            <select
+              value={exerciseType}
+              onChange={(e) => setExerciseType(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+            >
+              <option value="match">Hevberkirin (Match)</option>
+              <option value="choice">Hilbijartin (Choice)</option>
+              <option value="sentence">Hevok (Sentence)</option>
+              <option value="fill">Valahî Dagirtin (Fill)</option>
+              <option value="image">Wêne (Image)</option>
+            </select>
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Sernav / Pirs
+            </label>
+            <input
+              type="text"
+              required
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Vebijêrk / Peyv=Wêne (Her rêzek yek)
+            </label>
+            <textarea
+              rows={4}
+              value={optionsRaw}
+              onChange={(e) => setOptionsRaw(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Bersiva Rast
+            </label>
+            <input
+              type="text"
+              required
+              value={correctAnswer}
+              onChange={(e) => setCorrectAnswer(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Wêne (Ji Komputerê)
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
+              />
+              <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1">
+                <Upload className="w-3.5 h-3.5" />
+                <span>{uploading ? '...' : 'Wêne'}</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImagePick}
+                  className="hidden"
+                />
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Deng (Audio URL)
+            </label>
+            <input
+              type="text"
+              value={audioUrl}
+              onChange={(e) => setAudioUrl(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Ravekirin
+            </label>
+            <input
+              type="text"
+              value={explanation}
+              onChange={(e) => setExplanation(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
+            />
+          </div>
+
+          <div className="sm:col-span-2 flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+            >
+              Betal Bike
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-5 py-2 rounded-xl bg-red-700 hover:bg-red-800 text-white text-xs font-bold"
+            >
+              {saving ? 'Tê tomarkirin...' : 'Guherandinê Tomar Bike'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
 const ADMIN_PASSCODE = 'kurdiklass2026';
 
 const DEFAULT_CATEGORIES = [
@@ -879,6 +1139,7 @@ export default function App() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const audioPlayerRef = useRef(null);
 
+  const [modalEditingGame, setModalEditingGame] = useState(null);
   const [editingExId, setEditingExId] = useState(null);
   const [exForm, setExForm] = useState({
     unit_title: '',
@@ -1164,6 +1425,7 @@ export default function App() {
       if (e.key === 'Escape') {
         setActiveLesson(null);
         setSelectedWordDetail(null);
+        setModalEditingGame(null);
         setLangMenuOpen(false);
       }
     };
@@ -1301,7 +1563,9 @@ export default function App() {
       setAlfabeRoundForm({ roundTitle: '', wordsText: '' });
       setAlfabeRoundFiles([]);
       setGamesReset(false);
-      setExMsg('Lîstika nû ya 4 peyv û 4 wêneyan hat zêdekirin û di Admin panelê de çalak bû.');
+      setExMsg(
+        'Lîstika nû ya 4 peyv û 4 wêneyan hat zêdekirin û di Admin panelê de çalak bû.'
+      );
       await fetchAllData();
     } catch (err) {
       setExMsg('Çewtî: ' + err.message);
@@ -1540,6 +1804,7 @@ export default function App() {
     setEditingId(null);
     setEditingExId(null);
     setEditingWordId(null);
+    setModalEditingGame(null);
   };
 
   const resetForm = () => {
@@ -1909,15 +2174,9 @@ export default function App() {
   };
 
   const handleEditGameInAdmin = (ex) => {
-    if (!ex) return;
-    setViewMode('admin');
-    setIsAdmin(true);
+    if (!ex || !isAdmin) return;
+    setModalEditingGame(ex);
     startEditingExercise(ex);
-    setExMsg(`"${ex.unit_title || ex.question_text}" ji bo guherandinê hat vekirin.`);
-    setTimeout(() => {
-      const el = document.getElementById('admin-exercises-section');
-      if (el) el.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
   };
 
   const handleDeleteExercise = async (id) => {
@@ -1929,6 +2188,7 @@ export default function App() {
       if (error) throw error;
       setExercises((prev) => prev.filter((item) => item.id !== id));
       if (editingExId === id) resetExForm();
+      if (modalEditingGame?.id === id) setModalEditingGame(null);
       setExMsg('Lîstik / pirs hat jêbirin.');
     } catch (err) {
       setExMsg('Jêbirin bi ser neket: ' + err.message);
@@ -1941,6 +2201,7 @@ export default function App() {
       setExercises([]);
       setGamesReset(true);
       setSelectedUnit(null);
+      setModalEditingGame(null);
       setXpPoints(0);
       setStreakDays(0);
       setCompletedUnits([]);
@@ -2286,6 +2547,18 @@ export default function App() {
         onChange={handleInlinePhotoFileSelected}
         className="hidden"
       />
+
+      {isAdmin && modalEditingGame && (
+        <AdminGameEditorModal
+          exercise={modalEditingGame}
+          onClose={() => setModalEditingGame(null)}
+          onSaved={async () => {
+            setExMsg('Guherandina lîstikê hat tomarkirin.');
+            await fetchAllData();
+          }}
+          onUploadImage={uploadImageToBucket}
+        />
+      )}
 
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
@@ -3876,7 +4149,9 @@ export default function App() {
                         type="submit"
                         className="px-5 py-2.5 rounded-xl bg-red-700 hover:bg-red-800 text-white text-sm font-bold"
                       >
-                        {editingExId ? 'Lîstik / Pirsê Nû Bike' : 'Lîstik / Pirsê Lê Zêde Bike'}
+                        {editingExId
+                          ? 'Lîstik / Pirsê Nû Bike'
+                          : 'Lîstik / Pirsê Lê Zêde Bike'}
                       </button>
                       {editingExId && (
                         <button
@@ -3932,12 +4207,12 @@ export default function App() {
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => startEditingExercise(ex)}
-                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold"
-                            title="Biguherîne"
+                            onClick={() => handleEditGameInAdmin(ex)}
+                            className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-950 text-xs font-bold border border-amber-300"
+                            title="Formu Aç (Admin)"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
-                            <span>Biguherîne</span>
+                            <span>Biguherîne (Form)</span>
                           </button>
                           <button
                             type="button"
