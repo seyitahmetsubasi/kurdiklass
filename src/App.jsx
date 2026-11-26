@@ -38,19 +38,21 @@ import {
   Zap
 } from 'lucide-react';
 
+const ALFABE_STORAGE_VERSION = 'v31_Aa_Zz';
+
 const ALFABE_DEFAULT_WORDS = [
-  { id: 'alf-1', word: 'Agir', letter: 'Aa', image_url: '' },
-  { id: 'alf-2', word: 'Bilbil', letter: 'Bb', image_url: '' },
-  { id: 'alf-3', word: 'Cemed', letter: 'Cc', image_url: '' },
-  { id: 'alf-4', word: 'Çay', letter: 'Çç', image_url: '' },
-  { id: 'alf-5', word: 'Dar', letter: 'Dd', image_url: '' },
-  { id: 'alf-6', word: 'Ewr', letter: 'Ee', image_url: '' },
-  { id: 'alf-7', word: 'Êvar', letter: 'Êê', image_url: '' },
-  { id: 'alf-8', word: 'Ferheng', letter: 'Ff', image_url: '' },
-  { id: 'alf-9', word: 'Guh', letter: 'Gg', image_url: '' },
+  { id: 'alf-01', word: 'Agir', letter: 'Aa', image_url: '' },
+  { id: 'alf-02', word: 'Bilbil', letter: 'Bb', image_url: '' },
+  { id: 'alf-03', word: 'Cemed', letter: 'Cc', image_url: '' },
+  { id: 'alf-04', word: 'Çay', letter: 'Çç', image_url: '' },
+  { id: 'alf-05', word: 'Dar', letter: 'Dd', image_url: '' },
+  { id: 'alf-06', word: 'Ewr', letter: 'Ee', image_url: '' },
+  { id: 'alf-07', word: 'Êvar', letter: 'Êê', image_url: '' },
+  { id: 'alf-08', word: 'Ferheng', letter: 'Ff', image_url: '' },
+  { id: 'alf-09', word: 'Guh', letter: 'Gg', image_url: '' },
   { id: 'alf-10', word: 'Hesp', letter: 'Hh', image_url: '' },
-  { id: 'alf-11', word: 'Îsot', letter: 'Ii', image_url: '' },
-  { id: 'alf-12', word: 'Îskan', letter: 'Îî', image_url: '' },
+  { id: 'alf-11', word: 'Irmak', letter: 'Ii', image_url: '' },
+  { id: 'alf-12', word: 'Îsot', letter: 'Îî', image_url: '' },
   { id: 'alf-13', word: 'Jûjî', letter: 'Jj', image_url: '' },
   { id: 'alf-14', word: 'Ker', letter: 'Kk', image_url: '' },
   { id: 'alf-15', word: 'Lembe', letter: 'Ll', image_url: '' },
@@ -245,7 +247,7 @@ function ALFABE({
               Lîstika ALFABE: 4 Peyv û 4 Wêne
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              Her peyvekê bi wêneyê wê yê rast re hevber bike ({activeWords.length} peyv)
+              Her peyvekê bi wêneyê wê yê rast re hevber bike ({activeWords.length} tîp / peyv)
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -1701,11 +1703,14 @@ export default function App() {
   const [exMsg, setExMsg] = useState('');
   const [alfabeWords, setAlfabeWords] = useState(() => {
     try {
+      const savedVer = localStorage.getItem('kk_alfabe_version');
       const saved = localStorage.getItem('kk_alfabe_words');
-      if (saved) {
+      if (savedVer === ALFABE_STORAGE_VERSION && saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length >= 31) return parsed;
       }
+      localStorage.setItem('kk_alfabe_version', ALFABE_STORAGE_VERSION);
+      localStorage.setItem('kk_alfabe_words', JSON.stringify(ALFABE_DEFAULT_WORDS));
     } catch {
       // ignore storage errors
     }
@@ -1716,35 +1721,39 @@ export default function App() {
     wordsText: '',
     imagesText: ''
   });
-  const [uploadingExImg, setUploadingExImg] = useState(false);
-  const [uploadingExAudio, setUploadingExAudio] = useState(false);
-  const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
   const [inlinePhotoTarget, setInlinePhotoTarget] = useState(null);
+  const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
   const inlinePhotoInputRef = useRef(null);
   const [adminExUnitFilter, setAdminExUnitFilter] = useState('all');
   const [adminExSearch, setAdminExSearch] = useState('');
   const [dictionaryWords, setDictionaryWords] = useState([]);
   const [totalWordCount, setTotalWordCount] = useState(0);
-  const [ferhengQuery, setFerhengQuery] = useState('');
   const [selectedLetter, setSelectedLetter] = useState('all');
-  const [selectedWordDetail, setSelectedWordDetail] = useState(null);
-  const [wiktionaryMatches, setWiktionaryMatches] = useState([]);
+  const [ferhengQuery, setFerhengQuery] = useState('');
+  const [wiktionaryResults, setWiktionaryResults] = useState([]);
   const [searchingDict, setSearchingDict] = useState(false);
   const [searchHistory, setSearchHistory] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('kk_search_history') || '[]');
+      const saved = localStorage.getItem('kk_search_history');
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
   const [favoriteWords, setFavoriteWords] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('kk_favorite_words') || '[]');
+      const saved = localStorage.getItem('kk_fav_words');
+      return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
     }
   });
+  const [selectedWordDetail, setSelectedWordDetail] = useState(null);
   const [editingWordId, setEditingWordId] = useState(null);
+  const [uploadingWordAudio, setUploadingWordAudio] = useState(false);
+  const [uploadingExImg, setUploadingExImg] = useState(false);
+  const [uploadingExAudio, setUploadingExAudio] = useState(false);
+  const [syncingProgress, setSyncingProgress] = useState('');
   const [wordForm, setWordForm] = useState({
     word: '',
     part_of_speech: 'navdêr',
@@ -1763,318 +1772,578 @@ export default function App() {
       FR: '',
       IT: ''
     },
-    examples_i18n: {
-      KU: '',
-      ZZA: '',
-      CKB: '',
-      TR: '',
-      EN: '',
-      DE: '',
-      FR: '',
-      IT: ''
-    }
+    examples_i18n: {}
   });
   const [wordMsg, setWordMsg] = useState('');
-  const [uploadingWordAudio, setUploadingWordAudio] = useState(false);
-  const [syncingProgress, setSyncingProgress] = useState('');
-  const [selectedLang, setSelectedLang] = useState(() => {
+  const [rawUi, setRawUi] = useState(() => {
     try {
-      return localStorage.getItem('kk_lang') || 'KU';
+      const saved = localStorage.getItem('kk_ui_texts');
+      return saved ? JSON.parse(saved) : {};
     } catch {
-      return 'KU';
+      return {};
     }
+  });
+  const [selectedLang, setSelectedLang] = useState(() => {
+    return localStorage.getItem('kk_lang') || 'KU';
   });
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const langDropdownRef = useRef(null);
-  const [rawUi, setRawUi] = useState(DEFAULT_UI_TEXTS);
   const [settingsMsg, setSettingsMsg] = useState('');
-  const ui = { ...DEFAULT_UI_TEXTS, ...rawUi };
+
+  const ui = {
+    ...DEFAULT_UI_TEXTS,
+    ...(rawUi && typeof rawUi === 'object' ? rawUi : {})
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kk_xp', String(xpPoints));
+    } catch {}
+  }, [xpPoints]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kk_streak', String(streakDays));
+    } catch {}
+  }, [streakDays]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kk_completed_units', JSON.stringify(completedUnits));
+    } catch {}
+  }, [completedUnits]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kk_lang', selectedLang);
+    } catch {}
+  }, [selectedLang]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kk_fav_words', JSON.stringify(favoriteWords));
+    } catch {}
+  }, [favoriteWords]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('kk_search_history', JSON.stringify(searchHistory));
+    } catch {}
+  }, [searchHistory]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setActiveLesson(null);
+        setSelectedWordDetail(null);
+        setLangMenuOpen(false);
+      }
+    };
+    const handleClickOutside = (e) => {
+      if (langDropdownRef.current && !langDropdownRef.current.contains(e.target)) {
+        setLangMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    try {
+      const [
+        { data: lessonsData },
+        { data: settingsData },
+        { data: exercisesData },
+        { data: dictData, count: dictCount }
+      ] = await Promise.all([
+        supabase.from('lessons').select('*').order('id', { ascending: false }),
+        supabase.from('site_settings').select('*'),
+        supabase.from('kurmanci_exercises').select('*').order('id', { ascending: true }),
+        supabase
+          .from('dictionary')
+          .select('*', { count: 'exact' })
+          .order('word', { ascending: true })
+          .limit(5000)
+      ]);
+
+      setLessons(Array.isArray(lessonsData) ? lessonsData : []);
+      setExercises(Array.isArray(exercisesData) ? exercisesData : []);
+      setDictionaryWords(Array.isArray(dictData) ? dictData : []);
+      setTotalWordCount(typeof dictCount === 'number' ? dictCount : (dictData || []).length);
+
+      if (Array.isArray(settingsData) && settingsData.length > 0) {
+        const map = {};
+        settingsData.forEach((row) => {
+          if (row && row.key) map[row.key] = row.value;
+        });
+
+        if (map.categories_json) {
+          try {
+            const parsedCats = JSON.parse(map.categories_json);
+            if (Array.isArray(parsedCats) && parsedCats.length > 0) {
+              setCategories(parsedCats);
+            }
+          } catch {}
+        }
+
+        if (map.levels_json) {
+          try {
+            const parsedLevels = JSON.parse(map.levels_json);
+            if (Array.isArray(parsedLevels) && parsedLevels.length > 0) {
+              setDynamicLevels(parsedLevels);
+            }
+          } catch {}
+        }
+
+        if (map.grades_json) {
+          try {
+            const parsedGrades = JSON.parse(map.grades_json);
+            if (Array.isArray(parsedGrades) && parsedGrades.length > 0) {
+              setDynamicGrades(parsedGrades);
+            }
+          } catch {}
+        }
+
+        if (map.media_types_json) {
+          try {
+            const parsedMedia = JSON.parse(map.media_types_json);
+            if (Array.isArray(parsedMedia) && parsedMedia.length > 0) {
+              setDynamicMediaTypes(
+                parsedMedia.map((m) => ({
+                  ...m,
+                  icon:
+                    m.id === 'video'
+                      ? Video
+                      : m.id === 'audio'
+                      ? Headphones
+                      : m.id === 'book'
+                      ? BookOpen
+                      : FileText
+                }))
+              );
+            }
+          } catch {}
+        }
+
+        if (map.ui_texts_json) {
+          try {
+            const parsedUi = JSON.parse(map.ui_texts_json);
+            if (parsedUi && typeof parsedUi === 'object') {
+              setRawUi(parsedUi);
+              localStorage.setItem('kk_ui_texts', JSON.stringify(parsedUi));
+            }
+          } catch {}
+        }
+
+        if (map.alfabe_words_json) {
+          try {
+            const parsedWords = JSON.parse(map.alfabe_words_json);
+            const savedVer = localStorage.getItem('kk_alfabe_version');
+            if (
+              savedVer === ALFABE_STORAGE_VERSION &&
+              Array.isArray(parsedWords) &&
+              parsedWords.length >= 31
+            ) {
+              setAlfabeWords(parsedWords);
+              localStorage.setItem('kk_alfabe_words', JSON.stringify(parsedWords));
+            } else {
+              setAlfabeWords(ALFABE_DEFAULT_WORDS);
+              localStorage.setItem('kk_alfabe_version', ALFABE_STORAGE_VERSION);
+              localStorage.setItem('kk_alfabe_words', JSON.stringify(ALFABE_DEFAULT_WORDS));
+            }
+          } catch {
+            setAlfabeWords(ALFABE_DEFAULT_WORDS);
+            localStorage.setItem('kk_alfabe_version', ALFABE_STORAGE_VERSION);
+            localStorage.setItem('kk_alfabe_words', JSON.stringify(ALFABE_DEFAULT_WORDS));
+          }
+        } else {
+          setAlfabeWords(ALFABE_DEFAULT_WORDS);
+          localStorage.setItem('kk_alfabe_version', ALFABE_STORAGE_VERSION);
+          localStorage.setItem('kk_alfabe_words', JSON.stringify(ALFABE_DEFAULT_WORDS));
+        }
+
+        if (map.xp_points) {
+          const dbXp = parseInt(map.xp_points, 10) || 0;
+          setXpPoints((prev) => Math.max(prev, dbXp));
+        }
+        if (map.streak_days) {
+          const dbStreak = parseInt(map.streak_days, 10) || 0;
+          setStreakDays((prev) => Math.max(prev, dbStreak));
+        }
+        if (map.completed_units_json) {
+          try {
+            const dbUnits = JSON.parse(map.completed_units_json);
+            if (Array.isArray(dbUnits)) {
+              setCompletedUnits((prev) => [...new Set([...prev, ...dbUnits])]);
+            }
+          } catch {}
+        }
+      }
+    } catch (err) {
+      console.error('Veri çekme hatası:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const persistAlfabeWords = async (nextList) => {
+    setAlfabeWords(nextList);
+    try {
+      localStorage.setItem('kk_alfabe_version', ALFABE_STORAGE_VERSION);
+      localStorage.setItem('kk_alfabe_words', JSON.stringify(nextList));
+      await supabase.from('site_settings').upsert(
+        [
+          {
+            key: 'alfabe_words_json',
+            value: JSON.stringify(nextList)
+          }
+        ],
+        { onConflict: 'key' }
+      );
+    } catch (err) {
+      console.error('ALFABE kelime kaydı hatası:', err);
+    }
+  };
+
+  const handleCreateAlfabeRound = async (e) => {
+    e.preventDefault();
+    const parsedWords = alfabeRoundForm.wordsText
+      .split(/[\n,]+/)
+      .map((w) => w.trim())
+      .filter(Boolean);
+    const parsedImages = alfabeRoundForm.imagesText
+      .split(/\n+/)
+      .map((u) => u.trim())
+      .filter(Boolean);
+
+    if (parsedWords.length < 4) {
+      setExMsg('Ji kerema xwe herî kêm 4 peyvan binivîse.');
+      return;
+    }
+
+    const roundLabel =
+      alfabeRoundForm.roundTitle.trim() ||
+      `ALFABE - ${parsedWords.slice(0, 4).join(' / ')}`;
+    const fourWords = parsedWords.slice(0, 4);
+    const fourImgs = parsedImages.slice(0, 4);
+
+    const updated = [...alfabeWords];
+    fourWords.forEach((w, idx) => {
+      const targetIdx = idx < updated.length ? idx : updated.length;
+      const existing = updated[targetIdx] || {
+        id: `alf-${Date.now()}-${idx}`,
+        letter: kurdishAlphabet[targetIdx] || 'A'
+      };
+      updated[targetIdx] = {
+        ...existing,
+        word: w,
+        image_url: fourImgs[idx] || existing.image_url || ''
+      };
+    });
+
+    await persistAlfabeWords(updated);
+    setAlfabeRoundForm({ roundTitle: '', wordsText: '', imagesText: '' });
+    setExMsg(`Lîstika "${roundLabel}" (4 peyv û 4 wêne) li serê ALFABE hat zêdekirin.`);
+  };
+
+  const handleSaveWordImage = async (e, item) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    const enteredUrl = window.prompt(
+      `"${item.word}" (${item.letter}) ji bo wêneyê lînka URL binivîse (an ji bo barkirina pelê vala bihêle):`,
+      item.image_url || ''
+    );
+    if (enteredUrl === null) return;
+    if (enteredUrl.trim()) {
+      const nextList = alfabeWords.map((w) =>
+        w.id === item.id ? { ...w, image_url: enteredUrl.trim() } : w
+      );
+      await persistAlfabeWords(nextList);
+      setExMsg(`Wêneyê "${item.word}" hat nûkirin.`);
+    } else {
+      handleTriggerInlinePhotoUpload(e, { wordItem: item, mode: 'alfabe_word' });
+    }
+  };
+
+  const handleTriggerInlinePhotoUpload = (e, target) => {
+    if (e && e.stopPropagation) e.stopPropagation();
+    setInlinePhotoTarget(target);
+    if (inlinePhotoInputRef.current) {
+      inlinePhotoInputRef.current.value = '';
+      inlinePhotoInputRef.current.click();
+    }
+  };
+
+  const handleInlinePhotoFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !inlinePhotoTarget) return;
+    setInlinePhotoSaving(true);
+    try {
+      const ext = file.name.split('.').pop() || 'jpg';
+      const filePath = `inline/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from('materyal')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { data: pubData } = supabase.storage.from('materyal').getPublicUrl(filePath);
+      const publicUrl = pubData?.publicUrl || '';
+
+      if (inlinePhotoTarget.mode === 'alfabe_word' && inlinePhotoTarget.wordItem) {
+        const nextList = alfabeWords.map((w) =>
+          w.id === inlinePhotoTarget.wordItem.id ? { ...w, image_url: publicUrl } : w
+        );
+        await persistAlfabeWords(nextList);
+        setExMsg(`Wêneyê "${inlinePhotoTarget.wordItem.word}" hat barkirin.`);
+      } else if (inlinePhotoTarget.mode === 'lesson' && inlinePhotoTarget.lessonId) {
+        await supabase
+          .from('lessons')
+          .update({ thumbnail_url: publicUrl })
+          .eq('id', inlinePhotoTarget.lessonId);
+        setLessons((prev) =>
+          prev.map((l) =>
+            l.id === inlinePhotoTarget.lessonId ? { ...l, thumbnail_url: publicUrl } : l
+          )
+        );
+      } else if (inlinePhotoTarget.mode === 'question' && inlinePhotoTarget.exerciseId) {
+        await supabase
+          .from('kurmanci_exercises')
+          .update({ image_url: publicUrl })
+          .eq('id', inlinePhotoTarget.exerciseId);
+        setExercises((prev) =>
+          prev.map((ex) =>
+            ex.id === inlinePhotoTarget.exerciseId ? { ...ex, image_url: publicUrl } : ex
+          )
+        );
+      }
+    } catch (err) {
+      console.error('Wêne barkirin têk çû:', err);
+      setExMsg('Wêne nehat barkirin: ' + (err.message || 'Çewtî'));
+    } finally {
+      setInlinePhotoSaving(false);
+      setInlinePhotoTarget(null);
+    }
+  };
+
+  const handleSelectLanguage = (code) => {
+    setSelectedLang(code);
+    setLangMenuOpen(false);
+  };
+
+  const getCategoryName = (slug) => {
+    const found = categories.find((c) => c.slug === slug);
+    return found ? found.name : slug;
+  };
+
+  const handleOpenLesson = (lesson) => {
+    setActiveLesson(lesson);
+    setLessonTab('content');
+    setMediaLoadError('');
+  };
+
+  const renderLessonMediaViewer = (lesson) => {
+    const url = (lesson.media_url || '').trim();
+    if (!url) {
+      return (
+        <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-600">
+          Ji bo vê materyalê hîn lînka medyayê nehatiye zêdekirin.
+        </div>
+      );
+    }
+
+    const ytEmbed = getYouTubeEmbedUrl(url);
+    if (ytEmbed) {
+      return (
+        <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
+          <iframe
+            src={ytEmbed}
+            title={lesson.title}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          />
+        </div>
+      );
+    }
+
+    if (lesson.media_type === 'video' || /\.(mp4|webm|ogg)(\?|$)/i.test(url)) {
+      return (
+        <div className="space-y-2">
+          <video
+            src={url}
+            controls
+            onError={() => setMediaLoadError('Vîdyo nehat vekirin.')}
+            className="w-full max-h-[460px] rounded-xl bg-black"
+          />
+          {mediaLoadError && <p className="text-xs text-red-600 font-semibold">{mediaLoadError}</p>}
+        </div>
+      );
+    }
+
+    if (lesson.media_type === 'audio' || /\.(mp3|wav|ogg|m4a)(\?|$)/i.test(url)) {
+      return (
+        <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+          <audio
+            src={url}
+            controls
+            onError={() => setMediaLoadError('Pelê dengî nehat vekirin.')}
+            className="w-full"
+          />
+          {mediaLoadError && <p className="text-xs text-red-600 font-semibold">{mediaLoadError}</p>}
+        </div>
+      );
+    }
+
+    if (/\.pdf(\?|$)/i.test(url)) {
+      return (
+        <div className="space-y-3">
+          <iframe src={url} title={lesson.title} className="w-full h-[480px] rounded-xl border" />
+          <a
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-red-700 hover:underline"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            <span>Di pencereya nû de veke</span>
+          </a>
+        </div>
+      );
+    }
+
+    return (
+      <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-4 flex-wrap">
+        <span className="text-sm text-slate-700 break-all">{url}</span>
+        <a
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-700 text-white text-xs font-bold"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          <span>{ui.btn_open_material}</span>
+        </a>
+      </div>
+    );
+  };
+
+  const filteredLessons = lessons.filter((item) => {
+    const matchesCat =
+      selectedCategory === 'all' || item.category_slug === selectedCategory;
+    const matchesLvl = selectedLevel === 'all' || item.level === selectedLevel;
+    const matchesMedia = selectedMedia === 'all' || item.media_type === selectedMedia;
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      (item.title && item.title.toLowerCase().includes(q)) ||
+      (item.description && item.description.toLowerCase().includes(q)) ||
+      (item.grade_level && item.grade_level.toLowerCase().includes(q));
+    return matchesCat && matchesLvl && matchesMedia && matchesSearch;
+  });
+
   const hasActiveFilters =
     selectedCategory !== 'all' ||
     selectedLevel !== 'all' ||
     selectedMedia !== 'all' ||
-    Boolean(searchQuery.trim());
+    searchQuery.trim() !== '';
+
   const handleResetFilters = () => {
     setSelectedCategory('all');
     setSelectedLevel('all');
     setSelectedMedia('all');
     setSearchQuery('');
   };
-  const persistProgressSnapshot = async (nextXp, nextStreak, nextUnits) => {
-    try {
-      localStorage.setItem('kk_xp', String(nextXp));
-      localStorage.setItem('kk_streak', String(nextStreak));
-      localStorage.setItem('kk_completed_units', JSON.stringify(nextUnits));
-    } catch {
-      // ignore storage errors
-    }
-    try {
-      await supabase.from('site_settings').upsert(
-        [
-          { key: 'learner_xp_remote', value: String(nextXp) },
-          { key: 'learner_streak_remote', value: String(nextStreak) },
-          { key: 'learner_units_remote', value: JSON.stringify(nextUnits) }
-        ],
-        { onConflict: 'key' }
-      );
-    } catch {
-      // ignore remote sync errors
-    }
-  };
-  useEffect(() => {
-    const handleOutsideClick = (event) => {
-      if (langDropdownRef.current && !langDropdownRef.current.contains(event.target)) {
-        setLangMenuOpen(false);
-      }
-    };
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setLangMenuOpen(false);
-        setActiveLesson(null);
-        setSelectedWordDetail(null);
-      }
-    };
-    document.addEventListener('mousedown', handleOutsideClick);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleOutsideClick);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
-  useEffect(() => {
-    if (sessionStorage.getItem('kurdiklass_admin') === '1') {
-      setIsAdmin(true);
-    }
-    fetchAllData();
-  }, []);
-  const fetchAllData = async () => {
-    setLoading(true);
-    const { data: lessonsData } = await supabase
-      .from('lessons')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (lessonsData) {
-      setLessons(lessonsData);
-      const lessonLevels = lessonsData.map((l) => l.level).filter(Boolean);
-      setDynamicLevels([...new Set([...defaultLevels, ...lessonLevels])]);
-      const lessonGrades = lessonsData.map((l) => l.grade_level).filter(Boolean);
-      setDynamicGrades([...new Set([...defaultGrades, ...lessonGrades])]);
-      const extraMediaIds = lessonsData.map((l) => l.media_type).filter(Boolean);
-      const mergedMedia = [...defaultMediaTypes];
-      extraMediaIds.forEach((mId) => {
-        if (!mergedMedia.some((dm) => dm.id === mId)) {
-          mergedMedia.push({
-            id: mId,
-            label: mId.charAt(0).toUpperCase() + mId.slice(1),
-            icon: FileText
-          });
-        }
-      });
-      setDynamicMediaTypes(mergedMedia);
-    }
-    const { data: exData } = await supabase
-      .from('kurmanci_exercises')
-      .select('*')
-      .order('sort_order', { ascending: true });
-    if (exData) setExercises(exData);
-    const { count: wordTotal } = await supabase
-      .from('dictionary')
-      .select('*', { count: 'exact', head: true });
-    if (typeof wordTotal === 'number') setTotalWordCount(wordTotal);
-    const { data: dictData } = await supabase
-      .from('dictionary')
-      .select('*')
-      .order('word', { ascending: true })
-      .limit(1000);
-    if (dictData) setDictionaryWords(dictData);
-    const { data: settingsData } = await supabase
-      .from('site_settings')
-      .select('key, value');
-    if (settingsData && settingsData.length > 0) {
-      const map = {};
-      settingsData.forEach((row) => {
-        map[row.key] = row.value;
-      });
-      if (map.categories_json) {
-        try {
-          const parsedCats = JSON.parse(map.categories_json);
-          if (Array.isArray(parsedCats) && parsedCats.length > 0) {
-            setCategories(parsedCats);
-          }
-        } catch {
-          // ignore
-        }
-      }
-      if (map.alfabe_words_json) {
-        try {
-          const parsedWords = JSON.parse(map.alfabe_words_json);
-          if (Array.isArray(parsedWords) && parsedWords.length > 0) {
-            setAlfabeWords(parsedWords);
-            localStorage.setItem('kk_alfabe_words', JSON.stringify(parsedWords));
-          }
-        } catch {
-          // ignore
-        }
-      }
-      if (map.games_reset === 'true') {
-        setGamesReset(true);
-      }
-      const activeLang = (() => {
-        try {
-          return localStorage.getItem('kk_lang') || 'KU';
-        } catch {
-          return 'KU';
-        }
-      })();
-      const langPrefix = `${activeLang.toLowerCase()}_`;
-      const uiMap = { ...DEFAULT_UI_TEXTS };
-      Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
-        if (map[k] !== undefined) uiMap[k] = map[k];
-      });
-      Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
-        if (map[`${langPrefix}${k}`] !== undefined) {
-          uiMap[k] = map[`${langPrefix}${k}`];
-        }
-      });
-      setRawUi(uiMap);
-      if (map.learner_xp_remote) {
-        const remoteXp = parseInt(map.learner_xp_remote, 10) || 0;
-        const localXp = parseInt(localStorage.getItem('kk_xp') || '0', 10) || 0;
-        const bestXp = Math.max(remoteXp, localXp);
-        setXpPoints(bestXp);
-        localStorage.setItem('kk_xp', String(bestXp));
-      }
-      if (map.learner_streak_remote) {
-        const remoteStreak = parseInt(map.learner_streak_remote, 10) || 0;
-        const localStreak = parseInt(localStorage.getItem('kk_streak') || '0', 10) || 0;
-        const bestStreak = Math.max(remoteStreak, localStreak);
-        setStreakDays(bestStreak);
-        localStorage.setItem('kk_streak', String(bestStreak));
-      }
-      if (map.learner_units_remote) {
-        try {
-          const remoteUnits = JSON.parse(map.learner_units_remote);
-          if (Array.isArray(remoteUnits)) {
-            const localUnits = JSON.parse(localStorage.getItem('kk_completed_units') || '[]');
-            const mergedUnits = [...new Set([...(Array.isArray(localUnits) ? localUnits : []), ...remoteUnits])];
-            setCompletedUnits(mergedUnits);
-            localStorage.setItem('kk_completed_units', JSON.stringify(mergedUnits));
-          }
-        } catch {
-          // ignore
-        }
-      }
-    }
-    setLoading(false);
-  };
-  const handleSelectLanguage = async (langCode) => {
-    setSelectedLang(langCode);
-    setLangMenuOpen(false);
-    try {
-      localStorage.setItem('kk_lang', langCode);
-    } catch {
-      // ignore
-    }
-    const { data: settingsData } = await supabase
-      .from('site_settings')
-      .select('key, value');
-    const map = {};
-    (settingsData || []).forEach((row) => {
-      map[row.key] = row.value;
-    });
-    const langPrefix = `${langCode.toLowerCase()}_`;
-    const uiMap = { ...DEFAULT_UI_TEXTS };
-    Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
-      if (map[k] !== undefined) uiMap[k] = map[k];
-    });
-    Object.keys(DEFAULT_UI_TEXTS).forEach((k) => {
-      if (map[`${langPrefix}${k}`] !== undefined) {
-        uiMap[k] = map[`${langPrefix}${k}`];
-      }
-    });
-    setRawUi(uiMap);
-  };
+
   const handleAdminLogin = (e) => {
     e.preventDefault();
-    if (passwordInput === ADMIN_PASSCODE) {
+    if (passwordInput.trim() === ADMIN_PASSCODE) {
       setIsAdmin(true);
-      sessionStorage.setItem('kurdiklass_admin', '1');
       setAuthError('');
       setPasswordInput('');
     } else {
       setAuthError('Şîfre şaş e! Ji kerema xwe dîsa biceribîne.');
     }
   };
+
   const handleLogout = () => {
-    if (audioPlayerRef.current) audioPlayerRef.current.pause();
-    setIsPlayingAudio(false);
     setIsAdmin(false);
-    sessionStorage.removeItem('kurdiklass_admin');
-    resetForm();
+    setEditingId(null);
+    setEditingExId(null);
+    setEditingWordId(null);
   };
-  const handleFileUpload = async (event, fieldName) => {
-    const file = event.target.files?.[0];
+
+  const resetForm = () => {
+    setEditingId(null);
+    setFormData({
+      title: '',
+      category_slug: categories[0]?.slug || 'ders',
+      media_type: dynamicMediaTypes[0]?.id || 'video',
+      media_url: '',
+      thumbnail_url: '',
+      level: dynamicLevels[0] || 'Destpêk (A1-A2)',
+      grade_level: dynamicGrades[0] || 'Pola 1-4',
+      description: '',
+      teacher_guide: '',
+      guide_pdf_url: ''
+    });
+  };
+
+  const handleFileUpload = async (e, fieldName) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     setUploadingField(fieldName);
     setStatusMsg({ type: '', text: '' });
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `uploads/${fileName}`;
-    const { error: uploadError } = await supabase.storage
-      .from('materyal')
-      .upload(filePath, file);
-    if (uploadError) {
-      setStatusMsg({ type: 'error', text: 'Barkirina pelî têk çû: ' + uploadError.message });
-    } else {
-      const { data: publicUrlData } = supabase.storage
+    try {
+      const ext = file.name.split('.').pop() || 'bin';
+      const filePath = `lessons/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const { error } = await supabase.storage
         .from('materyal')
-        .getPublicUrl(filePath);
-      if (publicUrlData?.publicUrl) {
-        setFormData((prev) => ({ ...prev, [fieldName]: publicUrlData.publicUrl }));
-        setStatusMsg({ type: 'success', text: 'Pel bi serkeftî hat barkirin!' });
+        .upload(filePath, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('materyal').getPublicUrl(filePath);
+      if (data?.publicUrl) {
+        setFormData((prev) => ({ ...prev, [fieldName]: data.publicUrl }));
+        setStatusMsg({ type: 'success', text: 'Pel bi serkeftî hat barkirin.' });
       }
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'Barkirina pelê bi ser neket: ' + err.message });
+    } finally {
+      setUploadingField(null);
     }
-    setUploadingField(null);
-    event.target.value = '';
   };
+
   const handleSaveLesson = async (e) => {
     e.preventDefault();
     setStatusMsg({ type: '', text: '' });
-    const payload = {
-      title: formData.title.trim(),
-      category_slug: formData.category_slug,
-      media_type: formData.media_type,
-      media_url: formData.media_url.trim(),
-      thumbnail_url: formData.thumbnail_url.trim(),
-      level: formData.level,
-      grade_level: formData.grade_level,
-      description: formData.description.trim(),
-      teacher_guide: formData.teacher_guide.trim(),
-      guide_pdf_url: formData.guide_pdf_url.trim()
-    };
-    if (editingId) {
-      const { error } = await supabase.from('lessons').update(payload).eq('id', editingId);
-      if (error) {
-        setStatusMsg({ type: 'error', text: 'Çewtî çêbû: ' + error.message });
+    try {
+      if (editingId) {
+        const { error } = await supabase
+          .from('lessons')
+          .update(formData)
+          .eq('id', editingId);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: 'Materyal bi serkeftî hat nûkirin.' });
       } else {
-        setStatusMsg({ type: 'success', text: 'Ders bi serkeftî hat nûkirin!' });
-        resetForm();
-        fetchAllData();
+        const { error } = await supabase.from('lessons').insert([formData]);
+        if (error) throw error;
+        setStatusMsg({ type: 'success', text: 'Materyala nû hat tomarkirin.' });
       }
-    } else {
-      const { error } = await supabase.from('lessons').insert([payload]);
-      if (error) {
-        setStatusMsg({ type: 'error', text: 'Çewtî çêbû: ' + error.message });
-      } else {
-        setStatusMsg({ type: 'success', text: 'Materyala nû li malperê hat zêdekirin!' });
-        resetForm();
-        fetchAllData();
-      }
+      resetForm();
+      await fetchAllData();
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'Çewtî çêbû: ' + err.message });
     }
   };
+
   const startEditing = (lesson) => {
-    setActiveLesson(null);
-    setViewMode('admin');
     setEditingId(lesson.id);
     setFormData({
       title: lesson.title || '',
@@ -2090,278 +2359,475 @@ export default function App() {
     });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  const resetForm = () => {
-    setEditingId(null);
-    setFormData({
-      title: '',
-      category_slug: 'ders',
-      media_type: 'video',
-      media_url: '',
-      thumbnail_url: '',
-      level: 'Destpêk (A1-A2)',
-      grade_level: 'Pola 1-4',
-      description: '',
-      teacher_guide: '',
-      guide_pdf_url: ''
-    });
-  };
+
   const handleDeleteLesson = async (id) => {
-    if (!window.confirm('Tu piştrast î ku dixwazî vê materyalê jê bibî?')) return;
-    const { error } = await supabase.from('lessons').delete().eq('id', id);
-    if (!error) {
-      fetchAllData();
+    try {
+      const { error } = await supabase.from('lessons').delete().eq('id', id);
+      if (error) throw error;
+      setLessons((prev) => prev.filter((item) => item.id !== id));
+      setStatusMsg({ type: 'success', text: 'Materyal hat jêbirin.' });
+    } catch (err) {
+      setStatusMsg({ type: 'error', text: 'Jêbirin bi ser neket: ' + err.message });
     }
   };
+
   const handleUpdateCategoryName = (slug, newName) => {
     setCategories((prev) =>
       prev.map((c) => (c.slug === slug ? { ...c, name: newName } : c))
     );
   };
-  const handleSaveCategories = async () => {
-    const { error } = await supabase
-      .from('site_settings')
-      .upsert(
-        { key: 'categories_json', value: JSON.stringify(categories) },
-        { onConflict: 'key' }
-      );
-    setCatMsg(
-      error
-        ? 'Çewtî: ' + error.message
-        : 'Navên beşan hatin tomarkirin!'
-    );
-    setTimeout(() => setCatMsg(''), 3500);
-  };
-  const handleAddCategory = async (e) => {
+
+  const handleAddCategory = (e) => {
     e.preventDefault();
-    if (!newCatName.trim()) return;
-    const slug = newCatName
-      .toLowerCase()
-      .trim()
-      .replace(/ç/g, 'c')
-      .replace(/ğ/g, 'g')
-      .replace(/ı/g, 'i')
-      .replace(/î/g, 'i')
-      .replace(/ö/g, 'o')
-      .replace(/ş/g, 's')
-      .replace(/ü/g, 'u')
-      .replace(/û/g, 'u')
-      .replace(/ê/g, 'e')
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-    if (!slug) return;
-    const updated = [...categories, { slug, name: newCatName.trim() }];
-    setCategories(updated);
+    const clean = newCatName.trim();
+    if (!clean) return;
+    const slug =
+      normalizeKurdish(clean)
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || `bes-${Date.now()}`;
+    if (categories.some((c) => c.slug === slug)) return;
+    setCategories((prev) => [...prev, { slug, name: clean }]);
     setNewCatName('');
-    await supabase
-      .from('site_settings')
-      .upsert(
-        { key: 'categories_json', value: JSON.stringify(updated) },
+  };
+
+  const handleDeleteCategory = (slug) => {
+    setCategories((prev) => prev.filter((c) => c.slug !== slug));
+  };
+
+  const handleSaveCategories = async () => {
+    try {
+      await supabase
+        .from('site_settings')
+        .upsert([{ key: 'categories_json', value: JSON.stringify(categories) }], {
+          onConflict: 'key'
+        });
+      setCatMsg('Beş hatin tomarkirin.');
+      setTimeout(() => setCatMsg(''), 3000);
+    } catch (err) {
+      setCatMsg('Çewtî: ' + err.message);
+    }
+  };
+
+  const effectiveExercises = gamesReset ? [] : exercises;
+  const exerciseUnits = [
+    ...new Set(effectiveExercises.map((ex) => ex.unit_title).filter(Boolean))
+  ];
+  const unitExercises = selectedUnit
+    ? effectiveExercises.filter((ex) => ex.unit_title === selectedUnit)
+    : [];
+  const currentExercise = unitExercises[currentExIndex] || null;
+
+  const stopAudio = () => {
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.pause();
+      audioPlayerRef.current.currentTime = 0;
+      audioPlayerRef.current = null;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsPlayingAudio(false);
+  };
+
+  const playCurrentAudio = (url) => {
+    stopAudio();
+    if (!url) return;
+    const audio = new Audio(url);
+    audioPlayerRef.current = audio;
+    setIsPlayingAudio(true);
+    audio.onended = () => setIsPlayingAudio(false);
+    audio.onerror = () => setIsPlayingAudio(false);
+    audio.play().catch(() => setIsPlayingAudio(false));
+  };
+
+  const startUnit = (unitTitle) => {
+    stopAudio();
+    setSelectedUnit(unitTitle);
+    setCurrentExIndex(0);
+    setSelectedOption('');
+    setBuiltWords([]);
+    setAnswerState(null);
+    setComboCount(0);
+    setHearts(5);
+    setUnitCompleted(false);
+  };
+
+  const exitUnit = () => {
+    stopAudio();
+    const wasZarok = selectedUnit && selectedUnit.toUpperCase().startsWith('ZAROK:');
+    setSelectedUnit(null);
+    setCurrentExIndex(0);
+    setSelectedOption('');
+    setBuiltWords([]);
+    setAnswerState(null);
+    setUnitCompleted(false);
+    if (wasZarok) {
+      setViewMode('student');
+      setSelectedCategory('zarok');
+    }
+  };
+
+  const handleToggleWordToken = (token) => {
+    setBuiltWords((prev) => [...prev, token]);
+  };
+
+  const handleRemoveBuiltWord = (idx) => {
+    setBuiltWords((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const persistProgress = async (nextXp, nextStreak, nextUnits) => {
+    try {
+      await supabase.from('site_settings').upsert(
+        [
+          { key: 'xp_points', value: String(nextXp) },
+          { key: 'streak_days', value: String(nextStreak) },
+          { key: 'completed_units_json', value: JSON.stringify(nextUnits) }
+        ],
         { onConflict: 'key' }
       );
-    setCatMsg('Beşa nû hat zêdekirin!');
-    setTimeout(() => setCatMsg(''), 3000);
+    } catch {}
   };
-  const handleDeleteCategory = async (slug) => {
-    if (categories.length <= 1) return;
-    const updated = categories.filter((c) => c.slug !== slug);
-    setCategories(updated);
-    if (selectedCategory === slug) setSelectedCategory('all');
-    await supabase
-      .from('site_settings')
-      .upsert(
-        { key: 'categories_json', value: JSON.stringify(updated) },
-        { onConflict: 'key' }
-      );
-    setCatMsg('Beş hat jêbirin.');
-    setTimeout(() => setCatMsg(''), 3000);
-  };
-  const handleSaveAllUiTexts = async (e) => {
-    e.preventDefault();
-    const langPrefix = `${selectedLang.toLowerCase()}_`;
-    const rows = Object.entries(ui).map(([k, v]) => ({
-      key: `${langPrefix}${k}`,
-      value: v
-    }));
-    if (selectedLang === 'KU') {
-      Object.entries(ui).forEach(([k, v]) => {
-        rows.push({ key: k, value: v });
+
+  const handleCheckAnswer = () => {
+    if (!currentExercise) return;
+    let candidate = '';
+    if (currentExercise.exercise_type === 'sentence') {
+      candidate = builtWords.join(' ').trim();
+    } else {
+      candidate = selectedOption.trim();
+    }
+    const isRight =
+      currentExercise.exercise_type === 'match' ||
+      candidate.toLowerCase() ===
+        String(currentExercise.correct_answer || '').trim().toLowerCase();
+
+    if (isRight) {
+      const nextCombo = comboCount + 1;
+      const earned = 15 + Math.min(nextCombo * 2, 10);
+      const nextXp = xpPoints + earned;
+      setComboCount(nextCombo);
+      setXpPoints(nextXp);
+      setAnswerState({
+        correct: true,
+        message: `${ui.learn_correct_msg} (+${earned} XP)`
+      });
+      persistProgress(nextXp, streakDays, completedUnits);
+    } else {
+      const nextHearts = Math.max(0, hearts - 1);
+      setComboCount(0);
+      setHearts(nextHearts);
+      setAnswerState({
+        correct: false,
+        message: `${ui.learn_wrong_prefix} ${currentExercise.correct_answer}`
       });
     }
-    const { error } = await supabase.from('site_settings').upsert(rows, { onConflict: 'key' });
-    setSettingsMsg(
-      error
-        ? 'Çewtî: ' + error.message
-        : `Hemû nivîsên malperê (${selectedLang}) bi serkeftî hatin tomarkirin!`
-    );
-    setTimeout(() => setSettingsMsg(''), 3500);
   };
-  const recordSearchHistory = (term) => {
-    const clean = term.trim();
-    if (!clean) return;
-    setSearchHistory((prev) => {
-      const next = [clean, ...prev.filter((t) => t.toLowerCase() !== clean.toLowerCase())].slice(0, 8);
-      try {
-        localStorage.setItem('kk_search_history', JSON.stringify(next));
-      } catch {
-        // ignore
-      }
-      return next;
+
+  const handleNextExercise = () => {
+    stopAudio();
+    setAnswerState(null);
+    setSelectedOption('');
+    setBuiltWords([]);
+    if (hearts <= 0) {
+      setUnitCompleted(true);
+      return;
+    }
+    if (currentExIndex + 1 < unitExercises.length) {
+      setCurrentExIndex((i) => i + 1);
+    } else {
+      const nextUnits =
+        selectedUnit && !completedUnits.includes(selectedUnit)
+          ? [...completedUnits, selectedUnit]
+          : completedUnits;
+      const nextStreak = streakDays + 1;
+      setCompletedUnits(nextUnits);
+      setStreakDays(nextStreak);
+      setUnitCompleted(true);
+      persistProgress(xpPoints, nextStreak, nextUnits);
+    }
+  };
+
+  const resetExForm = () => {
+    setEditingExId(null);
+    setExForm({
+      unit_title: '',
+      exercise_type: 'choice',
+      question_text: '',
+      options_raw: '',
+      correct_answer: '',
+      explanation: '',
+      image_url: '',
+      audio_url: ''
     });
   };
-  const toggleFavoriteWord = (word) => {
-    if (!word) return;
-    setFavoriteWords((prev) => {
-      const exists = prev.includes(word);
-      const next = exists ? prev.filter((w) => w !== word) : [word, ...prev];
-      try {
-        localStorage.setItem('kk_favorite_words', JSON.stringify(next));
-      } catch {
-        // ignore
+
+  const handleExImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingExImg(true);
+    try {
+      const ext = file.name.split('.').pop() || 'png';
+      const path = `exercises/img-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('materyal').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('materyal').getPublicUrl(path);
+      if (data?.publicUrl) setExForm((prev) => ({ ...prev, image_url: data.publicUrl }));
+    } catch (err) {
+      setExMsg('Wêne nehat barkirin: ' + err.message);
+    } finally {
+      setUploadingExImg(false);
+    }
+  };
+
+  const handleExAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingExAudio(true);
+    try {
+      const ext = file.name.split('.').pop() || 'mp3';
+      const path = `exercises/aud-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('materyal').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('materyal').getPublicUrl(path);
+      if (data?.publicUrl) setExForm((prev) => ({ ...prev, audio_url: data.publicUrl }));
+    } catch (err) {
+      setExMsg('Deng nehat barkirin: ' + err.message);
+    } finally {
+      setUploadingExAudio(false);
+    }
+  };
+
+  const handleSaveExercise = async (e) => {
+    e.preventDefault();
+    const optionsArray = exForm.options_raw
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const payload = {
+      unit_title: exForm.unit_title.trim(),
+      exercise_type: exForm.exercise_type,
+      question_text: exForm.question_text.trim(),
+      options: optionsArray,
+      correct_answer: exForm.correct_answer.trim(),
+      explanation: exForm.explanation.trim(),
+      image_url: exForm.image_url.trim(),
+      audio_url: exForm.audio_url.trim()
+    };
+    try {
+      if (editingExId) {
+        const { error } = await supabase
+          .from('kurmanci_exercises')
+          .update(payload)
+          .eq('id', editingExId);
+        if (error) throw error;
+        setExMsg('Pirs hat nûkirin.');
+      } else {
+        const { error } = await supabase.from('kurmanci_exercises').insert([payload]);
+        if (error) throw error;
+        setExMsg('Pirs hat zêdekirin.');
       }
-      return next;
+      resetExForm();
+      await fetchAllData();
+    } catch (err) {
+      setExMsg('Çewtî: ' + err.message);
+    }
+  };
+
+  const startEditingExercise = (ex) => {
+    setEditingExId(ex.id);
+    setExForm({
+      unit_title: ex.unit_title || '',
+      exercise_type: ex.exercise_type || 'choice',
+      question_text: ex.question_text || '',
+      options_raw: Array.isArray(ex.options) ? ex.options.join('\n') : '',
+      correct_answer: ex.correct_answer || '',
+      explanation: ex.explanation || '',
+      image_url: ex.image_url || '',
+      audio_url: ex.audio_url || ''
     });
   };
-  const getWordMeaningByLang = (item, lang = selectedLang) => {
+
+  const handleDeleteExercise = async (id) => {
+    try {
+      const { error } = await supabase.from('kurmanci_exercises').delete().eq('id', id);
+      if (error) throw error;
+      setExercises((prev) => prev.filter((item) => item.id !== id));
+      setExMsg('Pirs hat jêbirin.');
+    } catch (err) {
+      setExMsg('Jêbirin bi ser neket: ' + err.message);
+    }
+  };
+
+  const handleResetAllGames = async () => {
+    try {
+      await supabase.from('kurmanci_exercises').delete().neq('id', 0);
+      setExercises([]);
+      setGamesReset(true);
+      setSelectedUnit(null);
+      setXpPoints(0);
+      setStreakDays(0);
+      setCompletedUnits([]);
+      localStorage.setItem('kk_xp', '0');
+      localStorage.setItem('kk_streak', '0');
+      localStorage.setItem('kk_completed_units', '[]');
+      await persistProgress(0, 0, []);
+      setExMsg('Hemû lîstik û pêşketin hatin sifirkirin.');
+    } catch (err) {
+      setExMsg('Sifirkirin bi ser neket: ' + err.message);
+    }
+  };
+
+  const getWordMeaningByLang = (item, lang = 'KU') => {
     if (!item) return '';
-    const i18n = item.meanings_i18n || {};
-    if (i18n[lang]) return i18n[lang];
-    if (lang === 'TR' && item.meaning_tr) return item.meaning_tr;
-    if (lang === 'EN' && item.meaning_en) return item.meaning_en;
-    if (lang === 'KU' && item.meaning_ku) return item.meaning_ku;
+    if (item.meanings_i18n && item.meanings_i18n[lang]) {
+      return item.meanings_i18n[lang];
+    }
+    if (lang === 'TR') return item.meaning_tr || item.meaning_en || item.meaning_ku || '';
+    if (lang === 'EN') return item.meaning_en || item.meaning_tr || item.meaning_ku || '';
+    if (lang === 'KU') return item.meaning_ku || item.meaning_tr || item.meaning_en || '';
     return (
-      i18n.KU ||
-      i18n.TR ||
-      i18n.EN ||
-      item.meaning_ku ||
       item.meaning_tr ||
       item.meaning_en ||
-      Object.values(i18n).find(Boolean) ||
+      item.meaning_ku ||
+      (item.meanings_i18n ? Object.values(item.meanings_i18n).find(Boolean) : '') ||
       ''
     );
   };
-  const getWordExampleByLang = (item, lang = selectedLang) => {
+
+  const getWordExampleByLang = (item, lang = 'KU') => {
     if (!item) return '';
-    const exMap = item.examples_i18n || {};
-    return exMap[lang] || exMap.KU || exMap.EN || exMap.TR || item.example_sentence || '';
-  };
-  const playDictionaryPronunciation = (item) => {
-    if (!item) return;
-    if (item.audio_url) {
-      playCurrentAudio(item.audio_url);
-      return;
+    if (item.examples_i18n && item.examples_i18n[lang]) {
+      return item.examples_i18n[lang];
     }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(item.word);
-        utter.lang = selectedLang === 'TR' ? 'tr-TR' : selectedLang === 'EN' ? 'en-US' : 'ku';
-        window.speechSynthesis.speak(utter);
-      } catch {
-        // ignore speech errors
-      }
-    }
+    return item.example_sentence || '';
   };
-  const handleWordAudioUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingWordAudio(true);
-    const fileExt = file.name.split('.').pop();
-    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `dictionary_audio/${safeName}`;
-    const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
-    if (uploadError) {
-      setWordMsg('Barkirina dengî têk çû: ' + uploadError.message);
-    } else {
-      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
-      if (publicData?.publicUrl) {
-        setWordForm((prev) => ({ ...prev, audio_url: publicData.publicUrl }));
-        setWordMsg('Dengê telaffuzê hat barkirin!');
-      }
-    }
-    setUploadingWordAudio(false);
-    e.target.value = '';
-  };
-  const handleSaveWord = async (e) => {
-    e.preventDefault();
-    const activeMeaning = (
-      wordForm.meanings_i18n?.[selectedLang] ?? wordForm.meaning_tr ?? ''
-    ).trim();
-    if (!wordForm.word.trim() || !activeMeaning) return;
-    const activeExample = (
-      wordForm.examples_i18n?.[selectedLang] ?? wordForm.example_sentence ?? ''
-    ).trim();
-    const updatedMeanings = {
-      ...(wordForm.meanings_i18n || {}),
-      [selectedLang]: activeMeaning
-    };
-    const updatedExamples = {
-      ...(wordForm.examples_i18n || {}),
-      ...(activeExample ? { [selectedLang]: activeExample } : {})
-    };
-    const payload = {
-      word: wordForm.word.trim(),
-      part_of_speech: wordForm.part_of_speech,
-      meaning_tr: selectedLang === 'TR' ? activeMeaning : (wordForm.meaning_tr || '').trim(),
-      meaning_en: selectedLang === 'EN' ? activeMeaning : (wordForm.meaning_en || '').trim(),
-      meaning_ku: selectedLang === 'KU' ? activeMeaning : (wordForm.meaning_ku || '').trim(),
-      example_sentence: activeExample,
-      audio_url: (wordForm.audio_url || '').trim(),
-      meanings_i18n: updatedMeanings,
-      examples_i18n: updatedExamples
-    };
-    if (editingWordId) {
-      const { error } = await supabase.from('dictionary').update(payload).eq('id', editingWordId);
-      if (error) {
-        setWordMsg('Çewtî: ' + error.message);
-      } else {
-        setWordMsg('Peyv bi serkeftî hat nûkirin!');
-        resetWordForm();
-        fetchAllData();
-      }
-    } else {
-      const { error } = await supabase.from('dictionary').insert([payload]);
-      if (error) {
-        setWordMsg('Çewtî: ' + error.message);
-      } else {
-        setWordMsg('Peyva nû li ferhengê hat zêdekirin!');
-        resetWordForm();
-        fetchAllData();
-      }
-    }
-    setTimeout(() => setWordMsg(''), 3500);
-  };
-  const startEditingWord = (item) => {
-    setEditingWordId(item.id);
-    setWordForm({
-      word: item.word || '',
-      part_of_speech: item.part_of_speech || 'navdêr',
-      meaning_tr: item.meaning_tr || '',
-      meaning_en: item.meaning_en || '',
-      meaning_ku: item.meaning_ku || '',
-      example_sentence: item.example_sentence || '',
-      audio_url: item.audio_url || '',
-      meanings_i18n: {
-        KU: item.meanings_i18n?.KU || item.meaning_ku || '',
-        ZZA: item.meanings_i18n?.ZZA || '',
-        CKB: item.meanings_i18n?.CKB || '',
-        TR: item.meanings_i18n?.TR || item.meaning_tr || '',
-        EN: item.meanings_i18n?.EN || item.meaning_en || '',
-        DE: item.meanings_i18n?.DE || '',
-        FR: item.meanings_i18n?.FR || '',
-        IT: item.meanings_i18n?.IT || ''
-      },
-      examples_i18n: {
-        KU: item.examples_i18n?.KU || item.example_sentence || '',
-        ZZA: item.examples_i18n?.ZZA || '',
-        CKB: item.examples_i18n?.CKB || '',
-        TR: item.examples_i18n?.TR || '',
-        EN: item.examples_i18n?.EN || '',
-        DE: item.examples_i18n?.DE || '',
-        FR: item.examples_i18n?.FR || '',
-        IT: item.examples_i18n?.IT || ''
+
+  const combinedDictionary = (() => {
+    const map = new Map();
+    BUILTIN_DICTIONARY.forEach((b) => {
+      map.set(normalizeKurdish(b.word), { ...b, sourceType: b.sourceType || 'builtin' });
+    });
+    dictionaryWords.forEach((d) => {
+      const key = normalizeKurdish(d.word);
+      const prev = map.get(key) || {};
+      map.set(key, {
+        ...prev,
+        ...d,
+        meanings_i18n: {
+          ...(prev.meanings_i18n || {}),
+          ...(d.meanings_i18n || {})
+        },
+        examples_i18n: {
+          ...(prev.examples_i18n || {}),
+          ...(d.examples_i18n || {})
+        },
+        sourceType: 'db'
+      });
+    });
+    wiktionaryResults.forEach((w) => {
+      const key = normalizeKurdish(w.word);
+      if (!map.has(key)) {
+        map.set(key, { ...w, sourceType: 'wiktionary' });
       }
     });
+    return Array.from(map.values()).sort((a, b) =>
+      String(a.word || '').localeCompare(String(b.word || ''), 'ku')
+    );
+  })();
+
+  const filteredDictionary = combinedDictionary.filter((item) => {
+    const q = normalizeKurdish(ferhengQuery);
+    if (q) {
+      const wordMatch = normalizeKurdish(item.word || '').includes(q);
+      const meaningAll = [
+        item.meaning_tr,
+        item.meaning_en,
+        item.meaning_ku,
+        ...Object.values(item.meanings_i18n || {})
+      ]
+        .filter(Boolean)
+        .join(' ');
+      const meaningMatch = normalizeKurdish(meaningAll).includes(q);
+      return wordMatch || meaningMatch;
+    }
+    if (selectedLetter && selectedLetter !== 'all') {
+      const firstChar = normalizeKurdish((item.word || '').trim().charAt(0));
+      return firstChar === normalizeKurdish(selectedLetter);
+    }
+    return true;
+  });
+
+  useEffect(() => {
+    const trimmed = ferhengQuery.trim();
+    if (!trimmed || trimmed.length < 2) {
+      setWiktionaryResults([]);
+      setSearchingDict(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSearchingDict(true);
+    const timer = setTimeout(async () => {
+      try {
+        const entry = await fetchWiktionaryEntry(trimmed, selectedLang);
+        if (!cancelled) {
+          setWiktionaryResults(entry ? [entry] : []);
+        }
+      } catch {
+        if (!cancelled) setWiktionaryResults([]);
+      } finally {
+        if (!cancelled) setSearchingDict(false);
+      }
+    }, 300);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [ferhengQuery, selectedLang]);
+
+  const handleDictionarySearchSubmit = async (e) => {
+    e.preventDefault();
+    const clean = ferhengQuery.trim();
+    if (!clean) return;
+    setSearchHistory((prev) => [clean, ...prev.filter((t) => t !== clean)].slice(0, 8));
+    setSearchingDict(true);
+    try {
+      const entry = await fetchWiktionaryEntry(clean, selectedLang);
+      if (entry) {
+        setWiktionaryResults((prev) => {
+          const filtered = prev.filter(
+            (item) => normalizeKurdish(item.word) !== normalizeKurdish(entry.word)
+          );
+          return [entry, ...filtered];
+        });
+      }
+    } finally {
+      setSearchingDict(false);
+    }
   };
+
+  const toggleFavoriteWord = (word) => {
+    setFavoriteWords((prev) =>
+      prev.includes(word) ? prev.filter((w) => w !== word) : [word, ...prev]
+    );
+  };
+
+  const playDictionaryPronunciation = (item) => {
+    stopAudio();
+    if (item?.audio_url) {
+      const audio = new Audio(item.audio_url);
+      audioPlayerRef.current = audio;
+      audio.play().catch(() => {});
+      return;
+    }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window && item?.word) {
+      const utter = new SpeechSynthesisUtterance(item.word);
+      utter.lang = 'ku';
+      window.speechSynthesis.speak(utter);
+    }
+  };
+
   const resetWordForm = () => {
     setEditingWordId(null);
     setWordForm({
@@ -2382,771 +2848,140 @@ export default function App() {
         FR: '',
         IT: ''
       },
-      examples_i18n: {
-        KU: '',
+      examples_i18n: {}
+    });
+  };
+
+  const handleWordAudioUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingWordAudio(true);
+    try {
+      const ext = file.name.split('.').pop() || 'mp3';
+      const path = `dictionary/aud-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('materyal').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data } = supabase.storage.from('materyal').getPublicUrl(path);
+      if (data?.publicUrl) setWordForm((prev) => ({ ...prev, audio_url: data.publicUrl }));
+    } catch (err) {
+      setWordMsg('Deng nehat barkirin: ' + err.message);
+    } finally {
+      setUploadingWordAudio(false);
+    }
+  };
+
+  const handleSaveWord = async (e) => {
+    e.preventDefault();
+    const activeMeaning =
+      wordForm.meanings_i18n?.[selectedLang] ||
+      wordForm.meaning_tr ||
+      wordForm.meaning_en ||
+      wordForm.meaning_ku ||
+      '';
+    const payload = {
+      word: wordForm.word.trim(),
+      part_of_speech: wordForm.part_of_speech.trim() || 'navdêr',
+      meaning_tr: wordForm.meanings_i18n?.TR || wordForm.meaning_tr || activeMeaning,
+      meaning_en: wordForm.meanings_i18n?.EN || wordForm.meaning_en || activeMeaning,
+      meaning_ku: wordForm.meanings_i18n?.KU || wordForm.meaning_ku || activeMeaning,
+      example_sentence:
+        wordForm.examples_i18n?.[selectedLang] || wordForm.example_sentence || '',
+      audio_url: wordForm.audio_url || '',
+      meanings_i18n: {
+        ...(wordForm.meanings_i18n || {}),
+        [selectedLang]: activeMeaning
+      },
+      examples_i18n: wordForm.examples_i18n || {}
+    };
+    try {
+      if (editingWordId) {
+        const { error } = await supabase
+          .from('dictionary')
+          .update(payload)
+          .eq('id', editingWordId);
+        if (error) throw error;
+        setWordMsg('Peyv hat nûkirin.');
+      } else {
+        const { error } = await supabase.from('dictionary').insert([payload]);
+        if (error) throw error;
+        setWordMsg('Peyv hat zêdekirin.');
+      }
+      resetWordForm();
+      await fetchAllData();
+    } catch (err) {
+      setWordMsg('Çewtî: ' + err.message);
+    }
+  };
+
+  const startEditingWord = (wItem) => {
+    setEditingWordId(wItem.id);
+    setWordForm({
+      word: wItem.word || '',
+      part_of_speech: wItem.part_of_speech || 'navdêr',
+      meaning_tr: wItem.meaning_tr || '',
+      meaning_en: wItem.meaning_en || '',
+      meaning_ku: wItem.meaning_ku || '',
+      example_sentence: wItem.example_sentence || '',
+      audio_url: wItem.audio_url || '',
+      meanings_i18n: {
+        KU: wItem.meaning_ku || '',
         ZZA: '',
         CKB: '',
-        TR: '',
-        EN: '',
+        TR: wItem.meaning_tr || '',
+        EN: wItem.meaning_en || '',
         DE: '',
         FR: '',
-        IT: ''
-      }
+        IT: '',
+        ...(wItem.meanings_i18n || {})
+      },
+      examples_i18n: wItem.examples_i18n || {}
     });
   };
+
   const handleDeleteWord = async (id) => {
-    if (!window.confirm('Tu piştrast î ku dixwazî vê peyvê jê bibî?')) return;
-    const { error } = await supabase.from('dictionary').delete().eq('id', id);
-    if (!error) {
-      if (editingWordId === id) resetWordForm();
-      fetchAllData();
-    }
-  };
-  const handleBulkImportDictionary = async () => {
-    setSyncingProgress('Peyvên bingehîn tên tomarkirin...');
-    let added = 0;
-    const existingSet = new Set(
-      dictionaryWords.map((w) => normalizeKurdish(w.word || ''))
-    );
-    for (const entry of BUILTIN_DICTIONARY) {
-      const key = normalizeKurdish(entry.word);
-      if (existingSet.has(key)) continue;
-      const { error } = await supabase.from('dictionary').insert([
-        {
-          word: entry.word,
-          part_of_speech: entry.part_of_speech,
-          meaning_tr: entry.meaning_tr,
-          meaning_en: entry.meaning_en,
-          meaning_ku: entry.meaning_ku,
-          example_sentence: entry.example_sentence,
-          meanings_i18n: entry.meanings_i18n,
-          examples_i18n: entry.examples_i18n
-        }
-      ]);
-      if (!error) {
-        added += 1;
-        existingSet.add(key);
-      }
-    }
-    setSyncingProgress('');
-    setWordMsg(`${added} peyvên nû li ferhengê hatin zêdekirin.`);
-    fetchAllData();
-    setTimeout(() => setWordMsg(''), 4000);
-  };
-  useEffect(() => {
-    const trimmed = ferhengQuery.trim();
-    if (!trimmed || trimmed.length < 2) {
-      setWiktionaryMatches([]);
-      setSearchingDict(false);
-      return;
-    }
-    let cancelled = false;
-    setSearchingDict(true);
-    const timer = setTimeout(async () => {
-      try {
-        const entry = await fetchWiktionaryEntry(trimmed, selectedLang);
-        if (cancelled) return;
-        if (entry) {
-          setWiktionaryMatches([entry]);
-        } else {
-          setWiktionaryMatches([]);
-        }
-      } catch {
-        if (!cancelled) setWiktionaryMatches([]);
-      } finally {
-        if (!cancelled) setSearchingDict(false);
-      }
-    }, 250);
-    return () => {
-      cancelled = true;
-      clearTimeout(timer);
-    };
-  }, [ferhengQuery, selectedLang]);
-  const handleDictionarySearchSubmit = (e) => {
-    e.preventDefault();
-    if (ferhengQuery.trim()) {
-      recordSearchHistory(ferhengQuery.trim());
-    }
-  };
-  const effectiveExercises = (() => {
-    const base = gamesReset ? exercises : [...exercises];
-    return [...base].sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
-  })();
-  const combinedDictionary = (() => {
-    const map = new Map();
-    BUILTIN_DICTIONARY.forEach((item) => {
-      const key = normalizeKurdish(item.word || '');
-      if (key) {
-        map.set(key, { ...item, sourceType: 'builtin' });
-      }
-    });
-    dictionaryWords.forEach((item) => {
-      const key = normalizeKurdish(item.word || '');
-      if (key) {
-        const prev = map.get(key);
-        map.set(key, {
-          ...(prev || {}),
-          ...item,
-          meanings_i18n: {
-            ...(prev?.meanings_i18n || {}),
-            ...(item.meanings_i18n || {})
-          },
-          examples_i18n: {
-            ...(prev?.examples_i18n || {}),
-            ...(item.examples_i18n || {})
-          },
-          sourceType: 'db'
-        });
-      }
-    });
-    wiktionaryMatches.forEach((item) => {
-      const key = normalizeKurdish(item.word || '');
-      if (key) {
-        const existing = map.get(key);
-        if (existing) {
-          map.set(key, {
-            ...existing,
-            meanings_i18n: {
-              ...(item.meanings_i18n || {}),
-              ...(existing.meanings_i18n || {})
-            },
-            examples_i18n: {
-              ...(item.examples_i18n || {}),
-              ...(existing.examples_i18n || {})
-            }
-          });
-        } else {
-          map.set(key, { ...item, sourceType: 'wiktionary' });
-        }
-      }
-    });
-    return Array.from(map.values());
-  })();
-  const filteredDictionary = (() => {
-    const rawQ = ferhengQuery.trim();
-    const normQ = normalizeKurdish(rawQ);
-    if (!normQ) {
-      return combinedDictionary
-        .filter((item) => {
-          if (selectedLetter === 'all') return true;
-          const firstChar = (item.word || '').trim().charAt(0).toLocaleUpperCase('tr');
-          return normalizeKurdish(firstChar) === normalizeKurdish(selectedLetter);
-        })
-        .sort((a, b) =>
-          (a.word || '').localeCompare(b.word || '', ['ku', 'tr', 'en'], {
-            sensitivity: 'base'
-          })
-        );
-    }
-    return combinedDictionary
-      .map((item) => {
-        const wNorm = normalizeKurdish(item.word || '');
-        const trNorm = normalizeKurdish(item.meaning_tr || '');
-        const enNorm = normalizeKurdish(item.meaning_en || '');
-        const kuNorm = normalizeKurdish(item.meaning_ku || '');
-        const activeLangMeaningNorm = normalizeKurdish(getWordMeaningByLang(item, selectedLang));
-        const allI18nValues = Object.values(item.meanings_i18n || {})
-          .map((v) => normalizeKurdish(String(v || '')))
-          .filter(Boolean);
-        let score = 0;
-        if (wNorm === normQ) score = 100;
-        else if (activeLangMeaningNorm === normQ) score = 96;
-        else if (trNorm.split(/[,;/]/).map((s) => s.trim()).includes(normQ)) score = 95;
-        else if (enNorm.split(/[,;/]/).map((s) => s.trim()).includes(normQ)) score = 95;
-        else if (allI18nValues.includes(normQ)) score = 92;
-        else if (wNorm.startsWith(normQ)) score = 80;
-        else if (activeLangMeaningNorm.startsWith(normQ)) score = 78;
-        else if (trNorm.startsWith(normQ) || enNorm.startsWith(normQ)) score = 75;
-        else if (allI18nValues.some((v) => v.startsWith(normQ))) score = 72;
-        else if (wNorm.includes(normQ)) score = 60;
-        else if (activeLangMeaningNorm.includes(normQ)) score = 55;
-        else if (trNorm.includes(normQ) || enNorm.includes(normQ)) score = 50;
-        else if (allI18nValues.some((v) => v.includes(normQ))) score = 45;
-        else if (kuNorm.includes(normQ)) score = 35;
-        return { ...item, _score: score };
-      })
-      .filter((item) => item._score > 0)
-      .sort(
-        (a, b) =>
-          b._score - a._score ||
-          (a.word || '').localeCompare(b.word || '', ['ku', 'tr', 'en'], {
-            sensitivity: 'base'
-          })
-      );
-  })();
-  const filteredLessons = lessons.filter((item) => {
-    const matchesCategory =
-      selectedCategory === 'all' || item.category_slug === selectedCategory;
-    const matchesLevel = selectedLevel === 'all' || item.level === selectedLevel;
-    const matchesMedia = selectedMedia === 'all' || item.media_type === selectedMedia;
-    const q = searchQuery.trim().toLowerCase();
-    const matchesSearch =
-      !q ||
-      (item.title && item.title.toLowerCase().includes(q)) ||
-      (item.description && item.description.toLowerCase().includes(q)) ||
-      (item.teacher_guide && item.teacher_guide.toLowerCase().includes(q));
-    return matchesCategory && matchesLevel && matchesMedia && matchesSearch;
-  });
-  const handleOpenLesson = (lesson) => {
-    setActiveLesson(lesson);
-    setLessonTab('content');
-    setMediaLoadError('');
-  };
-  const renderLessonMediaViewer = (lesson) => {
-    if (!lesson?.media_url) {
-      return (
-        <div className="p-8 text-center bg-slate-100 rounded-xl text-slate-600">
-          Vê materyalê hîn lînkeke medyayê tune.
-        </div>
-      );
-    }
-    const ytEmbed = getYouTubeEmbedUrl(lesson.media_url);
-    if (ytEmbed || lesson.media_type === 'video') {
-      if (ytEmbed) {
-        return (
-          <div className="aspect-video w-full rounded-xl overflow-hidden bg-black">
-            <iframe
-              src={ytEmbed}
-              title={lesson.title}
-              className="w-full h-full"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
-            />
-          </div>
-        );
-      }
-      return (
-        <div className="space-y-3">
-          <video
-            src={lesson.media_url}
-            controls
-            onError={() =>
-              setMediaLoadError('Vîdyo nehat barkirin. Lînkê kontrol bikin an di pencereya nû de vekin.')
-            }
-            className="w-full max-h-[480px] rounded-xl bg-black"
-          />
-          {mediaLoadError && (
-            <p className="text-sm text-red-600 font-medium">{mediaLoadError}</p>
-          )}
-        </div>
-      );
-    }
-    if (lesson.media_type === 'audio') {
-      return (
-        <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
-          <p className="text-sm font-medium text-slate-700">Dengê Dersê:</p>
-          <audio
-            src={lesson.media_url}
-            controls
-            onError={() =>
-              setMediaLoadError('Pelê dengî nehat barkirin.')
-            }
-            className="w-full"
-          />
-          {mediaLoadError && (
-            <p className="text-sm text-red-600 font-medium">{mediaLoadError}</p>
-          )}
-        </div>
-      );
-    }
-    return (
-      <div className="space-y-4">
-        <iframe
-          src={lesson.media_url}
-          title={lesson.title}
-          className="w-full h-[520px] rounded-xl border border-slate-200 bg-white"
-        />
-        <div className="flex justify-end">
-          <a
-            href={lesson.media_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-red-700 hover:text-red-800"
-          >
-            <span>Di Pencereya Nû de Veke</span>
-            <ExternalLink className="w-4 h-4" />
-          </a>
-        </div>
-      </div>
-    );
-  };
-  const getCategoryName = (slug) => {
-    const found = categories.find((c) => c.slug === slug);
-    return found ? found.name : slug;
-  };
-  const exerciseUnits = [...new Set(effectiveExercises.map((ex) => ex.unit_title).filter(Boolean))];
-  const unitExercises = selectedUnit
-    ? effectiveExercises.filter((ex) => ex.unit_title === selectedUnit)
-    : [];
-  const currentExercise = unitExercises[currentExIndex] || null;
-  const playCurrentAudio = (url) => {
-    const targetUrl = url || currentExercise?.audio_url;
-    if (!targetUrl) return;
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.pause();
-    }
-    const audio = new Audio(targetUrl);
-    audioPlayerRef.current = audio;
-    setIsPlayingAudio(true);
-    audio.onended = () => setIsPlayingAudio(false);
-    audio.onerror = () => setIsPlayingAudio(false);
-    audio.play().catch(() => setIsPlayingAudio(false));
-  };
-  const stopAudio = () => {
-    if (audioPlayerRef.current) {
-      audioPlayerRef.current.pause();
-      audioPlayerRef.current.currentTime = 0;
-    }
-    setIsPlayingAudio(false);
-  };
-  const startUnit = (unitTitle) => {
-    stopAudio();
-    setSelectedUnit(unitTitle);
-    setCurrentExIndex(0);
-    setSelectedOption('');
-    setBuiltWords([]);
-    setAnswerState(null);
-    setUnitCompleted(false);
-    setHearts(5);
-  };
-  const exitUnit = () => {
-    const wasZarokUnit =
-      typeof selectedUnit === 'string' && selectedUnit.trim().toUpperCase().startsWith('ZAROK:');
-    stopAudio();
-    setSelectedUnit(null);
-    setCurrentExIndex(0);
-    setSelectedOption('');
-    setBuiltWords([]);
-    setAnswerState(null);
-    setUnitCompleted(false);
-    if (wasZarokUnit) {
-      setViewMode('student');
-      setSelectedCategory('zarok');
-    }
-  };
-  const handleToggleWordToken = (word) => {
-    if (answerState) return;
-    setBuiltWords((prev) => [...prev, word]);
-  };
-  const handleRemoveBuiltWord = (idxToRemove) => {
-    if (answerState) return;
-    setBuiltWords((prev) => prev.filter((_, idx) => idx !== idxToRemove));
-  };
-  const handleCheckAnswer = () => {
-    if (!currentExercise || answerState) return;
-    let isCorrect = false;
-    if (currentExercise.exercise_type === 'sentence') {
-      const constructed = builtWords.join(' ').trim();
-      isCorrect =
-        normalizeKurdish(constructed) === normalizeKurdish(currentExercise.correct_answer || '');
-    } else if (currentExercise.exercise_type === 'match') {
-      isCorrect = true;
-    } else {
-      isCorrect =
-        normalizeKurdish(selectedOption) === normalizeKurdish(currentExercise.correct_answer || '');
-    }
-    if (isCorrect) {
-      const nextCombo = comboCount + 1;
-      const earnedXp = 15 + Math.min(nextCombo - 1, 5) * 5;
-      const nextXp = xpPoints + earnedXp;
-      const nextStreak = streakDays === 0 ? 1 : streakDays;
-      setComboCount(nextCombo);
-      setXpPoints(nextXp);
-      setStreakDays(nextStreak);
-      setAnswerState({
-        correct: true,
-        message: `${ui.learn_correct_msg} (+${earnedXp} XP)`
-      });
-      persistProgressSnapshot(nextXp, nextStreak, completedUnits);
-    } else {
-      const nextHearts = Math.max(0, hearts - 1);
-      setComboCount(0);
-      setHearts(nextHearts);
-      setAnswerState({
-        correct: false,
-        message: `${ui.learn_wrong_prefix} ${currentExercise.correct_answer}`
-      });
-      persistProgressSnapshot(xpPoints, streakDays, completedUnits);
-    }
-  };
-  const handleNextExercise = () => {
-    stopAudio();
-    setAnswerState(null);
-    setSelectedOption('');
-    setBuiltWords([]);
-    if (hearts <= 0) {
-      setUnitCompleted(true);
-      return;
-    }
-    if (currentExIndex + 1 < unitExercises.length) {
-      setCurrentExIndex((prev) => prev + 1);
-    } else {
-      setUnitCompleted(true);
-      const nextXp = xpPoints + 25;
-      const nextStreak = streakDays === 0 ? 1 : streakDays;
-      const nextUnits =
-        selectedUnit && !completedUnits.includes(selectedUnit)
-          ? [...completedUnits, selectedUnit]
-          : completedUnits;
-      setXpPoints(nextXp);
-      setStreakDays(nextStreak);
-      setCompletedUnits(nextUnits);
-      persistProgressSnapshot(nextXp, nextStreak, nextUnits);
-    }
-  };
-  const handleExImageUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingExImg(true);
-    const fileExt = file.name.split('.').pop();
-    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `exercises/${safeName}`;
-    const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
-    if (uploadError) {
-      setExMsg('Barkirina wêneyî têk çû: ' + uploadError.message);
-    } else {
-      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
-      if (publicData?.publicUrl) {
-        setExForm((prev) => ({ ...prev, image_url: publicData.publicUrl }));
-        setExMsg('Wêneyê pirsê bi serkeftî hat barkirin!');
-      }
-    }
-    setUploadingExImg(false);
-    e.target.value = '';
-  };
-  const handleExAudioUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploadingExAudio(true);
-    const fileExt = file.name.split('.').pop();
-    const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-    const filePath = `exercises/audio/${safeName}`;
-    const { error: uploadError } = await supabase.storage.from('materyal').upload(filePath, file);
-    if (uploadError) {
-      setExMsg('Barkirina dengî têk çû: ' + uploadError.message);
-    } else {
-      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
-      if (publicData?.publicUrl) {
-        setExForm((prev) => ({ ...prev, audio_url: publicData.publicUrl }));
-        setExMsg('Dengê pirsê bi serkeftî hat barkirin!');
-      }
-    }
-    setUploadingExAudio(false);
-    e.target.value = '';
-  };
-  const handleTriggerInlinePhotoUpload = (e, target) => {
-    e.stopPropagation();
-    if (!isAdmin || !inlinePhotoInputRef.current) return;
-    setInlinePhotoTarget(target);
-    inlinePhotoInputRef.current.value = '';
-    inlinePhotoInputRef.current.click();
-  };
-  const handleSaveWordImage = (e, wordItem) => {
-    handleTriggerInlinePhotoUpload(e, {
-      wordId: wordItem.id,
-      wordLabel: wordItem.word,
-      mode: 'alfabe_word'
-    });
-  };
-  const handleCreateAlfabeRound = async (e) => {
-    e.preventDefault();
-    const wordLines = alfabeRoundForm.wordsText
-      .split(/\n|,/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 4);
-
-    if (wordLines.length !== 4) {
-      setExMsg('Ji kerema xwe tam 4 peyv binivîse.');
-      return;
-    }
-
-    const imageLines = alfabeRoundForm.imagesText
-      .split(/\n|,/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 4);
-
-    const newEntries = wordLines.map((w, idx) => {
-      const cleanChar = w.trim().charAt(0).toLocaleUpperCase('tr') || 'A';
-      return {
-        id: `alf-custom-${Date.now()}-${idx}`,
-        word: w,
-        letter: cleanChar,
-        image_url: imageLines[idx] || ''
-      };
-    });
-
-    const merged = [...newEntries, ...alfabeWords];
-    setAlfabeWords(merged);
     try {
-      localStorage.setItem('kk_alfabe_words', JSON.stringify(merged));
-    } catch {
-      // ignore storage errors
-    }
-
-    await supabase
-      .from('site_settings')
-      .upsert(
-        { key: 'alfabe_words_json', value: JSON.stringify(merged) },
-        { onConflict: 'key' }
-      );
-
-    if (alfabeRoundForm.roundTitle.trim()) {
-      const unitLabel = alfabeRoundForm.roundTitle.trim();
-      const exRows = newEntries.map((entry, idx) => ({
-        unit_title: unitLabel,
-        exercise_type: 'image',
-        question_text: `Wêneyê "${entry.word}" hilbijêre`,
-        options: newEntries.map((x) => x.word),
-        correct_answer: entry.word,
-        explanation: `${entry.letter} — ${entry.word}`,
-        image_url: entry.image_url,
-        audio_url: '',
-        sort_order: exercises.length + idx + 1
-      }));
-      const { error } = await supabase.from('kurmanci_exercises').insert(exRows);
-      if (!error) {
-        fetchAllData();
-      }
-    }
-
-    setAlfabeRoundForm({ roundTitle: '', wordsText: '', imagesText: '' });
-    setExMsg('Lîstika nû ya 4 peyv û 4 wêneyan hat zêdekirin!');
-  };
-  const handleInlinePhotoFileSelected = async (e) => {
-    const file = e.target.files?.[0];
-    const target = inlinePhotoTarget;
-    setInlinePhotoTarget(null);
-    if (!file || !target || !isAdmin) return;
-    setInlinePhotoSaving(true);
-    setStatusMsg({ type: '', text: '' });
-    setExMsg('');
-    try {
-      const fileExt = file.name.split('.').pop() || 'jpg';
-      const safeName = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-      const folder =
-        target.mode === 'question'
-          ? 'exercises'
-          : target.mode === 'alfabe_word'
-          ? 'alfabe'
-          : 'thumbnails';
-      const filePath = `${folder}/${safeName}`;
-      const { error: uploadError } = await supabase.storage
-        .from('materyal')
-        .upload(filePath, file);
-      if (uploadError) {
-        throw new Error(uploadError.message);
-      }
-      const { data: publicData } = supabase.storage.from('materyal').getPublicUrl(filePath);
-      const newUrl = publicData?.publicUrl;
-      if (!newUrl) {
-        throw new Error('URL-ya giştî ya wêneyî nehat wergirtin.');
-      }
-      if (target.mode === 'question' && target.exerciseId) {
-        const { error: updateErr } = await supabase
-          .from('kurmanci_exercises')
-          .update({ image_url: newUrl })
-          .eq('id', target.exerciseId);
-        if (updateErr) throw new Error(updateErr.message);
-        setExercises((prev) =>
-          prev.map((item) =>
-            item.id === target.exerciseId ? { ...item, image_url: newUrl } : item
-          )
-        );
-        setBrokenExImages((prev) => {
-          const copy = { ...prev };
-          delete copy[target.exerciseId];
-          return copy;
-        });
-        if (editingExId === target.exerciseId) {
-          setExForm((prev) => ({ ...prev, image_url: newUrl }));
-        }
-        setExMsg('Wêneyê lîstikê bi serkeftî hat guhertin!');
-      } else if (target.mode === 'alfabe_word' && target.wordId) {
-        const updatedWords = alfabeWords.map((w) =>
-          w.id === target.wordId ? { ...w, image_url: newUrl } : w
-        );
-        setAlfabeWords(updatedWords);
-        try {
-          localStorage.setItem('kk_alfabe_words', JSON.stringify(updatedWords));
-        } catch {
-          // ignore storage errors
-        }
-        await supabase
-          .from('site_settings')
-          .upsert(
-            { key: 'alfabe_words_json', value: JSON.stringify(updatedWords) },
-            { onConflict: 'key' }
-          );
-        setExMsg(`"${target.wordLabel || ''}" ji bo wêne bi serkeftî hat barkirin!`);
-      } else if (target.mode === 'lesson' && target.lessonId) {
-        const { error: updateErr } = await supabase
-          .from('lessons')
-          .update({ thumbnail_url: newUrl })
-          .eq('id', target.lessonId);
-        if (updateErr) throw new Error(updateErr.message);
-        setLessons((prev) =>
-          prev.map((item) =>
-            item.id === target.lessonId ? { ...item, thumbnail_url: newUrl } : item
-          )
-        );
-        setBrokenThumbs((prev) => {
-          const copy = { ...prev };
-          delete copy[target.lessonId];
-          return copy;
-        });
-        if (activeLesson?.id === target.lessonId) {
-          setActiveLesson((prev) => (prev ? { ...prev, thumbnail_url: newUrl } : prev));
-        }
-        if (editingId === target.lessonId) {
-          setFormData((prev) => ({ ...prev, thumbnail_url: newUrl }));
-        }
-        setStatusMsg({ type: 'success', text: 'Wêneyê materyalê bi serkeftî hat guhertin!' });
-      }
+      const { error } = await supabase.from('dictionary').delete().eq('id', id);
+      if (error) throw error;
+      setDictionaryWords((prev) => prev.filter((w) => w.id !== id));
+      setWordMsg('Peyv hat jêbirin.');
     } catch (err) {
-      const errText = 'Guhertina wêneyî têk çû: ' + (err?.message || 'Çewtiya nenas');
-      if (target.mode === 'question' || target.mode === 'alfabe_word') {
-        setExMsg(errText);
-      } else {
-        setStatusMsg({ type: 'error', text: errText });
-      }
+      setWordMsg('Jêbirin bi ser neket: ' + err.message);
+    }
+  };
+
+  const handleBulkImportDictionary = async () => {
+    setSyncingProgress('Peyvên bingehîn tên barkirin...');
+    try {
+      const rows = BUILTIN_DICTIONARY.map(({ id, sourceType, ...rest }) => rest);
+      const { error } = await supabase.from('dictionary').insert(rows);
+      if (error) throw error;
+      setWordMsg(`${rows.length} peyvên bingehîn hatin barkirin.`);
+      await fetchAllData();
+    } catch (err) {
+      setWordMsg('Barkirin bi ser neket: ' + err.message);
     } finally {
-      setInlinePhotoSaving(false);
-      e.target.value = '';
+      setSyncingProgress('');
     }
   };
-  const handleSaveExercise = async (e) => {
+
+  const handleSaveAllUiTexts = async (e) => {
     e.preventDefault();
-    if (!exForm.unit_title.trim() || !exForm.question_text.trim() || !exForm.correct_answer.trim()) {
-      return;
-    }
-    const parsedOptions = exForm.options_raw
-      .split(/\n|\|/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    const payload = {
-      unit_title: exForm.unit_title.trim(),
-      exercise_type: exForm.exercise_type,
-      question_text: exForm.question_text.trim(),
-      options:
-        parsedOptions.length > 0
-          ? parsedOptions
-          : [exForm.correct_answer.trim()],
-      correct_answer: exForm.correct_answer.trim(),
-      explanation: exForm.explanation.trim(),
-      image_url: exForm.image_url.trim(),
-      audio_url: exForm.audio_url.trim(),
-      sort_order: editingExId
-        ? undefined
-        : exercises.length > 0
-        ? Math.max(...exercises.map((x) => x.sort_order || 0)) + 1
-        : 1
-    };
-    if (payload.sort_order === undefined) {
-      delete payload.sort_order;
-    }
-    if (editingExId) {
-      const { error } = await supabase
-        .from('kurmanci_exercises')
-        .update(payload)
-        .eq('id', editingExId);
-      if (error) {
-        setExMsg('Çewtî: ' + error.message);
-      } else {
-        setGamesReset(false);
-        await supabase
-          .from('site_settings')
-          .upsert({ key: 'games_reset', value: 'false' }, { onConflict: 'key' });
-        setExMsg('Lîstik bi serkeftî hat nûkirin!');
-        resetExForm();
-        fetchAllData();
-      }
-    } else {
-      const { error } = await supabase.from('kurmanci_exercises').insert([payload]);
-      if (error) {
-        setExMsg('Çewtî: ' + error.message);
-      } else {
-        setGamesReset(false);
-        await supabase
-          .from('site_settings')
-          .upsert({ key: 'games_reset', value: 'false' }, { onConflict: 'key' });
-        setExMsg('Lîstika nû hat zêdekirin!');
-        resetExForm();
-        fetchAllData();
-      }
-    }
-    setTimeout(() => setExMsg(''), 3500);
-  };
-  const startEditingExercise = (ex) => {
-    setEditingExId(ex.id);
-    setExForm({
-      unit_title: ex.unit_title || '',
-      exercise_type: ex.exercise_type || 'choice',
-      question_text: ex.question_text || '',
-      options_raw: Array.isArray(ex.options) ? ex.options.join('\n') : '',
-      correct_answer: ex.correct_answer || '',
-      explanation: ex.explanation || '',
-      image_url: ex.image_url || '',
-      audio_url: ex.audio_url || ''
-    });
-  };
-  const resetExForm = () => {
-    setEditingExId(null);
-    setExForm({
-      unit_title: '',
-      exercise_type: 'choice',
-      question_text: '',
-      options_raw: '',
-      correct_answer: '',
-      explanation: '',
-      image_url: '',
-      audio_url: ''
-    });
-  };
-  const handleDeleteExercise = async (id) => {
-    if (!window.confirm('Tu piştrast î ku dixwazî vê lîstikê jê bibî?')) return;
-    const { error } = await supabase.from('kurmanci_exercises').delete().eq('id', id);
-    if (!error) {
-      if (editingExId === id) resetExForm();
-      fetchAllData();
+    try {
+      localStorage.setItem('kk_ui_texts', JSON.stringify(ui));
+      await supabase
+        .from('site_settings')
+        .upsert([{ key: 'ui_texts_json', value: JSON.stringify(ui) }], {
+          onConflict: 'key'
+        });
+      setSettingsMsg('Hemû nivîs hatin tomarkirin.');
+      setTimeout(() => setSettingsMsg(''), 3000);
+    } catch (err) {
+      setSettingsMsg('Çewtî: ' + err.message);
     }
   };
-  const handleResetAllGames = async () => {
-    const confirmed = window.confirm(
-      'Hişyarî: Ev kiryar dê hemû lîstik û pirsên di tabloya kurmanci_exercises de û her wiha xalên XP û qonaxên qedandî jê bibe/sifir bike. Tu piştrast î?'
-    );
-    if (!confirmed) return;
-    stopAudio();
-    const { error: deleteExError } = await supabase
-      .from('kurmanci_exercises')
-      .delete()
-      .not('id', 'is', null);
-    if (deleteExError) {
-      setExMsg('Sifirkirina lîstikan têk çû: ' + deleteExError.message);
-      return;
-    }
-    setExercises([]);
-    setGamesReset(true);
-    setSelectedUnit(null);
-    setCurrentExIndex(0);
-    setSelectedOption('');
-    setBuiltWords([]);
-    setAnswerState(null);
-    setComboCount(0);
-    setHearts(5);
-    setXpPoints(0);
-    setStreakDays(0);
-    setCompletedUnits([]);
-    setUnitCompleted(false);
-    await persistProgressSnapshot(0, 0, []);
-    await supabase
-      .from('site_settings')
-      .upsert({ key: 'games_reset', value: 'true' }, { onConflict: 'key' });
-    setExMsg('Hemû lîstik û pirs hatin sifirkirin.');
-    setTimeout(() => setExMsg(''), 4000);
-  };
-  const adminExerciseUnits = [...new Set(exercises.map((ex) => ex.unit_title).filter(Boolean))];
+  const adminExerciseUnits = [
+    ...new Set(exercises.map((ex) => ex.unit_title).filter(Boolean))
+  ];
   const filteredAdminExercises = exercises.filter((ex) => {
     const matchesUnit =
       adminExUnitFilter === 'all' || ex.unit_title === adminExUnitFilter;
@@ -3158,6 +2993,7 @@ export default function App() {
       (ex.correct_answer && ex.correct_answer.toLowerCase().includes(q));
     return matchesUnit && matchesSearch;
   });
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <input
@@ -3167,6 +3003,7 @@ export default function App() {
         onChange={handleInlinePhotoFileSelected}
         className="hidden"
       />
+
       <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
           <button
@@ -3185,6 +3022,7 @@ export default function App() {
               <span className="text-red-700">{ui.brand_second}</span>
             </span>
           </button>
+
           <nav className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <button
               type="button"
@@ -3245,6 +3083,7 @@ export default function App() {
               <Lock className="w-3.5 h-3.5" />
               <span>{ui.nav_admin}</span>
             </button>
+
             <div className="relative" ref={langDropdownRef}>
               <button
                 type="button"
@@ -3263,7 +3102,9 @@ export default function App() {
                       type="button"
                       onClick={() => handleSelectLanguage(opt.code)}
                       className={`w-full px-3 py-2 text-left text-xs flex items-center justify-between hover:bg-slate-50 ${
-                        selectedLang === opt.code ? 'font-bold text-red-700 bg-red-50/50' : 'text-slate-700'
+                        selectedLang === opt.code
+                          ? 'font-bold text-red-700 bg-red-50/50'
+                          : 'text-slate-700'
                       }`}
                     >
                       <span>{opt.nativeName}</span>
@@ -3276,6 +3117,7 @@ export default function App() {
           </nav>
         </div>
       </header>
+
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8">
         {viewMode === 'student' && (
           <div className="space-y-8">
@@ -3302,6 +3144,7 @@ export default function App() {
                 </div>
               </div>
             </section>
+
             <section className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 overflow-x-auto pb-1">
                 <button
@@ -3330,6 +3173,7 @@ export default function App() {
                   </button>
                 ))}
               </div>
+
               <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-100">
                 <div className="flex flex-wrap items-center gap-3">
                   <span className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase">
@@ -3372,6 +3216,7 @@ export default function App() {
                 )}
               </div>
             </section>
+
             <section className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-extrabold text-slate-900">
@@ -3383,6 +3228,7 @@ export default function App() {
                   {filteredLessons.length} {ui.list_count_suffix}
                 </span>
               </div>
+
               {loading ? (
                 <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-500">
                   {ui.loading_text}
@@ -3391,7 +3237,9 @@ export default function App() {
                 <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-12 text-center space-y-3">
                   <BookOpen className="w-10 h-10 text-slate-300 mx-auto" />
                   <h3 className="text-lg font-bold text-slate-800">{ui.empty_title}</h3>
-                  <p className="text-sm text-slate-500 max-w-md mx-auto">{ui.empty_subtitle}</p>
+                  <p className="text-sm text-slate-500 max-w-md mx-auto">
+                    {ui.empty_subtitle}
+                  </p>
                   <button
                     type="button"
                     onClick={() => setViewMode('admin')}
@@ -3404,7 +3252,9 @@ export default function App() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredLessons.map((lesson) => {
-                    const mediaObj = dynamicMediaTypes.find((m) => m.id === lesson.media_type);
+                    const mediaObj = dynamicMediaTypes.find(
+                      (m) => m.id === lesson.media_type
+                    );
                     const MediaIcon = mediaObj?.icon || FileText;
                     const showThumb = lesson.thumbnail_url && !brokenThumbs[lesson.id];
                     return (
@@ -3472,10 +3322,12 @@ export default function App() {
                           </div>
                           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
                             <span>
-                              {ui.meta_level_prefix} <strong className="text-slate-700">{lesson.level}</strong>
+                              {ui.meta_level_prefix}{' '}
+                              <strong className="text-slate-700">{lesson.level}</strong>
                             </span>
                             <span>
-                              {ui.meta_grade_prefix} <strong className="text-slate-700">{lesson.grade_level}</strong>
+                              {ui.meta_grade_prefix}{' '}
+                              <strong className="text-slate-700">{lesson.grade_level}</strong>
                             </span>
                           </div>
                         </div>
@@ -3487,6 +3339,7 @@ export default function App() {
             </section>
           </div>
         )}
+
         {viewMode === 'learn' && (
           <div className="space-y-6">
             <ALFABE
@@ -3513,6 +3366,7 @@ export default function App() {
               exMsg={exMsg}
               ui={ui}
             />
+
             {exerciseUnits.length > 0 && (
               <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
@@ -3529,6 +3383,7 @@ export default function App() {
                     </button>
                   )}
                 </div>
+
                 {!selectedUnit ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {exerciseUnits.map((uTitle, idx) => (
@@ -3575,13 +3430,18 @@ export default function App() {
                         {currentExIndex + 1} / {unitExercises.length}
                       </span>
                     </div>
-                    <p className="text-lg font-bold text-slate-900">{currentExercise.question_text}</p>
+                    <p className="text-lg font-bold text-slate-900">
+                      {currentExercise.question_text}
+                    </p>
                     {currentExercise.image_url && !brokenExImages[currentExercise.id] && (
                       <img
                         src={currentExercise.image_url}
                         alt={currentExercise.question_text}
                         onError={() =>
-                          setBrokenExImages((prev) => ({ ...prev, [currentExercise.id]: true }))
+                          setBrokenExImages((prev) => ({
+                            ...prev,
+                            [currentExercise.id]: true
+                          }))
                         }
                         className="max-h-60 rounded-xl border border-slate-200 object-contain bg-white p-1"
                       />
@@ -3590,7 +3450,9 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() =>
-                          isPlayingAudio ? stopAudio() : playCurrentAudio(currentExercise.audio_url)
+                          isPlayingAudio
+                            ? stopAudio()
+                            : playCurrentAudio(currentExercise.audio_url)
                         }
                         className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-800"
                       >
@@ -3598,6 +3460,7 @@ export default function App() {
                         <span>{isPlayingAudio ? 'Deng rawestîne' : 'Deng guhdar bike'}</span>
                       </button>
                     )}
+
                     {currentExercise.exercise_type === 'sentence' ? (
                       <div className="space-y-3">
                         <div className="min-h-12 p-3 rounded-xl border border-slate-300 bg-slate-50 flex flex-wrap gap-2">
@@ -3634,7 +3497,9 @@ export default function App() {
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {(currentExercise.options || []).map((opt, idx) => {
-                          const label = opt.includes('=') ? opt.split('=')[0].trim() : opt;
+                          const label = opt.includes('=')
+                            ? opt.split('=')[0].trim()
+                            : opt;
                           const active = selectedOption === opt;
                           return (
                             <button
@@ -3653,6 +3518,7 @@ export default function App() {
                         })}
                       </div>
                     )}
+
                     {answerState && (
                       <div
                         className={`p-3.5 rounded-xl text-sm font-bold ${
@@ -3669,6 +3535,7 @@ export default function App() {
                         )}
                       </div>
                     )}
+
                     <div className="flex justify-end gap-2">
                       {!answerState ? (
                         <button
@@ -3694,6 +3561,7 @@ export default function App() {
             )}
           </div>
         )}
+
         {viewMode === 'ferheng' && (
           <div className="space-y-6">
             <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
@@ -3703,9 +3571,11 @@ export default function App() {
                   <span>{ui.nav_ferheng}</span>
                 </h1>
                 <span className="text-xs font-bold text-slate-500">
-                  {combinedDictionary.length} peyv (DB: {totalWordCount || dictionaryWords.length})
+                  {combinedDictionary.length} peyv (DB:{' '}
+                  {totalWordCount || dictionaryWords.length})
                 </span>
               </div>
+
               <form onSubmit={handleDictionarySearchSubmit} className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -3724,11 +3594,13 @@ export default function App() {
                   {ui.ferheng_search_btn}
                 </button>
               </form>
+
               {searchingDict && (
                 <div className="text-xs font-semibold text-slate-500">
                   Li Wîkîferheng / Wiktionary tê gerîn...
                 </div>
               )}
+
               {searchHistory.length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap text-xs">
                   <span className="inline-flex items-center gap-1 text-slate-400 font-semibold">
@@ -3747,6 +3619,7 @@ export default function App() {
                   ))}
                 </div>
               )}
+
               <div className="flex items-center gap-1 overflow-x-auto pb-1 pt-1">
                 <button
                   type="button"
@@ -3781,6 +3654,7 @@ export default function App() {
                 ))}
               </div>
             </div>
+
             {filteredDictionary.length === 0 ? (
               <div className="bg-white border border-dashed border-slate-300 rounded-2xl p-10 text-center text-slate-500">
                 {ui.ferheng_empty_text}
@@ -3839,14 +3713,18 @@ export default function App() {
                           </div>
                         </div>
                         {meaningText && (
-                          <p className="text-sm font-semibold text-slate-800">{meaningText}</p>
+                          <p className="text-sm font-semibold text-slate-800">
+                            {meaningText}
+                          </p>
                         )}
                         {exampleText && (
                           <p className="text-xs italic text-slate-500">“{exampleText}”</p>
                         )}
                       </div>
                       <div className="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100">
-                        <span>{item.sourceType === 'wiktionary' ? 'Wiktionary' : 'Ferheng'}</span>
+                        <span>
+                          {item.sourceType === 'wiktionary' ? 'Wiktionary' : 'Ferheng'}
+                        </span>
                         <span className="inline-flex items-center gap-1 text-red-700 font-semibold">
                           <Eye className="w-3 h-3" />
                           <span>Hûrgilî</span>
@@ -3859,6 +3737,7 @@ export default function App() {
             )}
           </div>
         )}
+
         {viewMode === 'admin' && (
           <div className="space-y-8">
             {!isAdmin ? (
@@ -3868,8 +3747,12 @@ export default function App() {
                     <Lock className="w-5 h-5" />
                   </div>
                   <div>
-                    <h1 className="text-xl font-extrabold text-slate-900">Têketina Rêveber</h1>
-                    <p className="text-xs text-slate-500">Şîfreya rêveberiyê binivîse</p>
+                    <h1 className="text-xl font-extrabold text-slate-900">
+                      Têketina Rêveber
+                    </h1>
+                    <p className="text-xs text-slate-500">
+                      Şîfreya rêveberiyê binivîse
+                    </p>
                   </div>
                 </div>
                 <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -3909,6 +3792,7 @@ export default function App() {
                     <span>Derkeve</span>
                   </button>
                 </div>
+
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <div>
@@ -3920,12 +3804,17 @@ export default function App() {
                       </p>
                     </div>
                   </div>
+
                   {exMsg && (
                     <div className="p-3 rounded-xl bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
                       {exMsg}
                     </div>
                   )}
-                  <form onSubmit={handleCreateAlfabeRound} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                  <form
+                    onSubmit={handleCreateAlfabeRound}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                  >
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
                         Navê Qonaxê (Opsiyonel)
@@ -3934,7 +3823,10 @@ export default function App() {
                         type="text"
                         value={alfabeRoundForm.roundTitle}
                         onChange={(e) =>
-                          setAlfabeRoundForm((prev) => ({ ...prev, roundTitle: e.target.value }))
+                          setAlfabeRoundForm((prev) => ({
+                            ...prev,
+                            roundTitle: e.target.value
+                          }))
                         }
                         placeholder="Mînak: ALFABE - Koma 1"
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
@@ -3948,7 +3840,10 @@ export default function App() {
                         rows={3}
                         value={alfabeRoundForm.wordsText}
                         onChange={(e) =>
-                          setAlfabeRoundForm((prev) => ({ ...prev, wordsText: e.target.value }))
+                          setAlfabeRoundForm((prev) => ({
+                            ...prev,
+                            wordsText: e.target.value
+                          }))
                         }
                         placeholder={'Agir\nBilbil\nCemed\nÇay'}
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
@@ -3962,7 +3857,10 @@ export default function App() {
                         rows={3}
                         value={alfabeRoundForm.imagesText}
                         onChange={(e) =>
-                          setAlfabeRoundForm((prev) => ({ ...prev, imagesText: e.target.value }))
+                          setAlfabeRoundForm((prev) => ({
+                            ...prev,
+                            imagesText: e.target.value
+                          }))
                         }
                         placeholder="https://... (her rêzek ji bo wêneyekî)"
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
@@ -3979,10 +3877,14 @@ export default function App() {
                     </div>
                   </form>
                 </div>
+
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
                   <h2 className="text-lg font-extrabold text-slate-900">
-                    {editingId ? 'Materyalê Biguherîne' : 'Materyala Nû Lê Zêde Bike'}
+                    {editingId
+                      ? 'Materyalê Biguherîne'
+                      : 'Materyala Nû Lê Zêde Bike'}
                   </h2>
+
                   {statusMsg.text && (
                     <div
                       className={`p-3.5 rounded-xl text-sm font-semibold flex items-center gap-2 ${
@@ -3999,23 +3901,36 @@ export default function App() {
                       <span>{statusMsg.text}</span>
                     </div>
                   )}
-                  <form onSubmit={handleSaveLesson} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  <form
+                    onSubmit={handleSaveLesson}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Sernav</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Sernav
+                      </label>
                       <input
                         type="text"
                         required
                         value={formData.title}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, title: e.target.value }))
+                        }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Beş</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Beş
+                      </label>
                       <select
                         value={formData.category_slug}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, category_slug: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            category_slug: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       >
@@ -4033,7 +3948,10 @@ export default function App() {
                       <select
                         value={formData.media_type}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, media_type: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            media_type: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       >
@@ -4053,13 +3971,18 @@ export default function App() {
                           type="text"
                           value={formData.media_url}
                           onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, media_url: e.target.value }))
+                            setFormData((prev) => ({
+                              ...prev,
+                              media_url: e.target.value
+                            }))
                           }
                           className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
                         <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1">
                           <Upload className="w-3.5 h-3.5" />
-                          <span>{uploadingField === 'media_url' ? '...' : 'Bar Bike'}</span>
+                          <span>
+                            {uploadingField === 'media_url' ? '...' : 'Bar Bike'}
+                          </span>
                           <input
                             type="file"
                             onChange={(e) => handleFileUpload(e, 'media_url')}
@@ -4077,13 +4000,18 @@ export default function App() {
                           type="text"
                           value={formData.thumbnail_url}
                           onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, thumbnail_url: e.target.value }))
+                            setFormData((prev) => ({
+                              ...prev,
+                              thumbnail_url: e.target.value
+                            }))
                           }
                           className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
                         <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1">
                           <Upload className="w-3.5 h-3.5" />
-                          <span>{uploadingField === 'thumbnail_url' ? '...' : 'Wêne'}</span>
+                          <span>
+                            {uploadingField === 'thumbnail_url' ? '...' : 'Wêne'}
+                          </span>
                           <input
                             type="file"
                             accept="image/*"
@@ -4094,21 +4022,30 @@ export default function App() {
                       </div>
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Ast</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Ast
+                      </label>
                       <input
                         type="text"
                         value={formData.level}
-                        onChange={(e) => setFormData((prev) => ({ ...prev, level: e.target.value }))}
+                        onChange={(e) =>
+                          setFormData((prev) => ({ ...prev, level: e.target.value }))
+                        }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Pol</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Pol
+                      </label>
                       <input
                         type="text"
                         value={formData.grade_level}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, grade_level: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            grade_level: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4122,13 +4059,18 @@ export default function App() {
                           type="text"
                           value={formData.guide_pdf_url}
                           onChange={(e) =>
-                            setFormData((prev) => ({ ...prev, guide_pdf_url: e.target.value }))
+                            setFormData((prev) => ({
+                              ...prev,
+                              guide_pdf_url: e.target.value
+                            }))
                           }
                           className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
                         <label className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold cursor-pointer flex items-center gap-1">
                           <Upload className="w-3.5 h-3.5" />
-                          <span>{uploadingField === 'guide_pdf_url' ? '...' : 'PDF'}</span>
+                          <span>
+                            {uploadingField === 'guide_pdf_url' ? '...' : 'PDF'}
+                          </span>
                           <input
                             type="file"
                             accept=".pdf"
@@ -4146,7 +4088,10 @@ export default function App() {
                         rows={2}
                         value={formData.description}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, description: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            description: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4159,7 +4104,10 @@ export default function App() {
                         rows={3}
                         value={formData.teacher_guide}
                         onChange={(e) =>
-                          setFormData((prev) => ({ ...prev, teacher_guide: e.target.value }))
+                          setFormData((prev) => ({
+                            ...prev,
+                            teacher_guide: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4183,6 +4131,7 @@ export default function App() {
                     </div>
                   </form>
                 </div>
+
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
                   <h2 className="text-lg font-extrabold text-slate-900">
                     Materyalên Heyî ({lessons.length})
@@ -4196,7 +4145,8 @@ export default function App() {
                         <div>
                           <div className="font-bold text-slate-900">{item.title}</div>
                           <div className="text-xs text-slate-500">
-                            {getCategoryName(item.category_slug)} • {item.level} • {item.grade_level}
+                            {getCategoryName(item.category_slug)} • {item.level} •{' '}
+                            {item.grade_level}
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -4221,13 +4171,16 @@ export default function App() {
                     ))}
                   </div>
                 </div>
+
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-sm">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
                       <FolderEdit className="w-5 h-5 text-red-700" />
                       <span>Rêveberiya Beşan</span>
                     </h2>
-                    {catMsg && <span className="text-xs font-bold text-emerald-700">{catMsg}</span>}
+                    {catMsg && (
+                      <span className="text-xs font-bold text-emerald-700">{catMsg}</span>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {categories.map((cat) => (
@@ -4238,7 +4191,9 @@ export default function App() {
                         <input
                           type="text"
                           value={cat.name}
-                          onChange={(e) => handleUpdateCategoryName(cat.slug, e.target.value)}
+                          onChange={(e) =>
+                            handleUpdateCategoryName(cat.slug, e.target.value)
+                          }
                           className="flex-1 bg-white px-2.5 py-1.5 rounded-lg border border-slate-200 text-sm font-semibold"
                         />
                         {categories.length > 1 && (
@@ -4278,6 +4233,7 @@ export default function App() {
                     </button>
                   </div>
                 </div>
+
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
@@ -4292,7 +4248,11 @@ export default function App() {
                       Hemû Lîstikan Sifir Bike
                     </button>
                   </div>
-                  <form onSubmit={handleSaveExercise} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                  <form
+                    onSubmit={handleSaveExercise}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
                         Navê Qonaxê (Unit)
@@ -4302,7 +4262,10 @@ export default function App() {
                         required
                         value={exForm.unit_title}
                         onChange={(e) =>
-                          setExForm((prev) => ({ ...prev, unit_title: e.target.value }))
+                          setExForm((prev) => ({
+                            ...prev,
+                            unit_title: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4314,7 +4277,10 @@ export default function App() {
                       <select
                         value={exForm.exercise_type}
                         onChange={(e) =>
-                          setExForm((prev) => ({ ...prev, exercise_type: e.target.value }))
+                          setExForm((prev) => ({
+                            ...prev,
+                            exercise_type: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       >
@@ -4334,7 +4300,10 @@ export default function App() {
                         required
                         value={exForm.question_text}
                         onChange={(e) =>
-                          setExForm((prev) => ({ ...prev, question_text: e.target.value }))
+                          setExForm((prev) => ({
+                            ...prev,
+                            question_text: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4347,7 +4316,10 @@ export default function App() {
                         rows={3}
                         value={exForm.options_raw}
                         onChange={(e) =>
-                          setExForm((prev) => ({ ...prev, options_raw: e.target.value }))
+                          setExForm((prev) => ({
+                            ...prev,
+                            options_raw: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4362,7 +4334,10 @@ export default function App() {
                           required
                           value={exForm.correct_answer}
                           onChange={(e) =>
-                            setExForm((prev) => ({ ...prev, correct_answer: e.target.value }))
+                            setExForm((prev) => ({
+                              ...prev,
+                              correct_answer: e.target.value
+                            }))
                           }
                           className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
@@ -4375,7 +4350,10 @@ export default function App() {
                           type="text"
                           value={exForm.explanation}
                           onChange={(e) =>
-                            setExForm((prev) => ({ ...prev, explanation: e.target.value }))
+                            setExForm((prev) => ({
+                              ...prev,
+                              explanation: e.target.value
+                            }))
                           }
                           className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
@@ -4390,7 +4368,10 @@ export default function App() {
                           type="text"
                           value={exForm.image_url}
                           onChange={(e) =>
-                            setExForm((prev) => ({ ...prev, image_url: e.target.value }))
+                            setExForm((prev) => ({
+                              ...prev,
+                              image_url: e.target.value
+                            }))
                           }
                           className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
@@ -4415,7 +4396,10 @@ export default function App() {
                           type="text"
                           value={exForm.audio_url}
                           onChange={(e) =>
-                            setExForm((prev) => ({ ...prev, audio_url: e.target.value }))
+                            setExForm((prev) => ({
+                              ...prev,
+                              audio_url: e.target.value
+                            }))
                           }
                           className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
@@ -4449,6 +4433,7 @@ export default function App() {
                       )}
                     </div>
                   </form>
+
                   <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100">
                     <select
                       value={adminExUnitFilter}
@@ -4470,6 +4455,7 @@ export default function App() {
                       className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs"
                     />
                   </div>
+
                   <div className="divide-y divide-slate-100">
                     {filteredAdminExercises.map((ex) => (
                       <div
@@ -4477,7 +4463,9 @@ export default function App() {
                         className="py-3 flex items-center justify-between gap-3 flex-wrap"
                       >
                         <div>
-                          <div className="font-bold text-sm text-slate-900">{ex.question_text}</div>
+                          <div className="font-bold text-sm text-slate-900">
+                            {ex.question_text}
+                          </div>
                           <div className="text-xs text-slate-500">
                             {ex.unit_title} • Bersiv: {ex.correct_answer}
                           </div>
@@ -4502,6 +4490,7 @@ export default function App() {
                     ))}
                   </div>
                 </div>
+
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-lg font-extrabold text-slate-900">
@@ -4509,9 +4498,13 @@ export default function App() {
                     </h2>
                     <div className="flex items-center gap-2 flex-wrap">
                       {syncingProgress && (
-                        <span className="text-xs font-bold text-amber-700">{syncingProgress}</span>
+                        <span className="text-xs font-bold text-amber-700">
+                          {syncingProgress}
+                        </span>
                       )}
-                      {wordMsg && <span className="text-xs font-bold text-emerald-700">{wordMsg}</span>}
+                      {wordMsg && (
+                        <span className="text-xs font-bold text-emerald-700">{wordMsg}</span>
+                      )}
                       <button
                         type="button"
                         onClick={handleBulkImportDictionary}
@@ -4521,14 +4514,22 @@ export default function App() {
                       </button>
                     </div>
                   </div>
-                  <form onSubmit={handleSaveWord} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                  <form
+                    onSubmit={handleSaveWord}
+                    className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                  >
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">Peyv</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Peyv
+                      </label>
                       <input
                         type="text"
                         required
                         value={wordForm.word}
-                        onChange={(e) => setWordForm((prev) => ({ ...prev, word: e.target.value }))}
+                        onChange={(e) =>
+                          setWordForm((prev) => ({ ...prev, word: e.target.value }))
+                        }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
                     </div>
@@ -4540,7 +4541,10 @@ export default function App() {
                         type="text"
                         value={wordForm.part_of_speech}
                         onChange={(e) =>
-                          setWordForm((prev) => ({ ...prev, part_of_speech: e.target.value }))
+                          setWordForm((prev) => ({
+                            ...prev,
+                            part_of_speech: e.target.value
+                          }))
                         }
                         className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
                       />
@@ -4552,7 +4556,11 @@ export default function App() {
                       <input
                         type="text"
                         required
-                        value={wordForm.meanings_i18n?.[selectedLang] ?? wordForm.meaning_tr ?? ''}
+                        value={
+                          wordForm.meanings_i18n?.[selectedLang] ??
+                          wordForm.meaning_tr ??
+                          ''
+                        }
                         onChange={(e) => {
                           const val = e.target.value;
                           setWordForm((prev) => ({
@@ -4573,7 +4581,11 @@ export default function App() {
                       </label>
                       <input
                         type="text"
-                        value={wordForm.examples_i18n?.[selectedLang] ?? wordForm.example_sentence ?? ''}
+                        value={
+                          wordForm.examples_i18n?.[selectedLang] ??
+                          wordForm.example_sentence ??
+                          ''
+                        }
                         onChange={(e) => {
                           const val = e.target.value;
                           setWordForm((prev) => ({
@@ -4597,7 +4609,10 @@ export default function App() {
                           type="text"
                           value={wordForm.audio_url}
                           onChange={(e) =>
-                            setWordForm((prev) => ({ ...prev, audio_url: e.target.value }))
+                            setWordForm((prev) => ({
+                              ...prev,
+                              audio_url: e.target.value
+                            }))
                           }
                           className="flex-1 px-3 py-2 rounded-xl border border-slate-300 text-sm"
                         />
@@ -4631,6 +4646,7 @@ export default function App() {
                       )}
                     </div>
                   </form>
+
                   <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
                     {dictionaryWords.map((wItem) => (
                       <div
@@ -4638,7 +4654,9 @@ export default function App() {
                         className="py-2.5 flex items-center justify-between gap-3"
                       >
                         <div>
-                          <span className="font-bold text-sm text-slate-900">{wItem.word}</span>
+                          <span className="font-bold text-sm text-slate-900">
+                            {wItem.word}
+                          </span>
                           <span className="ml-2 text-xs text-slate-500">
                             {getWordMeaningByLang(wItem, selectedLang)}
                           </span>
@@ -4663,6 +4681,7 @@ export default function App() {
                     ))}
                   </div>
                 </div>
+
                 <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-5 shadow-sm">
                   <div className="flex items-center justify-between flex-wrap gap-2">
                     <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
@@ -4670,10 +4689,15 @@ export default function App() {
                       <span>Mîhengên Nivîsên Malperê ({selectedLang})</span>
                     </h2>
                     {settingsMsg && (
-                      <span className="text-xs font-bold text-emerald-700">{settingsMsg}</span>
+                      <span className="text-xs font-bold text-emerald-700">
+                        {settingsMsg}
+                      </span>
                     )}
                   </div>
-                  <form onSubmit={handleSaveAllUiTexts} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <form
+                    onSubmit={handleSaveAllUiTexts}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
                     {UI_FIELD_LABELS.map((f) => (
                       <div key={f.key}>
                         <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -4704,6 +4728,7 @@ export default function App() {
           </div>
         )}
       </main>
+
       {activeLesson && (
         <div
           className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4"
@@ -4730,6 +4755,7 @@ export default function App() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
             <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
               <button
                 type="button"
@@ -4754,6 +4780,7 @@ export default function App() {
                 {ui.tab_guide}
               </button>
             </div>
+
             {lessonTab === 'content' ? (
               <div className="space-y-4">
                 {renderLessonMediaViewer(activeLesson)}
@@ -4789,6 +4816,7 @@ export default function App() {
           </div>
         </div>
       )}
+
       {selectedWordDetail && (
         <div
           className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4"
@@ -4817,16 +4845,19 @@ export default function App() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+
             {getWordMeaningByLang(selectedWordDetail, selectedLang) && (
               <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800">
                 {getWordMeaningByLang(selectedWordDetail, selectedLang)}
               </div>
             )}
+
             {getWordExampleByLang(selectedWordDetail, selectedLang) && (
               <div className="text-xs italic text-slate-600">
                 “{getWordExampleByLang(selectedWordDetail, selectedLang)}”
               </div>
             )}
+
             <div className="flex items-center justify-between pt-2">
               <button
                 type="button"
@@ -4852,6 +4883,7 @@ export default function App() {
           </div>
         </div>
       )}
+
       <footer className="bg-white border-t border-slate-200 py-5 px-4 sm:px-6 text-center text-xs text-slate-500">
         {ui.footer_text}
       </footer>
