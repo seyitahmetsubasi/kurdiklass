@@ -86,7 +86,6 @@ function ALFABE({
   onDeductHeartOrReset,
   onCompleteUnit,
   onTriggerPhotoUpload,
-  onSaveWordImage,
   inlinePhotoSaving = false,
   exMsg = '',
   ui = {}
@@ -308,21 +307,17 @@ function ALFABE({
                     {isMatched && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
                   </button>
 
-                  {isAdmin && (
+                  {isAdmin && typeof onTriggerPhotoUpload === 'function' && (
                     <button
                       type="button"
                       disabled={inlinePhotoSaving}
-                      onClick={(e) => {
-                        if (typeof onSaveWordImage === 'function') {
-                          onSaveWordImage(e, item);
-                        } else if (typeof onTriggerPhotoUpload === 'function') {
-                          onTriggerPhotoUpload(e, { wordItem: item, mode: 'alfabe_word' });
-                        }
-                      }}
-                      title={`${ui.alfabe_add_photo_title || 'Tenê wêne lê zêde bike:'} ${item.word}`}
+                      onClick={(e) =>
+                        onTriggerPhotoUpload(e, { wordItem: item, mode: 'alfabe_word' })
+                      }
+                      title={`${ui.alfabe_add_photo_title || 'Ji komputerê wêne bar bike:'} ${item.word}`}
                       className="shrink-0 px-3 py-3.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-red-50 hover:border-red-300 text-slate-700 hover:text-red-700 text-xs font-bold inline-flex items-center gap-1.5 transition"
                     >
-                      <ImageIcon className="w-4 h-4 text-red-700" />
+                      <Upload className="w-4 h-4 text-red-700" />
                       <span>{inlinePhotoSaving ? '...' : (ui.alfabe_photo_btn || 'Wêne')}</span>
                     </button>
                   )}
@@ -494,7 +489,7 @@ function ALFABE({
                 }
                 className="inline-flex items-center gap-1.5 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-800 px-3 py-1.5 rounded-lg"
               >
-                <ImageIcon className="w-3.5 h-3.5 text-red-700" />
+                <Upload className="w-3.5 h-3.5 text-red-700" />
                 <span>{inlinePhotoSaving ? '...' : (ui.learn_change_q_photo || 'Wêneyê Pirsê Biguherîne')}</span>
               </button>
             </div>
@@ -1432,7 +1427,7 @@ const DEFAULT_UI_TEXTS = {
   alfabe_words_col: '4 Peyv',
   alfabe_images_col: '4 Wêne',
   alfabe_photo_btn: 'Wêne',
-  alfabe_add_photo_title: 'Tenê wêne lê zêde bike:',
+  alfabe_add_photo_title: 'Ji komputerê wêne bar bike:',
   alfabe_match_ok: 'Rast hat hevberkirin! (+10 XP)',
   alfabe_match_err: 'Ev peyv û wêne li hev nayên — dîsa biceribîne!',
   ferheng_search_placeholder: 'Peyvekê binivîse (Kurmancî, Tirkî, îngilîzî...)',
@@ -1748,9 +1743,10 @@ export default function App() {
   });
   const [alfabeRoundForm, setAlfabeRoundForm] = useState({
     roundTitle: '',
-    wordsText: '',
-    imagesText: ''
+    wordsText: ''
   });
+  const [alfabeRoundFiles, setAlfabeRoundFiles] = useState([]);
+  const [uploadingAlfabeRound, setUploadingAlfabeRound] = useState(false);
   const [alfabeEditMsg, setAlfabeEditMsg] = useState('');
   const [inlinePhotoTarget, setInlinePhotoTarget] = useState(null);
   const [inlinePhotoSaving, setInlinePhotoSaving] = useState(false);
@@ -2063,15 +2059,27 @@ export default function App() {
     setTimeout(() => setAlfabeEditMsg(''), 3500);
   };
 
+  const uploadImageToBucket = async (file, folder = 'alfabe-rounds') => {
+    const ext = file.name.split('.').pop() || 'png';
+    const filePath = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from('materyal')
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) throw uploadError;
+    const { data: pubData } = supabase.storage.from('materyal').getPublicUrl(filePath);
+    return pubData?.publicUrl || '';
+  };
+
+  const handleAlfabeRoundFilesChange = (e) => {
+    const selected = Array.from(e.target.files || []).slice(0, 4);
+    setAlfabeRoundFiles(selected);
+  };
+
   const handleCreateAlfabeRound = async (e) => {
     e.preventDefault();
     const parsedWords = alfabeRoundForm.wordsText
       .split(/[\n,]+/)
       .map((w) => w.trim())
-      .filter(Boolean);
-    const parsedImages = alfabeRoundForm.imagesText
-      .split(/\n+/)
-      .map((u) => u.trim())
       .filter(Boolean);
 
     if (parsedWords.length < 4) {
@@ -2079,46 +2087,43 @@ export default function App() {
       return;
     }
 
-    const roundLabel =
-      alfabeRoundForm.roundTitle.trim() ||
-      `ALFABE - ${parsedWords.slice(0, 4).join(' / ')}`;
-    const fourWords = parsedWords.slice(0, 4);
-    const fourImgs = parsedImages.slice(0, 4);
+    setUploadingAlfabeRound(true);
+    try {
+      const uploadedUrls = [];
+      for (const file of alfabeRoundFiles.slice(0, 4)) {
+        const url = await uploadImageToBucket(file, 'alfabe-rounds');
+        if (url) uploadedUrls.push(url);
+      }
 
-    const updated = [...alfabeWords];
-    fourWords.forEach((w, idx) => {
-      const targetIdx = idx < updated.length ? idx : updated.length;
-      const existing = updated[targetIdx] || {
-        id: `alf-${Date.now()}-${idx}`,
-        letter: kurdishAlphabet[targetIdx] || 'A'
-      };
-      updated[targetIdx] = {
-        ...existing,
-        word: w,
-        image_url: fourImgs[idx] || existing.image_url || ''
-      };
-    });
+      const roundLabel =
+        alfabeRoundForm.roundTitle.trim() ||
+        `ALFABE - ${parsedWords.slice(0, 4).join(' / ')}`;
+      const fourWords = parsedWords.slice(0, 4);
 
-    await persistAlfabeWords(updated);
-    setAlfabeRoundForm({ roundTitle: '', wordsText: '', imagesText: '' });
-    setExMsg(`Lîstika "${roundLabel}" (4 peyv û 4 wêne) li serê ALFABE hat zêdekirin.`);
-  };
+      const updated = [...alfabeWords];
+      fourWords.forEach((w, idx) => {
+        const targetIdx = idx < updated.length ? idx : updated.length;
+        const existing = updated[targetIdx] || {
+          id: `alf-${Date.now()}-${idx}`,
+          letter: kurdishAlphabet[targetIdx] || 'A'
+        };
+        updated[targetIdx] = {
+          ...existing,
+          word: w,
+          image_url: uploadedUrls[idx] || existing.image_url || ''
+        };
+      });
 
-  const handleSaveWordImage = async (e, item) => {
-    if (e && e.stopPropagation) e.stopPropagation();
-    const enteredUrl = window.prompt(
-      `"${item.word}" (${item.letter}) ji bo wêneyê lînka URL binivîse (an ji bo barkirina pelê vala bihêle):`,
-      item.image_url || ''
-    );
-    if (enteredUrl === null) return;
-    if (enteredUrl.trim()) {
-      const nextList = alfabeWords.map((w) =>
-        w.id === item.id ? { ...w, image_url: enteredUrl.trim() } : w
+      await persistAlfabeWords(updated);
+      setAlfabeRoundForm({ roundTitle: '', wordsText: '' });
+      setAlfabeRoundFiles([]);
+      setExMsg(
+        `Lîstika "${roundLabel}" (4 peyv û ${uploadedUrls.length} wêneyên barkirî) li serê ALFABE hat zêdekirin.`
       );
-      await persistAlfabeWords(nextList);
-      setExMsg(`Wêneyê "${item.word}" hat nûkirin.`);
-    } else {
-      handleTriggerInlinePhotoUpload(e, { wordItem: item, mode: 'alfabe_word' });
+    } catch (err) {
+      setExMsg('Wêne nehatin barkirin: ' + (err.message || 'Çewtî'));
+    } finally {
+      setUploadingAlfabeRound(false);
     }
   };
 
@@ -2136,22 +2141,14 @@ export default function App() {
     if (!file || !inlinePhotoTarget) return;
     setInlinePhotoSaving(true);
     try {
-      const ext = file.name.split('.').pop() || 'jpg';
-      const filePath = `inline/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from('materyal')
-        .upload(filePath, file, { upsert: true });
-      if (uploadError) throw uploadError;
-
-      const { data: pubData } = supabase.storage.from('materyal').getPublicUrl(filePath);
-      const publicUrl = pubData?.publicUrl || '';
+      const publicUrl = await uploadImageToBucket(file, 'inline');
 
       if (inlinePhotoTarget.mode === 'alfabe_word' && inlinePhotoTarget.wordItem) {
         const nextList = alfabeWords.map((w) =>
           w.id === inlinePhotoTarget.wordItem.id ? { ...w, image_url: publicUrl } : w
         );
         await persistAlfabeWords(nextList);
-        setExMsg(`Wêneyê "${inlinePhotoTarget.wordItem.word}" hat barkirin.`);
+        setExMsg(`Wêneyê "${inlinePhotoTarget.wordItem.word}" ji komputerê hat barkirin.`);
       } else if (inlinePhotoTarget.mode === 'lesson' && inlinePhotoTarget.lessonId) {
         await supabase
           .from('lessons')
@@ -2181,7 +2178,6 @@ export default function App() {
       setInlinePhotoTarget(null);
     }
   };
-
   const handleSelectLanguage = (code) => {
     setSelectedLang(code);
     setLangMenuOpen(false);
@@ -2351,15 +2347,9 @@ export default function App() {
     setUploadingField(fieldName);
     setStatusMsg({ type: '', text: '' });
     try {
-      const ext = file.name.split('.').pop() || 'bin';
-      const filePath = `lessons/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
-      const { error } = await supabase.storage
-        .from('materyal')
-        .upload(filePath, file, { upsert: true });
-      if (error) throw error;
-      const { data } = supabase.storage.from('materyal').getPublicUrl(filePath);
-      if (data?.publicUrl) {
-        setFormData((prev) => ({ ...prev, [fieldName]: data.publicUrl }));
+      const publicUrl = await uploadImageToBucket(file, 'lessons');
+      if (publicUrl) {
+        setFormData((prev) => ({ ...prev, [fieldName]: publicUrl }));
         setStatusMsg({ type: 'success', text: 'Pel bi serkeftî hat barkirin.' });
       }
     } catch (err) {
@@ -2615,12 +2605,8 @@ export default function App() {
     if (!file) return;
     setUploadingExImg(true);
     try {
-      const ext = file.name.split('.').pop() || 'png';
-      const path = `exercises/img-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('materyal').upload(path, file, { upsert: true });
-      if (error) throw error;
-      const { data } = supabase.storage.from('materyal').getPublicUrl(path);
-      if (data?.publicUrl) setExForm((prev) => ({ ...prev, image_url: data.publicUrl }));
+      const publicUrl = await uploadImageToBucket(file, 'exercises');
+      if (publicUrl) setExForm((prev) => ({ ...prev, image_url: publicUrl }));
     } catch (err) {
       setExMsg('Wêne nehat barkirin: ' + err.message);
     } finally {
@@ -3028,6 +3014,7 @@ export default function App() {
       setSettingsMsg('Çewtî: ' + err.message);
     }
   };
+
   const adminExerciseUnits = [
     ...new Set(exercises.map((ex) => ex.unit_title).filter(Boolean))
   ];
@@ -3350,10 +3337,10 @@ export default function App() {
                                   mode: 'lesson'
                                 })
                               }
-                              title="Wêneyê materyalê biguherîne"
+                              title="Wêneyê materyalê ji komputerê bar bike"
                               className="absolute bottom-3 right-3 bg-white/95 hover:bg-white text-slate-800 border border-slate-200 shadow-sm px-2.5 py-1.5 rounded-lg text-[11px] font-bold flex items-center gap-1"
                             >
-                              <ImageIcon className="w-3.5 h-3.5 text-red-700" />
+                              <Upload className="w-3.5 h-3.5 text-red-700" />
                               <span>{inlinePhotoSaving ? '...' : 'Wêne'}</span>
                             </button>
                           )}
@@ -3410,7 +3397,6 @@ export default function App() {
                 );
               }}
               onTriggerPhotoUpload={handleTriggerInlinePhotoUpload}
-              onSaveWordImage={handleSaveWordImage}
               inlinePhotoSaving={inlinePhotoSaving}
               exMsg={exMsg}
               ui={ui}
@@ -3850,7 +3836,7 @@ export default function App() {
                         <span>Rêveberiya Hînbûn / Lîstik (31 Tîp û Peyvên ALFABE)</span>
                       </h2>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        Li vir her tîp, peyv an lînka wêneyî rasterast sererast bike û tomar bike.
+                        Her tîp û peyvê sererast bike û wêneyan rasterast ji komputerê bar bike.
                       </p>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
@@ -3916,20 +3902,10 @@ export default function App() {
                             className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-sm font-bold text-slate-900"
                           />
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <input
-                            type="text"
-                            value={item.image_url || ''}
-                            onChange={(e) =>
-                              handleInlineAlfabeFieldChange(
-                                item.id,
-                                'image_url',
-                                e.target.value
-                              )
-                            }
-                            placeholder="URL-ya wêneyî..."
-                            className="flex-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs text-slate-700"
-                          />
+                        <div className="flex items-center justify-between gap-2 pt-1">
+                          <span className="text-[11px] text-slate-500 truncate">
+                            {item.image_url ? 'Wêne barkirî ye' : 'Wêne nehatiye barkirin'}
+                          </span>
                           <button
                             type="button"
                             disabled={inlinePhotoSaving}
@@ -3939,10 +3915,10 @@ export default function App() {
                                 mode: 'alfabe_word'
                               })
                             }
-                            title="Wêne bar bike"
-                            className="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-red-50 text-xs font-bold text-slate-700"
+                            className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-red-50 hover:border-red-300 text-xs font-bold text-slate-700 hover:text-red-700"
                           >
-                            <Upload className="w-3.5 h-3.5" />
+                            <Upload className="w-3.5 h-3.5 text-red-700" />
+                            <span>{inlinePhotoSaving ? '...' : 'Wêne Bar Bike'}</span>
                           </button>
                         </div>
                       </div>
@@ -3957,7 +3933,7 @@ export default function App() {
                         Lîstika Nû ya ALFABE: 4 Peyv û 4 Wêne
                       </h2>
                       <p className="text-xs text-slate-500 mt-0.5">
-                        4 peyv û (heke hebe) 4 lînkên wêneyan binivîse da ku rasterast li serê lîstikê werin zêdekirin.
+                        4 peyvan binivîse û wêneyan rasterast ji komputerê hilbijêre.
                       </p>
                     </div>
                   </div>
@@ -4008,28 +3984,36 @@ export default function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        4 Lînkên Wêneyan (Opsiyonel)
+                        4 Wêne Ji Komputerê Hilbijêre
                       </label>
-                      <textarea
-                        rows={3}
-                        value={alfabeRoundForm.imagesText}
-                        onChange={(e) =>
-                          setAlfabeRoundForm((prev) => ({
-                            ...prev,
-                            imagesText: e.target.value
-                          }))
-                        }
-                        placeholder="https://... (her rêzek ji bo wêneyekî)"
-                        className="w-full px-3 py-2 rounded-xl border border-slate-300 text-sm"
-                      />
+                      <label className="w-full min-h-[78px] px-3 py-2.5 rounded-xl border border-dashed border-slate-300 bg-slate-50 hover:bg-red-50/40 hover:border-red-300 transition cursor-pointer flex flex-col items-center justify-center text-center gap-1">
+                        <Upload className="w-4 h-4 text-red-700" />
+                        <span className="text-xs font-bold text-slate-700">
+                          {alfabeRoundFiles.length > 0
+                            ? `${alfabeRoundFiles.length} wêne hatin hilbijartin`
+                            : 'Wêneyan ji komputerê hilbijêre (heta 4)'}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleAlfabeRoundFilesChange}
+                          className="hidden"
+                        />
+                      </label>
                     </div>
                     <div className="md:col-span-3 flex justify-end">
                       <button
                         type="submit"
-                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-red-700 hover:bg-red-800 text-white text-sm font-bold"
+                        disabled={uploadingAlfabeRound}
+                        className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-red-700 hover:bg-red-800 disabled:opacity-60 text-white text-sm font-bold"
                       >
                         <Plus className="w-4 h-4" />
-                        <span>Lîstika 4 Peyv û 4 Wêneyan Lê Zêde Bike</span>
+                        <span>
+                          {uploadingAlfabeRound
+                            ? 'Wêne tên barkirin...'
+                            : 'Lîstika 4 Peyv û 4 Wêneyan Lê Zêde Bike'}
+                        </span>
                       </button>
                     </div>
                   </form>
@@ -4150,7 +4134,7 @@ export default function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Wêneyê Bergê (Thumbnail URL)
+                        Wêneyê Bergê (Ji Komputerê)
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -4209,7 +4193,7 @@ export default function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        PDF-ya Rêbera Mamosteyan (URL)
+                        PDF-ya Rêbera Mamosteyan
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -4518,7 +4502,7 @@ export default function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Wêneyê Pirsê (URL)
+                        Wêneyê Pirsê (Ji Komputerê)
                       </label>
                       <div className="flex gap-2">
                         <input
@@ -4546,7 +4530,7 @@ export default function App() {
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Dengê Pirsê (URL)
+                        Dengê Pirsê
                       </label>
                       <div className="flex gap-2">
                         <input
